@@ -1,0 +1,41 @@
+package com.yandex.ydb.table.values;
+
+import com.yandex.ydb.ValueProtos;
+import com.yandex.ydb.table.types.VoidType;
+import com.yandex.ydb.table.values.proto.ProtoValue;
+
+
+/**
+ * @author Sergey Polovko
+ */
+public class VoidValue implements Value<VoidType> {
+
+    private static final VoidValue INSTANCE = new VoidValue();
+
+    private VoidValue() {
+    }
+
+    public static VoidValue of() {
+        return INSTANCE;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o == this;
+    }
+
+    @Override
+    public int hashCode() {
+        return 1987;
+    }
+
+    @Override
+    public String toString() {
+        return "Void";
+    }
+
+    @Override
+    public ValueProtos.Value toPb(VoidType type) {
+        return ProtoValue.voidValue();
+    }
+}

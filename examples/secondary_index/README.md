@@ -5,7 +5,7 @@ Build and run as follows:
 
     $ ya make
     $ export YDB_TOKEN=...
-    $ ./run.sh ru.yandex.ydb.examples.indexes.Application --indexes.endpoint=ENDPOINT --indexes.database=/ru/home/user/mydb --indexes.prefix=/ru/home/user/mydb
+    $ ./run.sh com.yandex.ydb.examples.indexes.Application --indexes.endpoint=ENDPOINT --indexes.database=/ru/home/user/mydb --indexes.prefix=/ru/home/user/mydb
 
 Drop and create tables:
 
