@@ -2,6 +2,7 @@ package com.yandex.ydb.examples;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.yandex.ydb.core.auth.TokenAuthProvider;
 import com.yandex.ydb.core.grpc.GrpcTransport;
 import com.yandex.ydb.core.grpc.GrpcTransportBuilder;
 
@@ -46,7 +47,7 @@ public class AppRunner {
         }
 
         try (GrpcTransport transport = GrpcTransportBuilder.forEndpoint(args.endpoint, args.database)
-                .withAuthToken(ydbToken)
+                .withAuthProvider(new TokenAuthProvider(ydbToken))
                 .build())
         {
             String path = args.path == null ? args.database : args.path;
