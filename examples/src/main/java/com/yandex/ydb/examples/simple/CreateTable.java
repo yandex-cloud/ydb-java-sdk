@@ -9,6 +9,9 @@ import com.yandex.ydb.table.rpc.grpc.GrpcTableRpc;
 import com.yandex.ydb.table.settings.CreateTableSettings;
 import com.yandex.ydb.table.settings.PartitioningPolicy;
 import com.yandex.ydb.table.types.PrimitiveType;
+import com.yandex.ydb.table.types.TupleType;
+import com.yandex.ydb.table.values.PrimitiveValue;
+import com.yandex.ydb.table.values.TupleValue;
 
 
 /**
@@ -18,51 +21,101 @@ public class CreateTable extends SimpleExample {
 
     @Override
     void run(RpcTransport transport, String pathPrefix) {
-        String tablePath = pathPrefix + getClass().getSimpleName();
-        TableClient tableClient = TableClient.newClient(GrpcTableRpc.useTransport(transport)).build();
-
-        Session session = tableClient.createSession()
-            .join()
-            .expect("cannot create session");
-
-        session.dropTable(tablePath)
-            .join();
-
-        {
-            TableDescription description = TableDescription.newBuilder()
-                .addNullableColumn("hash", PrimitiveType.uint32())
-                .addNullableColumn("name", PrimitiveType.utf8())
-                .addNullableColumn("salary", PrimitiveType.float64())
-                .setPrimaryKeys("hash", "name")  // uniform partitioning requires Uint32 / Uint64 as a first key column
-                .build();
-
-            CreateTableSettings settings = new CreateTableSettings()
-                .setPartitioningPolicy(new PartitioningPolicy().setUniformPartitions(4));
-
-            session.createTable(tablePath, description, settings)
+        try (TableClient tableClient = TableClient.newClient(GrpcTableRpc.useTransport(transport)).build()) {
+            Session session = tableClient.createSession()
                 .join()
-                .expect("cannot create table");
-        }
+                .expect("cannot create session");
 
+            {
+                String tablePath = pathPrefix + "UniformPartitionedTable";
+                session.dropTable(tablePath).join();
+                createUniformPartitionedTable(tablePath, session);
+                printTableScheme(tablePath, session);
+            }
+
+            {
+                String tablePath = pathPrefix + "ManuallyPartitionedTable";
+                session.dropTable(tablePath).join();
+                createManuallyPartitionedTable(tablePath, session);
+                printTableScheme(tablePath, session);
+            }
+
+            session.close()
+                .join()
+                .expect("cannot close session");
+        }
+    }
+
+    /**
+     * Will create table with 4 partitions (split by values of "hash" column)
+     *      1: [0x00000000, 0x3fffffff]
+     *      2: [0x40000000, 0x7fffffff]
+     *      3: [0x80000000, 0xbfffffff]
+     *      4: [0xc0000000, 0xffffffff]
+     */
+    private void createUniformPartitionedTable(String tablePath, Session session) {
+        TableDescription description = TableDescription.newBuilder()
+            .addNullableColumn("hash", PrimitiveType.uint32())
+            .addNullableColumn("name", PrimitiveType.utf8())
+            .addNullableColumn("salary", PrimitiveType.float64())
+            .setPrimaryKeys("hash", "name")  // uniform partitioning requires Uint32 / Uint64 as a first key column
+            .build();
+
+        CreateTableSettings settings = new CreateTableSettings()
+            .setPartitioningPolicy(new PartitioningPolicy().setUniformPartitions(4));
+
+        session.createTable(tablePath, description, settings)
+            .join()
+            .expect("cannot create table " + tablePath);
+    }
+
+    /**
+     * Will create table with 3 partitions (split by values of "name" column)
+     *      1: [empty(), "a"]
+     *      2: [next("a"), "n"]
+     *      3: [next("n"), empty()]
+     */
+    private void createManuallyPartitionedTable(String tablePath, Session session) {
+        TableDescription description = TableDescription.newBuilder()
+            .addNullableColumn("name", PrimitiveType.utf8())
+            .addNullableColumn("salary", PrimitiveType.float64())
+            .setPrimaryKey("name")
+            .build();
+
+        TupleType keyType = TupleType.of(PrimitiveType.utf8().makeOptional());
+
+        CreateTableSettings settings = new CreateTableSettings()
+            .setPartitioningPolicy(new PartitioningPolicy()
+                .addExplicitPartitioningPoint(keyType, makeKey("a"))
+                .addExplicitPartitioningPoint(keyType, makeKey("n")));
+
+        session.createTable(tablePath, description, settings)
+            .join()
+            .expect("cannot create table " + tablePath);
+    }
+
+    private static TupleValue makeKey(String value) {
+        return TupleValue.of(PrimitiveValue.utf8(value).makeOptional());
+    }
+
+    private void printTableScheme(String tablePath, Session session) {
         TableDescription description = session.describeTable(tablePath)
             .join()
-            .expect("cannot describe table");
+            .expect("cannot describe table " + tablePath);
 
-        System.out.println("--[primary keys]-------------");
+        System.out.println("--[" + tablePath + "]-----------");
+        System.out.println("primary keys:");
         int i = 1;
         for (String primaryKey : description.getPrimaryKeys()) {
             System.out.printf("%4d. %s\n", i++, primaryKey);
         }
 
-        System.out.println("\n--[columns]------------------");
+        System.out.println("columns:");
         i = 1;
         for (TableColumn column : description.getColumns()) {
             System.out.printf("%4d. %s %s\n", i++, column.getName(), column.getType());
         }
-
-        session.close()
-            .join()
-            .expect("cannot close session");
+        System.out.println();
     }
 
     public static void main(String[] args) {
