@@ -1,6 +1,10 @@
 package com.yandex.ydb.table.values;
 
 
+import com.yandex.ydb.ValueProtos;
+import com.yandex.ydb.table.values.proto.ProtoType;
+
+
 /**
  * @author Sergey Polovko
  */
@@ -33,5 +37,10 @@ public final class VoidType implements Type {
     @Override
     public String toString() {
         return "Void";
+    }
+
+    @Override
+    public ValueProtos.Type toPb() {
+        return ProtoType.voidType();
     }
 }

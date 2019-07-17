@@ -1,5 +1,8 @@
 package com.yandex.ydb.table.values;
 
+import com.yandex.ydb.ValueProtos;
+
+
 /**
  * @author Sergey Polovko
  */
@@ -17,6 +20,8 @@ public interface Type {
 
     @Override
     String toString();
+
+    ValueProtos.Type toPb();
 
     default OptionalType makeOptional() {
         return OptionalType.of(this);
