@@ -1,10 +1,9 @@
 package com.yandex.ydb.table.types;
 
 import com.google.common.truth.extensions.proto.ProtoTruth;
-import org.junit.Test;
-
 import com.yandex.ydb.ValueProtos;
 import com.yandex.ydb.table.types.proto.ProtoType;
+import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
 

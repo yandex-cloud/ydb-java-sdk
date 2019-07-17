@@ -1,13 +1,11 @@
 package com.yandex.ydb.table.result;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import com.yandex.ydb.ValueProtos;
-import com.yandex.ydb.table.YdbTable;
 import com.yandex.ydb.table.result.impl.ProtoValueReaders;
 import com.yandex.ydb.table.types.proto.ProtoType;
 import com.yandex.ydb.table.values.proto.ProtoValue;
+import org.junit.Assert;
+import org.junit.Test;
 
 
 /**

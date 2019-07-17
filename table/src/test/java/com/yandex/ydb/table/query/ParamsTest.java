@@ -4,14 +4,13 @@ import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.truth.extensions.proto.ProtoTruth;
-import org.junit.Test;
-
 import com.yandex.ydb.ValueProtos;
 import com.yandex.ydb.table.types.PrimitiveType;
 import com.yandex.ydb.table.types.Type;
 import com.yandex.ydb.table.types.proto.ProtoType;
 import com.yandex.ydb.table.values.PrimitiveValue;
 import com.yandex.ydb.table.values.proto.ProtoValue;
+import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
 

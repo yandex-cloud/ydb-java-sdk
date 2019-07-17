@@ -2,12 +2,11 @@ package com.yandex.ydb.table.values;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.truth.extensions.proto.ProtoTruth;
-import org.junit.Test;
-
 import com.yandex.ydb.ValueProtos;
 import com.yandex.ydb.table.types.PrimitiveType;
 import com.yandex.ydb.table.types.StructType;
 import com.yandex.ydb.table.values.proto.ProtoValue;
+import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
 
