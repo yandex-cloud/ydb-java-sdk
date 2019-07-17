@@ -38,13 +38,13 @@ public final class OperationServiceGrpc {
           io.grpc.protobuf.ProtoUtils.marshaller(com.yandex.ydb.OperationProtos.GetOperationResponse.getDefaultInstance()));
   @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
   public static final io.grpc.MethodDescriptor<com.yandex.ydb.OperationProtos.CancelOperationRequest,
-      com.google.protobuf.Empty> METHOD_CANCEL_OPERATION =
+      com.yandex.ydb.OperationProtos.CancelOperationResponse> METHOD_CANCEL_OPERATION =
       io.grpc.MethodDescriptor.create(
           io.grpc.MethodDescriptor.MethodType.UNARY,
           generateFullMethodName(
               "Ydb.Operation.V1.OperationService", "CancelOperation"),
           io.grpc.protobuf.ProtoUtils.marshaller(com.yandex.ydb.OperationProtos.CancelOperationRequest.getDefaultInstance()),
-          io.grpc.protobuf.ProtoUtils.marshaller(com.google.protobuf.Empty.getDefaultInstance()));
+          io.grpc.protobuf.ProtoUtils.marshaller(com.yandex.ydb.OperationProtos.CancelOperationResponse.getDefaultInstance()));
   @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
   public static final io.grpc.MethodDescriptor<com.yandex.ydb.OperationProtos.ForgetOperationRequest,
       com.yandex.ydb.OperationProtos.ForgetOperationResponse> METHOD_FORGET_OPERATION =
@@ -109,7 +109,7 @@ public final class OperationServiceGrpc {
      * </pre>
      */
     public void cancelOperation(com.yandex.ydb.OperationProtos.CancelOperationRequest request,
-        io.grpc.stub.StreamObserver<com.google.protobuf.Empty> responseObserver) {
+        io.grpc.stub.StreamObserver<com.yandex.ydb.OperationProtos.CancelOperationResponse> responseObserver) {
       asyncUnimplementedUnaryCall(METHOD_CANCEL_OPERATION, responseObserver);
     }
 
@@ -148,7 +148,7 @@ public final class OperationServiceGrpc {
             asyncUnaryCall(
               new MethodHandlers<
                 com.yandex.ydb.OperationProtos.CancelOperationRequest,
-                com.google.protobuf.Empty>(
+                com.yandex.ydb.OperationProtos.CancelOperationResponse>(
                   this, METHODID_CANCEL_OPERATION)))
           .addMethod(
             METHOD_FORGET_OPERATION,
@@ -205,7 +205,7 @@ public final class OperationServiceGrpc {
      * </pre>
      */
     public void cancelOperation(com.yandex.ydb.OperationProtos.CancelOperationRequest request,
-        io.grpc.stub.StreamObserver<com.google.protobuf.Empty> responseObserver) {
+        io.grpc.stub.StreamObserver<com.yandex.ydb.OperationProtos.CancelOperationResponse> responseObserver) {
       asyncUnaryCall(
           getChannel().newCall(METHOD_CANCEL_OPERATION, getCallOptions()), request, responseObserver);
     }
@@ -269,7 +269,7 @@ public final class OperationServiceGrpc {
      * or whether the operation completed despite cancellation.
      * </pre>
      */
-    public com.google.protobuf.Empty cancelOperation(com.yandex.ydb.OperationProtos.CancelOperationRequest request) {
+    public com.yandex.ydb.OperationProtos.CancelOperationResponse cancelOperation(com.yandex.ydb.OperationProtos.CancelOperationRequest request) {
       return blockingUnaryCall(
           getChannel(), METHOD_CANCEL_OPERATION, getCallOptions(), request);
     }
@@ -332,7 +332,7 @@ public final class OperationServiceGrpc {
      * or whether the operation completed despite cancellation.
      * </pre>
      */
-    public com.google.common.util.concurrent.ListenableFuture<com.google.protobuf.Empty> cancelOperation(
+    public com.google.common.util.concurrent.ListenableFuture<com.yandex.ydb.OperationProtos.CancelOperationResponse> cancelOperation(
         com.yandex.ydb.OperationProtos.CancelOperationRequest request) {
       return futureUnaryCall(
           getChannel().newCall(METHOD_CANCEL_OPERATION, getCallOptions()), request);
@@ -390,7 +390,7 @@ public final class OperationServiceGrpc {
           break;
         case METHODID_CANCEL_OPERATION:
           serviceImpl.cancelOperation((com.yandex.ydb.OperationProtos.CancelOperationRequest) request,
-              (io.grpc.stub.StreamObserver<com.google.protobuf.Empty>) responseObserver);
+              (io.grpc.stub.StreamObserver<com.yandex.ydb.OperationProtos.CancelOperationResponse>) responseObserver);
           break;
         case METHODID_FORGET_OPERATION:
           serviceImpl.forgetOperation((com.yandex.ydb.OperationProtos.ForgetOperationRequest) request,
