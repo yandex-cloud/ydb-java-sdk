@@ -11,9 +11,9 @@
     <version>1.0.0</version>
   </parent>
 
-  <artifactId>ydb-sdk-proto</artifactId>
-  <name>Generated from Protocol Buffers IDL Java sources</name>
-  <description>Generated from Protocol Buffers IDL Java sources</description>
+  <artifactId>ydb-sdk-examples</artifactId>
+  <name>Examples of usage Java SDK for Yandex Database (YDB)</name>
+  <description>Examples of usage Java SDK for Yandex Database (YDB)</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -34,25 +34,15 @@
   </build>
 
   <dependencies>
+    <dependency>
+      <groupId>ru.yandex.cloud</groupId>
+      <artifactId>ydb-sdk-table</artifactId>
+      <version>1.0.0</version>
+    </dependency>
 	<dependency>
-	  <groupId>com.google.protobuf</groupId>
-	  <artifactId>protobuf-java</artifactId>
-	  <version>3.6.1</version>
-	</dependency>
-	<dependency>
-	  <groupId>io.grpc</groupId>
-	  <artifactId>grpc-stub</artifactId>
-	  <version>1.20.0</version>
-	</dependency>
-	<dependency>
-	  <groupId>io.grpc</groupId>
-	  <artifactId>grpc-protobuf</artifactId>
-	  <version>1.20.0</version>
-	</dependency>
-	<dependency>
-	  <groupId>javax.annotation</groupId>
-	  <artifactId>javax.annotation-api</artifactId>
-	  <version>1.3.2</version>
+	  <groupId>com.beust</groupId>
+	  <artifactId>jcommander</artifactId>
+	  <version>1.72</version>
 	</dependency>
   </dependencies>
 </project>
