@@ -41,7 +41,7 @@ public class Application {
         }
         logger.info("Creating rpc transport for endpoint={} database={}", endpoint, database);
         GrpcTransportBuilder builder = GrpcTransportBuilder.forEndpoint(endpoint, database)
-                .withExecutorService(grpcExecutor);
+                .withCallExecutor(grpcExecutor);
         if (token != null && !token.isEmpty()) {
             builder.withAuthProvider(new TokenAuthProvider(token));
         }

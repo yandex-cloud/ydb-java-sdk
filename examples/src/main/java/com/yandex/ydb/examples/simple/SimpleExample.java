@@ -28,7 +28,7 @@ public abstract class SimpleExample {
         System.err.println();
 
         try (RpcTransport transport = GrpcTransportBuilder.singleHost(host, port)
-            .withExecutorService(Executors.newFixedThreadPool(3))
+            .withCallExecutor(Executors.newFixedThreadPool(3))
             .build())
         {
             run(transport, path);
