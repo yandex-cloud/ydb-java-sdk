@@ -1,0 +1,35 @@
+PRAGMA TablePathPrefix("<TABLE_PREFIX>");
+
+DECLARE $limit AS Uint64;
+DECLARE $lastSeriesId AS Uint64;
+DECLARE $lastViews AS Uint64;
+
+$maxUint64 = 0xffffffffffffffff;
+$lastRevViews = $maxUint64 - $lastViews;
+
+$filterRaw = (
+    SELECT rev_views, series_id
+    FROM series_rev_views
+    WHERE rev_views = $lastRevViews AND series_id > $lastSeriesId
+    ORDER BY rev_views, series_id
+    LIMIT $limit
+    UNION ALL
+    SELECT rev_views, series_id
+    FROM series_rev_views
+    WHERE rev_views > $lastRevViews
+    ORDER BY rev_views, series_id
+    LIMIT $limit
+);
+
+-- $filterRaw may have more than $limit rows
+$filter = (
+    SELECT rev_views, series_id
+    FROM $filterRaw
+    ORDER BY rev_views, series_id
+    LIMIT $limit
+);
+
+SELECT t2.series_id AS series_id, title, series_info, release_date, views
+FROM $filter AS t1
+INNER JOIN series AS t2 USING (series_id)
+ORDER BY views DESC, series_id ASC;

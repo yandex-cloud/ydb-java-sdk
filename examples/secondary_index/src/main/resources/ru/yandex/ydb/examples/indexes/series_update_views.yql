@@ -1,0 +1,24 @@
+PRAGMA TablePathPrefix("<TABLE_PREFIX>");
+
+DECLARE $seriesId AS Uint64;
+DECLARE $newViews AS Uint64;
+
+$maxUint64 = 0xffffffffffffffff;
+$newRevViews = $maxUint64 - $newViews;
+
+$data = (
+    SELECT series_id, ($maxUint64 - views) AS old_rev_views
+    FROM series
+    WHERE series_id = $seriesId
+);
+
+UPSERT INTO series
+SELECT series_id, $newViews AS views FROM $data;
+
+DELETE FROM series_rev_views
+ON SELECT old_rev_views AS rev_views, series_id FROM $data;
+
+UPSERT INTO series_rev_views
+SELECT $newRevViews AS rev_views, series_id FROM $data;
+
+SELECT COUNT(*) AS cnt FROM $data;

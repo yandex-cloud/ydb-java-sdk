@@ -1,0 +1,8 @@
+PRAGMA TablePathPrefix("<TABLE_PREFIX>");
+
+DECLARE $limit AS Uint64;
+
+SELECT series_id, title, series_info, release_date, views
+FROM series
+ORDER BY series_id
+LIMIT $limit;

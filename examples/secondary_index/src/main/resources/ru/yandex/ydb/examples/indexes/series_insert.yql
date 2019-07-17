@@ -1,0 +1,18 @@
+PRAGMA TablePathPrefix("<TABLE_PREFIX>");
+
+DECLARE $seriesId AS Uint64;
+DECLARE $title AS Utf8;
+DECLARE $seriesInfo AS Utf8;
+DECLARE $releaseDate AS Uint32;
+DECLARE $views AS Uint64;
+
+-- Simulate a DESC index by inverting views using max(uint64)-views
+$maxUint64 = 0xffffffffffffffff;
+$revViews = $maxUint64 - $views;
+
+INSERT INTO series (series_id, title, series_info, release_date, views)
+VALUES ($seriesId, $title, $seriesInfo, $releaseDate, $views);
+
+-- Insert above already verified series_id is unique, so it is safe to use upsert
+UPSERT INTO series_rev_views (rev_views, series_id)
+VALUES ($revViews, $seriesId);

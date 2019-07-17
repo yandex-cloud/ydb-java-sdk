@@ -1,0 +1,15 @@
+PRAGMA TablePathPrefix("<TABLE_PREFIX>");
+
+DECLARE $limit AS Uint64;
+
+$filter = (
+    SELECT rev_views, series_id
+    FROM series_rev_views
+    ORDER BY rev_views, series_id
+    LIMIT $limit
+);
+
+SELECT t2.series_id AS series_id, title, series_info, release_date, views
+FROM $filter AS t1
+INNER JOIN series AS t2 USING (series_id)
+ORDER BY views DESC, series_id ASC;
