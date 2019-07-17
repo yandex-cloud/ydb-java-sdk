@@ -41,5 +41,5 @@ public abstract class SimpleExample {
         }
     }
 
-    abstract void run(RpcTransport tableService, String pathPrefix);
+    abstract void run(RpcTransport transport, String pathPrefix);
 }

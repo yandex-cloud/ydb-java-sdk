@@ -1,5 +1,7 @@
 package com.yandex.ydb.examples.simple;
 
+import java.time.Duration;
+
 import com.yandex.ydb.core.rpc.RpcTransport;
 import com.yandex.ydb.table.Session;
 import com.yandex.ydb.table.TableClient;
@@ -23,7 +25,7 @@ public class ComplexTransaction extends SimpleExample {
         String prevSessionId;
 
         try (TableClient tableClient = TableClient.newClient(GrpcTableRpc.useTransport(transport)).build()) {
-            Session session = tableClient.getOrCreateSession()
+            Session session = tableClient.getOrCreateSession(Duration.ofSeconds(2))
                 .join()
                 .expect("cannot create session");
 
@@ -94,7 +96,7 @@ public class ComplexTransaction extends SimpleExample {
 
             boolean released = session.release();
             if (released) {
-                Session session2 = tableClient.getOrCreateSession()
+                Session session2 = tableClient.getOrCreateSession(Duration.ofSeconds(2))
                     .join()
                     .expect("cannot get or create session");
 
