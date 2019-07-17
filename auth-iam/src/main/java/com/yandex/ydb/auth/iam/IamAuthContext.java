@@ -34,7 +34,7 @@ import org.asynchttpclient.Request;
  * AuthProvider authProvider = ctx.authProvider("account_id", "key_id", Keys.privateKey(new File("/path/to/pem/file")))
  *      .join(); // await first token refresh synchronously or subscribe on future
  *
- * GrpcTransport transport = GrpcTransportBuilder.forEndpoint("some-ydb-endpoint", "my_db")
+ * GrpcTransport transport = GrpcTransport.forEndpoint("some-ydb-endpoint", "my_db")
  *      .withAuthProvider(authProvider)
  *      .build();
  *

@@ -1,7 +1,6 @@
 package com.yandex.ydb.examples.simple;
 
 import com.yandex.ydb.core.grpc.GrpcTransport;
-import com.yandex.ydb.core.grpc.GrpcTransportBuilder;
 import com.yandex.ydb.table.Session;
 import com.yandex.ydb.table.TableClient;
 import com.yandex.ydb.table.query.DataQueryResult;
@@ -16,7 +15,7 @@ import com.yandex.ydb.table.transaction.TxControl;
 public class NameResolverExample {
 
     public static void main(String[] args) {
-        GrpcTransport transport = GrpcTransportBuilder.forEndpoint("ydb-ru.yandex.net", "/ru/home/username/mydb")
+        GrpcTransport transport = GrpcTransport.forEndpoint("ydb-ru.yandex.net", "/ru/home/username/mydb")
             .build();
 
         try (TableClient tableClient = TableClient.newClient(GrpcTableRpc.useTransport(transport)).build()) {
