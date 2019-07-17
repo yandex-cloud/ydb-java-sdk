@@ -1,10 +1,11 @@
 package com.yandex.ydb.examples.simple;
 
+import com.yandex.ydb.core.rpc.RpcTransport;
 import com.yandex.ydb.table.Session;
 import com.yandex.ydb.table.TableClient;
-import com.yandex.ydb.table.TableService;
 import com.yandex.ydb.table.description.TableDescription;
 import com.yandex.ydb.table.query.DataQueryResult;
+import com.yandex.ydb.table.rpc.grpc.GrpcTableRpc;
 import com.yandex.ydb.table.transaction.Transaction;
 import com.yandex.ydb.table.transaction.TransactionMode;
 import com.yandex.ydb.table.transaction.TxControl;
@@ -17,11 +18,11 @@ import com.yandex.ydb.table.types.PrimitiveType;
 public class ComplexTransaction extends SimpleExample {
 
     @Override
-    void run(TableService tableService, String pathPrefix) {
+    void run(RpcTransport transport, String pathPrefix) {
         String tablePath = pathPrefix + getClass().getSimpleName();
         String prevSessionId;
 
-        try (TableClient tableClient = tableService.newTableClient()) {
+        try (TableClient tableClient = TableClient.newClient(GrpcTableRpc.useTransport(transport)).build()) {
             Session session = tableClient.getOrCreateSession()
                 .join()
                 .expect("cannot create session");

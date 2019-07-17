@@ -2,16 +2,24 @@ package com.yandex.ydb.table;
 
 import java.util.concurrent.CompletableFuture;
 
+import javax.annotation.WillClose;
+
 import com.yandex.ydb.core.Result;
 import com.yandex.ydb.core.Status;
 import com.yandex.ydb.table.description.DescribePathResult;
 import com.yandex.ydb.table.description.ListDirectoryResult;
+import com.yandex.ydb.table.impl.SchemeClientBuilderImpl;
+import com.yandex.ydb.table.rpc.SchemeRpc;
 
 
 /**
  * @author Sergey Polovko
  */
-public interface SchemeClient {
+public interface SchemeClient extends AutoCloseable {
+
+    static Builder newClient(@WillClose SchemeRpc schemeRpc) {
+        return new SchemeClientBuilderImpl(schemeRpc);
+    }
 
     CompletableFuture<Status> makeDirectory(String path);
 
@@ -21,4 +29,14 @@ public interface SchemeClient {
 
     CompletableFuture<Result<ListDirectoryResult>> listDirectory(String path);
 
+    @Override
+    void close();
+
+    /**
+     * BUILDER
+     */
+    interface Builder {
+
+        SchemeClient build();
+    }
 }

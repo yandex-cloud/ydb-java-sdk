@@ -1,4 +1,4 @@
-package com.yandex.ydb.table.query;
+package com.yandex.ydb.table.impl;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -6,8 +6,10 @@ import java.util.concurrent.CompletableFuture;
 import com.google.common.collect.ImmutableMap;
 import com.yandex.ydb.ValueProtos;
 import com.yandex.ydb.core.Result;
-import com.yandex.ydb.table.OperationsTray;
 import com.yandex.ydb.table.YdbTable;
+import com.yandex.ydb.table.query.DataQuery;
+import com.yandex.ydb.table.query.DataQueryResult;
+import com.yandex.ydb.table.query.Params;
 import com.yandex.ydb.table.rpc.TableRpc;
 import com.yandex.ydb.table.settings.ExecuteDataQuerySettings;
 import com.yandex.ydb.table.transaction.TxControl;
@@ -18,22 +20,20 @@ import com.yandex.ydb.table.types.proto.ProtoType;
 /**
  * @author Sergey Polovko
  */
-public class DataQueryImpl implements DataQuery {
+final class DataQueryImpl implements DataQuery {
 
     private final String sessionId;
     private final TableRpc tableRpc;
-    private final OperationsTray operationsTray;
     private final String queryId;
     private final ImmutableMap<String, Type> types;
     private final ImmutableMap<String, ValueProtos.Type> typesPb;
 
-    public DataQueryImpl(
-        String sessionId, TableRpc tableRpc, OperationsTray operationsTray,
+    DataQueryImpl(
+        String sessionId, TableRpc tableRpc,
         String queryId, Map<String, ValueProtos.Type> parametersTypes)
     {
         this.sessionId = sessionId;
         this.tableRpc = tableRpc;
-        this.operationsTray = operationsTray;
         this.queryId = queryId;
 
         ImmutableMap.Builder<String, Type> types = new ImmutableMap.Builder<>();
@@ -71,7 +71,7 @@ public class DataQueryImpl implements DataQuery {
                 if (!response.isSuccess()) {
                     return CompletableFuture.completedFuture(response.cast());
                 }
-                return operationsTray.waitResult(
+                return tableRpc.getOperationTray().waitResult(
                     response.expect("executeDataQuery()").getOperation(),
                     YdbTable.ExecuteQueryResult.class,
                     DataQueryImpl::mapExecuteDataQuery);

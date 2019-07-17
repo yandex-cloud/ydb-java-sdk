@@ -1,10 +1,11 @@
 package com.yandex.ydb.examples.simple;
 
+import com.yandex.ydb.core.rpc.RpcTransport;
 import com.yandex.ydb.table.Session;
 import com.yandex.ydb.table.TableClient;
-import com.yandex.ydb.table.TableService;
 import com.yandex.ydb.table.query.DataQueryResult;
 import com.yandex.ydb.table.result.ResultSetReader;
+import com.yandex.ydb.table.rpc.grpc.GrpcTableRpc;
 import com.yandex.ydb.table.transaction.TxControl;
 import com.yandex.ydb.table.values.DecimalValue;
 
@@ -15,8 +16,8 @@ import com.yandex.ydb.table.values.DecimalValue;
 public class DecimalExample extends SimpleExample {
 
     @Override
-    void run(TableService tableService, String pathPrefix) {
-        TableClient tableClient = tableService.newTableClient();
+    void run(RpcTransport transport, String pathPrefix) {
+        TableClient tableClient = TableClient.newClient(GrpcTableRpc.useTransport(transport)).build();
 
         Session session = tableClient.createSession()
             .join()

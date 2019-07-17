@@ -1,30 +1,28 @@
-package com.yandex.ydb.table.transaction;
+package com.yandex.ydb.table.impl;
 
 import java.util.concurrent.CompletableFuture;
 
 import com.yandex.ydb.core.Status;
-import com.yandex.ydb.table.OperationsTray;
 import com.yandex.ydb.table.YdbTable;
 import com.yandex.ydb.table.rpc.TableRpc;
 import com.yandex.ydb.table.settings.CommitTxSettings;
 import com.yandex.ydb.table.settings.RollbackTxSettings;
+import com.yandex.ydb.table.transaction.Transaction;
 
 
 /**
  * @author Sergey Polovko
  */
-public class TransactionImpl implements Transaction {
+final class TransactionImpl implements Transaction {
 
     private final String sessionId;
     private final String txId;
     private final TableRpc tableRpc;
-    private final OperationsTray operationsTray;
 
-    public TransactionImpl(String sessionId, String txId, TableRpc tableRpc, OperationsTray operationsTray) {
+    TransactionImpl(String sessionId, String txId, TableRpc tableRpc) {
         this.sessionId = sessionId;
         this.txId = txId;
         this.tableRpc = tableRpc;
-        this.operationsTray = operationsTray;
     }
 
     @Override
@@ -44,7 +42,8 @@ public class TransactionImpl implements Transaction {
                 if (!response.isSuccess()) {
                     return CompletableFuture.completedFuture(response.toStatus());
                 }
-                return operationsTray.waitStatus(response.expect("commitTransaction()").getOperation());
+                return tableRpc.getOperationTray()
+                    .waitStatus(response.expect("commitTransaction()").getOperation());
             });
     }
 
@@ -60,7 +59,8 @@ public class TransactionImpl implements Transaction {
                 if (!response.isSuccess()) {
                     return CompletableFuture.completedFuture(response.toStatus());
                 }
-                return operationsTray.waitStatus(response.expect("rollbackTransaction()").getOperation());
+                return tableRpc.getOperationTray()
+                    .waitStatus(response.expect("rollbackTransaction()").getOperation());
             });
     }
 }

@@ -4,8 +4,6 @@ import java.util.concurrent.Executors;
 
 import com.yandex.ydb.core.grpc.GrpcTransportBuilder;
 import com.yandex.ydb.core.rpc.RpcTransport;
-import com.yandex.ydb.table.TableService;
-import com.yandex.ydb.table.TableServiceBuilder;
 
 
 /**
@@ -33,16 +31,15 @@ public abstract class SimpleExample {
         System.err.println("PATH=" + PATH);
         System.err.println();
 
-        RpcTransport transport = GrpcTransportBuilder.singleHost(HOST, PORT)
+        try (RpcTransport transport = GrpcTransportBuilder.singleHost(HOST, PORT)
             .withExecutorService(Executors.newFixedThreadPool(3))
-            .build();
-
-        try (TableService tableService = TableServiceBuilder.ownTransport(transport).build()) {
-            run(tableService, PATH);
+            .build())
+        {
+            run(transport, PATH);
         } catch (Throwable t) {
             t.printStackTrace();
         }
     }
 
-    abstract void run(TableService tableService, String pathPrefix);
+    abstract void run(RpcTransport tableService, String pathPrefix);
 }

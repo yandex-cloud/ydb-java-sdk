@@ -1,10 +1,16 @@
-package com.yandex.ydb.table;
+package com.yandex.ydb.table.impl;
 
 import java.util.concurrent.CompletableFuture;
 
+import javax.annotation.Nullable;
+
 import com.yandex.ydb.core.Result;
 import com.yandex.ydb.core.Status;
-import com.yandex.ydb.table.SessionImpl.State;
+import com.yandex.ydb.core.rpc.OperationTray;
+import com.yandex.ydb.table.Session;
+import com.yandex.ydb.table.TableClient;
+import com.yandex.ydb.table.YdbTable;
+import com.yandex.ydb.table.impl.SessionImpl.State;
 import com.yandex.ydb.table.rpc.TableRpc;
 import com.yandex.ydb.table.settings.CreateSessionSettings;
 
@@ -15,13 +21,16 @@ import com.yandex.ydb.table.settings.CreateSessionSettings;
 final class TableClientImpl implements TableClient {
 
     private final TableRpc tableRpc;
-    private final OperationsTray operationsTray;
+    @Nullable
     private final SessionPool sessionPool;
+    private final OperationTray operationTray;
 
-    TableClientImpl(TableRpc tableRpc, OperationsTray operationsTray, SessionPool sessionPool) {
-        this.tableRpc = tableRpc;
-        this.operationsTray = operationsTray;
-        this.sessionPool = sessionPool;
+    TableClientImpl(TableClientBuilderImpl builder) {
+        this.tableRpc = builder.tableRpc;
+        this.sessionPool = builder.sessionPoolOptions.getMaxSize() != 0
+            ? new SessionPool(builder.sessionPoolOptions)
+            : null;
+        this.operationTray = tableRpc.getOperationTray();
     }
 
     @Override
@@ -38,7 +47,7 @@ final class TableClientImpl implements TableClient {
                 if (!response.isSuccess()) {
                     return CompletableFuture.completedFuture(response.cast());
                 }
-                return operationsTray.waitResult(
+                return operationTray.waitResult(
                     response.expect("createSession()").getOperation(),
                     YdbTable.CreateSessionResult.class,
                     result -> mapSessionResult(result, initialState));
@@ -46,18 +55,18 @@ final class TableClientImpl implements TableClient {
     }
 
     private Session mapSessionResult(YdbTable.CreateSessionResult result, State initialState) {
-        if (initialState == State.STANDALONE) {
-            return new SessionImpl(result.getSessionId(), tableRpc, operationsTray);
+        if (sessionPool == null || initialState == State.STANDALONE) {
+            return new SessionImpl(result.getSessionId(), tableRpc);
         }
 
-        SessionImpl session = sessionPool.newSession(result.getSessionId(), tableRpc, operationsTray);
+        SessionImpl session = sessionPool.newSession(result.getSessionId(), tableRpc);
         session.switchState(State.STANDALONE, initialState);
         return session;
     }
 
     @Override
     public CompletableFuture<Result<Session>> getOrCreateSession(CreateSessionSettings settings) {
-        if (sessionPool.getLimit() == 0) {
+        if (sessionPool == null) {
             return createSession(settings);
         }
         return sessionPool.getOrSession(() -> createSessionImpl(settings, State.IN_USE));
@@ -65,7 +74,7 @@ final class TableClientImpl implements TableClient {
 
     @Override
     public CompletableFuture<Status> releaseSession(Session session) {
-        if (sessionPool.releaseSession(session)) {
+        if (sessionPool != null && sessionPool.releaseSession(session)) {
             return CompletableFuture.completedFuture(Status.SUCCESS);
         }
 
@@ -74,8 +83,11 @@ final class TableClientImpl implements TableClient {
 
     @Override
     public void close() {
-        for (Session session : sessionPool.close()) {
-            session.close();
+        if (sessionPool != null) {
+            for (Session session : sessionPool.close()) {
+                session.close();
+            }
         }
+        tableRpc.close();
     }
 }

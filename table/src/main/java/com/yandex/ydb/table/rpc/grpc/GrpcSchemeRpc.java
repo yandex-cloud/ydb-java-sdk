@@ -4,9 +4,12 @@ import java.util.concurrent.CompletableFuture;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import javax.annotation.WillClose;
+import javax.annotation.WillNotClose;
 
 import com.yandex.ydb.core.Result;
 import com.yandex.ydb.core.grpc.GrpcTransport;
+import com.yandex.ydb.core.rpc.OperationTray;
 import com.yandex.ydb.core.rpc.RpcTransport;
 import com.yandex.ydb.scheme.v1.SchemeServiceGrpc;
 import com.yandex.ydb.table.rpc.SchemeRpc;
@@ -28,15 +31,25 @@ import static com.yandex.ydb.scheme.SchemeOperationProtos.RemoveDirectoryRespons
 public final class GrpcSchemeRpc implements SchemeRpc {
 
     private final GrpcTransport transport;
+    private final boolean transportOwned;
 
-    private GrpcSchemeRpc(GrpcTransport transport) {
+    private GrpcSchemeRpc(GrpcTransport transport, boolean transportOwned) {
         this.transport = transport;
+        this.transportOwned = transportOwned;
     }
 
     @Nullable
-    public static GrpcSchemeRpc create(RpcTransport transport) {
+    public static GrpcSchemeRpc useTransport(@WillNotClose RpcTransport transport) {
         if (transport instanceof GrpcTransport) {
-            return new GrpcSchemeRpc((GrpcTransport) transport);
+            return new GrpcSchemeRpc((GrpcTransport) transport, false);
+        }
+        return null;
+    }
+
+    @Nullable
+    public static GrpcSchemeRpc ownTransport(@WillClose RpcTransport transport) {
+        if (transport instanceof GrpcTransport) {
+            return new GrpcSchemeRpc((GrpcTransport) transport, true);
         }
         return null;
     }
@@ -62,7 +75,14 @@ public final class GrpcSchemeRpc implements SchemeRpc {
     }
 
     @Override
+    public OperationTray getOperationTray() {
+        return transport.getOperationTray();
+    }
+
+    @Override
     public void close() {
-        // nop
+        if (transportOwned) {
+            transport.close();
+        }
     }
 }

@@ -5,6 +5,8 @@ package com.yandex.ydb.core.rpc;
  */
 public interface RpcTransport extends AutoCloseable {
 
+    OperationTray getOperationTray();
+
     @Override
     void close();
 }

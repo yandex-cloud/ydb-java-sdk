@@ -3,17 +3,18 @@ package com.yandex.ydb.examples.pagination;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.yandex.ydb.core.rpc.RpcTransport;
 import com.yandex.ydb.examples.App;
 import com.yandex.ydb.examples.AppRunner;
 import com.yandex.ydb.examples.pagination.model.School;
 import com.yandex.ydb.table.Session;
 import com.yandex.ydb.table.TableClient;
-import com.yandex.ydb.table.TableService;
 import com.yandex.ydb.table.description.TableColumn;
 import com.yandex.ydb.table.description.TableDescription;
 import com.yandex.ydb.table.query.DataQueryResult;
 import com.yandex.ydb.table.query.Params;
 import com.yandex.ydb.table.result.ResultSetReader;
+import com.yandex.ydb.table.rpc.grpc.GrpcTableRpc;
 import com.yandex.ydb.table.transaction.TxControl;
 import com.yandex.ydb.table.types.ListType;
 import com.yandex.ydb.table.types.PrimitiveType;
@@ -34,12 +35,13 @@ public class PaginationApp implements App {
     private static final int MAX_PAGES = 10;
 
     private final String path;
+    private final TableClient tableClient;
     private final Session session;
 
-    PaginationApp(TableService tableService, String path) {
+    PaginationApp(RpcTransport transport, String path) {
         this.path = path;
-
-        TableClient tableClient = tableService.newTableClient();
+        this.tableClient = TableClient.newClient(GrpcTableRpc.useTransport(transport))
+            .build();
         this.session = tableClient.createSession()
             .join()
             .expect("cannot create session");
@@ -190,6 +192,7 @@ public class PaginationApp implements App {
     @Override
     public void close() {
         session.close();
+        tableClient.close();
     }
 
     public static void main(String[] args) {

@@ -1,4 +1,4 @@
-package com.yandex.ydb.table;
+package com.yandex.ydb.table.impl;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -9,6 +9,7 @@ import com.yandex.ydb.scheme.SchemeOperationProtos.DescribePathRequest;
 import com.yandex.ydb.scheme.SchemeOperationProtos.ListDirectoryRequest;
 import com.yandex.ydb.scheme.SchemeOperationProtos.MakeDirectoryRequest;
 import com.yandex.ydb.scheme.SchemeOperationProtos.RemoveDirectoryRequest;
+import com.yandex.ydb.table.SchemeClient;
 import com.yandex.ydb.table.description.DescribePathResult;
 import com.yandex.ydb.table.description.ListDirectoryResult;
 import com.yandex.ydb.table.rpc.SchemeRpc;
@@ -20,11 +21,9 @@ import com.yandex.ydb.table.rpc.SchemeRpc;
 final class SchemeClientImpl implements SchemeClient {
 
     private final SchemeRpc schemeRpc;
-    private final OperationsTray operationsTray;
 
-    SchemeClientImpl(SchemeRpc schemeRpc, OperationsTray operationsTray) {
-        this.schemeRpc = schemeRpc;
-        this.operationsTray = operationsTray;
+    SchemeClientImpl(SchemeClientBuilderImpl builder) {
+        this.schemeRpc = builder.schemeRpc;
     }
 
     @Override
@@ -37,7 +36,8 @@ final class SchemeClientImpl implements SchemeClient {
                 if (!response.isSuccess()) {
                     return CompletableFuture.completedFuture(response.toStatus());
                 }
-                return operationsTray.waitStatus(response.expect("makeDirectory()").getOperation());
+                return schemeRpc.getOperationTray()
+                    .waitStatus(response.expect("makeDirectory()").getOperation());
             });
     }
 
@@ -51,7 +51,8 @@ final class SchemeClientImpl implements SchemeClient {
                 if (!response.isSuccess()) {
                     return CompletableFuture.completedFuture(response.toStatus());
                 }
-                return operationsTray.waitStatus(response.expect("removeDirectory()").getOperation());
+                return schemeRpc.getOperationTray()
+                    .waitStatus(response.expect("removeDirectory()").getOperation());
             });
     }
 
@@ -65,7 +66,7 @@ final class SchemeClientImpl implements SchemeClient {
                 if (!response.isSuccess()) {
                     return CompletableFuture.completedFuture(response.cast());
                 }
-                return operationsTray.waitResult(
+                return schemeRpc.getOperationTray().waitResult(
                     response.expect("describePath()").getOperation(),
                     SchemeOperationProtos.DescribePathResult.class,
                     result -> new DescribePathResult(result.getSelf()));
@@ -82,10 +83,15 @@ final class SchemeClientImpl implements SchemeClient {
                 if (!response.isSuccess()) {
                     return CompletableFuture.completedFuture(response.cast());
                 }
-                return operationsTray.waitResult(
+                return schemeRpc.getOperationTray().waitResult(
                     response.expect("describeDirectory()").getOperation(),
                     SchemeOperationProtos.ListDirectoryResult.class,
                     result -> new ListDirectoryResult(result.getSelf(), result.getChildrenList()));
             });
+    }
+
+    @Override
+    public void close() {
+        schemeRpc.close();
     }
 }

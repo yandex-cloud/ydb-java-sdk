@@ -2,10 +2,8 @@ package com.yandex.ydb.examples;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.yandex.ydb.core.grpc.GrpcTransport;
 import com.yandex.ydb.core.grpc.GrpcTransportBuilder;
-import com.yandex.ydb.core.rpc.RpcTransport;
-import com.yandex.ydb.table.TableService;
-import com.yandex.ydb.table.TableServiceBuilder;
 
 
 /**
@@ -47,13 +45,12 @@ public class AppRunner {
             System.exit(1);
         }
 
-        RpcTransport transport = GrpcTransportBuilder.forEndpoint(args.endpoint, args.database)
-            .withAuthToken(ydbToken)
-            .build();
-
-        try (TableService tableService = TableServiceBuilder.ownTransport(transport).build()) {
+        try (GrpcTransport transport = GrpcTransportBuilder.forEndpoint(args.endpoint, args.database)
+                .withAuthToken(ydbToken)
+                .build())
+        {
             String path = args.path == null ? args.database : args.path;
-            try (App example = appFactory.newApp(tableService, path)) {
+            try (App example = appFactory.newApp(transport, path)) {
                 example.run();
             } catch (Throwable t) {
                 t.printStackTrace();

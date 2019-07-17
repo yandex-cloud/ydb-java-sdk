@@ -2,10 +2,11 @@ package com.yandex.ydb.examples.simple;
 
 import java.util.UUID;
 
+import com.yandex.ydb.core.rpc.RpcTransport;
 import com.yandex.ydb.table.SchemeClient;
-import com.yandex.ydb.table.TableService;
 import com.yandex.ydb.table.description.DescribePathResult;
 import com.yandex.ydb.table.description.ListDirectoryResult;
+import com.yandex.ydb.table.rpc.grpc.GrpcSchemeRpc;
 
 
 /**
@@ -14,9 +15,9 @@ import com.yandex.ydb.table.description.ListDirectoryResult;
 public class Scheme extends SimpleExample {
 
     @Override
-    void run(TableService tableService, String pathPrefix) {
+    void run(RpcTransport transport, String pathPrefix) {
         String directoryPath = pathPrefix + UUID.randomUUID().toString();
-        SchemeClient schemeClient = tableService.newSchemeClient();
+        SchemeClient schemeClient = SchemeClient.newClient(GrpcSchemeRpc.useTransport(transport)).build();
 
         schemeClient.makeDirectory(directoryPath)
             .join()

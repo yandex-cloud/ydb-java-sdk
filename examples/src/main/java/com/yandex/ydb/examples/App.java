@@ -1,6 +1,6 @@
 package com.yandex.ydb.examples;
 
-import com.yandex.ydb.table.TableService;
+import com.yandex.ydb.core.rpc.RpcTransport;
 
 
 /**
@@ -14,6 +14,6 @@ public interface App extends AutoCloseable {
     void close();
 
     interface Factory {
-        App newApp(TableService tableService, String path);
+        App newApp(RpcTransport transport, String path);
     }
 }

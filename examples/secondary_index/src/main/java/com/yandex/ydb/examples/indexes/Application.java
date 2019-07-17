@@ -9,8 +9,7 @@ import com.yandex.ydb.core.rpc.RpcTransport;
 import com.yandex.ydb.examples.indexes.configuration.IndexesConfigurationProperties;
 import com.yandex.ydb.examples.indexes.repositories.SeriesRepository;
 import com.yandex.ydb.table.TableClient;
-import com.yandex.ydb.table.TableService;
-import com.yandex.ydb.table.TableServiceBuilder;
+import com.yandex.ydb.table.rpc.grpc.GrpcTableRpc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -31,7 +30,7 @@ public class Application {
         return Executors.newScheduledThreadPool(1);
     }
 
-    @Bean
+    @Bean(destroyMethod = "close")
     RpcTransport rpcTransport(IndexesConfigurationProperties properties, ExecutorService grpcExecutor) {
         String endpoint = properties.getEndpoint();
         String database = properties.getDatabase();
@@ -49,13 +48,9 @@ public class Application {
     }
 
     @Bean
-    TableService tableService(RpcTransport rpcTransport) {
-        return TableServiceBuilder.useTransport(rpcTransport).build();
-    }
-
-    @Bean
-    TableClient tableClient(TableService tableService) {
-        return tableService.newTableClient();
+    TableClient tableClient(RpcTransport transport) {
+        return TableClient.newClient(GrpcTableRpc.useTransport(transport))
+            .build();
     }
 
     @Bean
