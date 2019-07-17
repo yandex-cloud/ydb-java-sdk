@@ -5,4 +5,14 @@ package com.yandex.ydb.table.settings;
  */
 public class PrepareDataQuerySettings extends RequestSettings<PrepareDataQuerySettings> {
 
+    private boolean keepInQueryCache = false;
+
+    public boolean isKeepInQueryCache() {
+        return keepInQueryCache;
+    }
+
+    public PrepareDataQuerySettings keepInQueryCache() {
+        keepInQueryCache = true;
+        return this;
+    }
 }
