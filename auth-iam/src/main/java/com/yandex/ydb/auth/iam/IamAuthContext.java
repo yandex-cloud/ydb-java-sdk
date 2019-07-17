@@ -31,10 +31,10 @@ import org.asynchttpclient.Request;
  *
  * <pre>{@code
  * IamAuthContext ctx = new IamAuthContext();
- * AuthProvider authProvider = ctx.authProvider("account_id", "key_id", Keys.privateKey("/path/to/pem/file"))
+ * AuthProvider authProvider = ctx.authProvider("account_id", "key_id", Keys.privateKey(new File("/path/to/pem/file")))
  *      .join(); // await first token refresh synchronously or subscribe on future
  *
- * GrpcTransport transport = GrpcTransportBuilder.forEndpoint("ydb://some-ydb-endpoint", "my_db")
+ * GrpcTransport transport = GrpcTransportBuilder.forEndpoint("some-ydb-endpoint", "my_db")
  *      .withAuthProvider(authProvider)
  *      .build();
  *
