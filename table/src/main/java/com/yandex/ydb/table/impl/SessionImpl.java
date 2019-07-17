@@ -42,6 +42,7 @@ import com.yandex.ydb.table.transaction.Transaction;
 import com.yandex.ydb.table.transaction.TransactionMode;
 import com.yandex.ydb.table.transaction.TxControl;
 import com.yandex.ydb.table.types.proto.ProtoType;
+import com.yandex.ydb.table.values.TypedValue;
 
 
 /**
@@ -138,8 +139,14 @@ class SessionImpl implements Session {
                 if (policy.getAutoPartitioning() != null) {
                     policyProto.setAutoPartitioning(toPb(policy.getAutoPartitioning()));
                 }
+
                 if (policy.getUniformPartitions() > 0) {
                     policyProto.setUniformPartitions(policy.getUniformPartitions());
+                } else if (policy.getExplicitPartitioningPoints() != null) {
+                    YdbTable.ExplicitPartitions.Builder b = policyProto.getExplicitPartitionsBuilder();
+                    for (TypedValue<?> p : policy.getExplicitPartitioningPoints()) {
+                        b.addSplitPoints(p.toPb());
+                    }
                 }
             }
         }
