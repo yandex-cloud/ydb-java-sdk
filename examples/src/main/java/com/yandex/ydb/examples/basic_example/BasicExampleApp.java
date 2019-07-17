@@ -31,7 +31,6 @@ import com.yandex.ydb.table.rpc.grpc.GrpcTableRpc;
 import com.yandex.ydb.table.transaction.Transaction;
 import com.yandex.ydb.table.transaction.TransactionMode;
 import com.yandex.ydb.table.transaction.TxControl;
-import com.yandex.ydb.table.values.ListType;
 import com.yandex.ydb.table.values.PrimitiveType;
 
 import static com.yandex.ydb.table.values.PrimitiveValue.date;
@@ -193,10 +192,10 @@ public class BasicExampleApp implements App {
             "FROM AS_TABLE($episodesData);",
             path);
 
-        Params params = Params.withUnknownTypes()
-            .put("$seriesData", ListType.of(SeriesData.SERIES_TYPE), SeriesData.SERIES_DATA)
-            .put("$seasonsData", ListType.of(SeriesData.SEASON_TYPE), SeriesData.SEASON_DATA)
-            .put("$episodesData", ListType.of(SeriesData.EPISODE_TYPE), SeriesData.EPISODE_DATA);
+        Params params = Params.of(
+            "$seriesData", SeriesData.SERIES_DATA,
+            "$seasonsData", SeriesData.SEASON_DATA,
+            "$episodesData", SeriesData.EPISODE_DATA);
 
         TxControl txControl = TxControl.serializableRw().setCommitTx(true);
 
@@ -269,9 +268,7 @@ public class BasicExampleApp implements App {
         TxControl txControl = TxControl.serializableRw().setCommitTx(true);
 
         // Type of parameter values should be exactly the same as in DECLARE statements.
-        Params params = Params.withUnknownTypes()
-            .put("$seriesId", uint64(2))
-            .put("$seasonId", uint64(3));
+        Params params = Params.of("$seriesId", uint64(2), "$seasonId", uint64(3));
 
         DataQueryResult result = executeWithResult(session -> session.executeDataQuery(query, txControl, params).join());
 
@@ -343,9 +340,7 @@ public class BasicExampleApp implements App {
                 "WHERE series_id = $seriesId AND season_id = $seasonId;",
                 path);
 
-            Params params = Params.withUnknownTypes()
-                .put("$seriesId", uint64(seriesId))
-                .put("$seasonId", uint64(seasonId));
+            Params params = Params.of("$seriesId", uint64(seriesId), "$seasonId", uint64(seasonId));
 
             // Execute first query to get the required values to the client.
             // Transaction control settings don't set CommitTx flag to keep transaction active
@@ -382,10 +377,10 @@ public class BasicExampleApp implements App {
                 "WHERE series_id = $seriesId AND air_date >= $fromDate AND air_date <= $toDate;",
                 path);
 
-            Params params = Params.withUnknownTypes()
-                .put("$seriesId", uint64(seriesId))
-                .put("$fromDate", uint64(Duration.between(Instant.EPOCH, fromDate).toDays()))
-                .put("$toDate", uint64(Duration.between(Instant.EPOCH, toDate).toDays()));
+            Params params = Params.of(
+                "$seriesId", uint64(seriesId),
+                "$fromDate", uint64(Duration.between(Instant.EPOCH, fromDate).toDays()),
+                "$toDate", uint64(Duration.between(Instant.EPOCH, toDate).toDays()));
 
             // Execute second query.
             // Transaction control settings continues active transaction (tx) and
@@ -419,8 +414,7 @@ public class BasicExampleApp implements App {
             "UPDATE episodes SET air_date = DateTime::ToDays($airDate) WHERE title = \"TBD\";",
             path);
 
-        Params params = Params.withUnknownTypes()
-            .put("$airDate", date(Instant.now()));
+        Params params = Params.of("$airDate", date(Instant.now()));
 
         // Execute data query.
         // Transaction control settings continues active transaction (tx)

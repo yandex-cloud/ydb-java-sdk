@@ -16,7 +16,6 @@ import com.yandex.ydb.table.query.Params;
 import com.yandex.ydb.table.result.ResultSetReader;
 import com.yandex.ydb.table.rpc.grpc.GrpcTableRpc;
 import com.yandex.ydb.table.transaction.TxControl;
-import com.yandex.ydb.table.values.ListType;
 import com.yandex.ydb.table.values.PrimitiveType;
 
 import static com.yandex.ydb.table.values.PrimitiveValue.uint32;
@@ -135,9 +134,7 @@ public class PaginationApp implements App {
             "FROM AS_TABLE($schoolsData);",
             path);
 
-        Params params = Params.withUnknownTypes()
-            .put("$schoolsData", ListType.of(PaginationData.SCHOOL_TYPE), PaginationData.SCHOOL_DATA);
-
+        Params params = Params.of("$schoolsData", PaginationData.SCHOOL_DATA);
         TxControl txControl = TxControl.serializableRw().setCommitTx(true);
 
         session.executeDataQuery(query, txControl, params)
@@ -167,10 +164,10 @@ public class PaginationApp implements App {
             "SELECT * FROM $Data ORDER BY city, number LIMIT $limit;",
             path);
 
-        Params params = Params.withUnknownTypes()
-            .put("$limit", uint64(limit))
-            .put("$lastCity", utf8(lastSchool.getCity()))
-            .put("$lastNumber", uint32(lastSchool.getNumber()));
+        Params params = Params.of(
+            "$limit", uint64(limit),
+            "$lastCity", utf8(lastSchool.getCity()),
+            "$lastNumber", uint32(lastSchool.getNumber()));
 
         TxControl txControl = TxControl.serializableRw().setCommitTx(true);
 

@@ -96,8 +96,7 @@ public class BasicWorkflow extends SimpleExample {
             DataQuery query = makePreparedQuery(session,
                     "DECLARE $id AS Uint32; SELECT id, security FROM [" + tablePath + "] where id=$id;");
 
-            Params params = Params.withUnknownTypes()
-                .put("$id", uint32(1));
+            Params params = Params.of("$id", uint32(1));
 
             DataQueryResult result = query.execute(TxControl.serializableRw().setCommitTx(true), params)
                 .join()
