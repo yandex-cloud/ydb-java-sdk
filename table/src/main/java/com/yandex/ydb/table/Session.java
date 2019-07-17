@@ -19,6 +19,7 @@ import com.yandex.ydb.table.settings.DropTableSettings;
 import com.yandex.ydb.table.settings.ExecuteDataQuerySettings;
 import com.yandex.ydb.table.settings.ExecuteSchemeQuerySettings;
 import com.yandex.ydb.table.settings.ExplainDataQuerySettings;
+import com.yandex.ydb.table.settings.KeepAliveSessionSettings;
 import com.yandex.ydb.table.settings.PrepareDataQuerySettings;
 import com.yandex.ydb.table.transaction.Transaction;
 import com.yandex.ydb.table.transaction.TransactionMode;
@@ -99,6 +100,14 @@ public interface Session {
     default CompletableFuture<Result<Transaction>> beginTransaction(TransactionMode transactionMode) {
         return beginTransaction(transactionMode, new BeginTxSettings());
     }
+
+    CompletableFuture<Result<SessionStatus>> keepAlive(KeepAliveSessionSettings settings);
+
+    default CompletableFuture<Result<SessionStatus>> keepAlive() {
+        return keepAlive(new KeepAliveSessionSettings());
+    }
+
+    boolean release();
 
     CompletableFuture<Status> close(CloseSessionSettings settings);
 

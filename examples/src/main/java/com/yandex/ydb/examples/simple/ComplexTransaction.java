@@ -92,16 +92,21 @@ public class ComplexTransaction extends SimpleExample {
                 System.out.println("------------------------------");
             }
 
-            tableClient.releaseSession(session)
-                .join()
-                .expect("cannot release session");
+            boolean released = session.release();
+            if (released) {
+                Session session2 = tableClient.getOrCreateSession()
+                    .join()
+                    .expect("cannot get or create session");
 
-            Session session2 = tableClient.getOrCreateSession()
-                .join()
-                .expect("cannot get or create session");
+                if (!prevSessionId.equals(session2.getId())) {
+                    throw new IllegalStateException("get non pooled session");
+                }
 
-            if (!prevSessionId.equals(session2.getId())) {
-                throw new IllegalStateException("get non pooled session");
+                session2.release();
+            } else {
+                session.close()
+                    .join()
+                    .expect("cannot close session");
             }
         }
     }

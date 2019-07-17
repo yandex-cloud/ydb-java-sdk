@@ -5,6 +5,8 @@ import com.yandex.ydb.StatusCodesProtos.StatusIds;
 import static com.yandex.ydb.core.Constants.INTERNAL_CLIENT_FIRST;
 import static com.yandex.ydb.core.Constants.SERVER_STATUSES_FIRST;
 import static com.yandex.ydb.core.Constants.TRANSPORT_STATUSES_FIRST;
+import static com.yandex.ydb.core.Constants.TRANSPORT_STATUSES_LAST;
+
 
 /**
  * @author Sergey Polovko
@@ -58,6 +60,10 @@ public enum StatusCode {
 
     public int getCode() {
         return code;
+    }
+
+    public boolean isTransportError() {
+        return code >= TRANSPORT_STATUSES_FIRST && code <= TRANSPORT_STATUSES_LAST;
     }
 
     public static StatusCode fromProto(StatusIds.StatusCode code) {
