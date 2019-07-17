@@ -73,30 +73,30 @@ public interface SessionResponseOrBuilder extends
   com.yandex.ydb.coordination.SessionResponse.SessionStoppedOrBuilder getSessionStoppedOrBuilder();
 
   /**
-   * <code>.Ydb.Coordination.SessionResponse.JobStart job_start = 6;</code>
+   * <code>.Ydb.Coordination.Unsupported unsupported_6 = 6;</code>
    */
-  boolean hasJobStart();
+  boolean hasUnsupported6();
   /**
-   * <code>.Ydb.Coordination.SessionResponse.JobStart job_start = 6;</code>
+   * <code>.Ydb.Coordination.Unsupported unsupported_6 = 6;</code>
    */
-  com.yandex.ydb.coordination.SessionResponse.JobStart getJobStart();
+  com.yandex.ydb.coordination.Unsupported getUnsupported6();
   /**
-   * <code>.Ydb.Coordination.SessionResponse.JobStart job_start = 6;</code>
+   * <code>.Ydb.Coordination.Unsupported unsupported_6 = 6;</code>
    */
-  com.yandex.ydb.coordination.SessionResponse.JobStartOrBuilder getJobStartOrBuilder();
+  com.yandex.ydb.coordination.UnsupportedOrBuilder getUnsupported6OrBuilder();
 
   /**
-   * <code>.Ydb.Coordination.SessionResponse.JobStop job_stop = 7;</code>
+   * <code>.Ydb.Coordination.Unsupported unsupported_7 = 7;</code>
    */
-  boolean hasJobStop();
+  boolean hasUnsupported7();
   /**
-   * <code>.Ydb.Coordination.SessionResponse.JobStop job_stop = 7;</code>
+   * <code>.Ydb.Coordination.Unsupported unsupported_7 = 7;</code>
    */
-  com.yandex.ydb.coordination.SessionResponse.JobStop getJobStop();
+  com.yandex.ydb.coordination.Unsupported getUnsupported7();
   /**
-   * <code>.Ydb.Coordination.SessionResponse.JobStop job_stop = 7;</code>
+   * <code>.Ydb.Coordination.Unsupported unsupported_7 = 7;</code>
    */
-  com.yandex.ydb.coordination.SessionResponse.JobStopOrBuilder getJobStopOrBuilder();
+  com.yandex.ydb.coordination.UnsupportedOrBuilder getUnsupported7OrBuilder();
 
   /**
    * <code>.Ydb.Coordination.SessionResponse.AcquireSemaphorePending acquire_semaphore_pending = 8;</code>
@@ -203,43 +203,43 @@ public interface SessionResponseOrBuilder extends
   com.yandex.ydb.coordination.SessionResponse.DeleteSemaphoreResultOrBuilder getDeleteSemaphoreResultOrBuilder();
 
   /**
-   * <code>.Ydb.Coordination.SessionResponse.CreateTaskResult create_task_result = 16;</code>
+   * <code>.Ydb.Coordination.Unsupported unsupported_16 = 16;</code>
    */
-  boolean hasCreateTaskResult();
+  boolean hasUnsupported16();
   /**
-   * <code>.Ydb.Coordination.SessionResponse.CreateTaskResult create_task_result = 16;</code>
+   * <code>.Ydb.Coordination.Unsupported unsupported_16 = 16;</code>
    */
-  com.yandex.ydb.coordination.SessionResponse.CreateTaskResult getCreateTaskResult();
+  com.yandex.ydb.coordination.Unsupported getUnsupported16();
   /**
-   * <code>.Ydb.Coordination.SessionResponse.CreateTaskResult create_task_result = 16;</code>
+   * <code>.Ydb.Coordination.Unsupported unsupported_16 = 16;</code>
    */
-  com.yandex.ydb.coordination.SessionResponse.CreateTaskResultOrBuilder getCreateTaskResultOrBuilder();
+  com.yandex.ydb.coordination.UnsupportedOrBuilder getUnsupported16OrBuilder();
 
   /**
-   * <code>.Ydb.Coordination.SessionResponse.UpdateTaskResult update_task_result = 17;</code>
+   * <code>.Ydb.Coordination.Unsupported unsupported_17 = 17;</code>
    */
-  boolean hasUpdateTaskResult();
+  boolean hasUnsupported17();
   /**
-   * <code>.Ydb.Coordination.SessionResponse.UpdateTaskResult update_task_result = 17;</code>
+   * <code>.Ydb.Coordination.Unsupported unsupported_17 = 17;</code>
    */
-  com.yandex.ydb.coordination.SessionResponse.UpdateTaskResult getUpdateTaskResult();
+  com.yandex.ydb.coordination.Unsupported getUnsupported17();
   /**
-   * <code>.Ydb.Coordination.SessionResponse.UpdateTaskResult update_task_result = 17;</code>
+   * <code>.Ydb.Coordination.Unsupported unsupported_17 = 17;</code>
    */
-  com.yandex.ydb.coordination.SessionResponse.UpdateTaskResultOrBuilder getUpdateTaskResultOrBuilder();
+  com.yandex.ydb.coordination.UnsupportedOrBuilder getUnsupported17OrBuilder();
 
   /**
-   * <code>.Ydb.Coordination.SessionResponse.DeleteTaskResult delete_task_result = 18;</code>
+   * <code>.Ydb.Coordination.Unsupported unsupported_18 = 18;</code>
    */
-  boolean hasDeleteTaskResult();
+  boolean hasUnsupported18();
   /**
-   * <code>.Ydb.Coordination.SessionResponse.DeleteTaskResult delete_task_result = 18;</code>
+   * <code>.Ydb.Coordination.Unsupported unsupported_18 = 18;</code>
    */
-  com.yandex.ydb.coordination.SessionResponse.DeleteTaskResult getDeleteTaskResult();
+  com.yandex.ydb.coordination.Unsupported getUnsupported18();
   /**
-   * <code>.Ydb.Coordination.SessionResponse.DeleteTaskResult delete_task_result = 18;</code>
+   * <code>.Ydb.Coordination.Unsupported unsupported_18 = 18;</code>
    */
-  com.yandex.ydb.coordination.SessionResponse.DeleteTaskResultOrBuilder getDeleteTaskResultOrBuilder();
+  com.yandex.ydb.coordination.UnsupportedOrBuilder getUnsupported18OrBuilder();
 
   public com.yandex.ydb.coordination.SessionResponse.ResponseCase getResponseCase();
 }
