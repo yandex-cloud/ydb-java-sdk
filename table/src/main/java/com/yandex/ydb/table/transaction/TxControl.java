@@ -9,7 +9,7 @@ import com.yandex.ydb.table.YdbTable;
  */
 public abstract class TxControl<Self extends TxControl> {
 
-    private boolean commitTx;
+    private boolean commitTx = true;
 
     public static TxControl id(String id) {
         return new TxId(id);
