@@ -3,23 +3,31 @@ package com.yandex.ydb.table.impl;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
+import com.yandex.ydb.StatusCodesProtos.StatusIds;
 import com.yandex.ydb.ValueProtos;
+import com.yandex.ydb.core.Issue;
 import com.yandex.ydb.core.Result;
 import com.yandex.ydb.core.Status;
 import com.yandex.ydb.core.StatusCode;
 import com.yandex.ydb.core.rpc.OperationTray;
+import com.yandex.ydb.core.rpc.StreamObserver;
 import com.yandex.ydb.table.Session;
 import com.yandex.ydb.table.SessionStatus;
 import com.yandex.ydb.table.YdbTable;
+import com.yandex.ydb.table.YdbTable.ReadTableRequest;
+import com.yandex.ydb.table.YdbTable.ReadTableResponse;
 import com.yandex.ydb.table.description.TableColumn;
 import com.yandex.ydb.table.description.TableDescription;
 import com.yandex.ydb.table.query.DataQuery;
 import com.yandex.ydb.table.query.DataQueryResult;
 import com.yandex.ydb.table.query.ExplainDataQueryResult;
 import com.yandex.ydb.table.query.Params;
+import com.yandex.ydb.table.result.ResultSetReader;
+import com.yandex.ydb.table.result.impl.ProtoValueReaders;
 import com.yandex.ydb.table.rpc.TableRpc;
 import com.yandex.ydb.table.settings.AlterTableSettings;
 import com.yandex.ydb.table.settings.AutoPartitioningPolicy;
@@ -36,6 +44,7 @@ import com.yandex.ydb.table.settings.ExplainDataQuerySettings;
 import com.yandex.ydb.table.settings.KeepAliveSessionSettings;
 import com.yandex.ydb.table.settings.PartitioningPolicy;
 import com.yandex.ydb.table.settings.PrepareDataQuerySettings;
+import com.yandex.ydb.table.settings.ReadTableSettings;
 import com.yandex.ydb.table.settings.RollbackTxSettings;
 import com.yandex.ydb.table.settings.StoragePolicy;
 import com.yandex.ydb.table.transaction.Transaction;
@@ -454,6 +463,70 @@ class SessionImpl implements Session {
                     YdbTable.BeginTransactionResult.class,
                     result -> new TransactionImpl(this, result.getTxMeta().getId()));
             }));
+    }
+
+    @Override
+    public CompletableFuture<Status> readTable(String tablePath, ReadTableSettings settings, Consumer<ResultSetReader> fn) {
+        ReadTableRequest.Builder request = ReadTableRequest.newBuilder()
+            .setSessionId(id)
+            .setPath(tablePath)
+            .setOrdered(settings.isOrdered())
+            .setRowLimit(settings.getRowLimit());
+
+        TypedValue fromKey = settings.getFromKey();
+        if (fromKey != null) {
+            YdbTable.KeyRange.Builder range = request.getKeyRangeBuilder();
+            if (settings.isFromInclusive()) {
+                range.setGreaterOrEqual(fromKey.toPb());
+            } else {
+                range.setGreater(fromKey.toPb());
+            }
+        }
+
+        TypedValue toKey = settings.getToKey();
+        if (toKey != null) {
+            YdbTable.KeyRange.Builder range = request.getKeyRangeBuilder();
+            if (settings.isToInclusive()) {
+                range.setLessOrEqual(toKey.toPb());
+            } else {
+                range.setLess(toKey.toPb());
+            }
+        }
+
+        if (!settings.getColumns().isEmpty()) {
+            request.addAllColumns(settings.getColumns());
+        }
+
+        CompletableFuture<Status> promise = new CompletableFuture<>();
+        tableRpc.streamReadTable(request.build(), new StreamObserver<ReadTableResponse>() {
+            @Override
+            public void onNext(ReadTableResponse response) {
+                StatusIds.StatusCode statusCode = response.getStatus();
+                if (statusCode == StatusIds.StatusCode.SUCCESS) {
+                    try {
+                        fn.accept(ProtoValueReaders.forResultSet(response.getResult().getResultSet()));
+                    } catch (Throwable t) {
+                        promise.completeExceptionally(t);
+                    }
+                } else {
+                    Issue[] issues = Issue.fromPb(response.getIssuesList());
+                    StatusCode code = StatusCode.fromProto(statusCode);
+                    promise.complete(Status.of(code, issues));
+                }
+            }
+
+            @Override
+            public void onError(Status status) {
+                assert !status.isSuccess();
+                promise.complete(status);
+            }
+
+            @Override
+            public void onCompleted() {
+                promise.complete(Status.SUCCESS);
+            }
+        });
+        return promise;
     }
 
     CompletableFuture<Status> commitTransaction(String txId, CommitTxSettings settings) {

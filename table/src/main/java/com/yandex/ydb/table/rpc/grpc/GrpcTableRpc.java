@@ -11,6 +11,9 @@ import com.yandex.ydb.core.Result;
 import com.yandex.ydb.core.grpc.GrpcTransport;
 import com.yandex.ydb.core.rpc.OperationTray;
 import com.yandex.ydb.core.rpc.RpcTransport;
+import com.yandex.ydb.core.rpc.StreamObserver;
+import com.yandex.ydb.table.YdbTable.ReadTableRequest;
+import com.yandex.ydb.table.YdbTable.ReadTableResponse;
 import com.yandex.ydb.table.rpc.TableRpc;
 import com.yandex.ydb.table.v1.TableServiceGrpc;
 
@@ -149,6 +152,11 @@ public final class GrpcTableRpc implements TableRpc {
     @Override
     public CompletableFuture<Result<RollbackTransactionResponse>> rollbackTransaction(RollbackTransactionRequest request) {
         return transport.unaryCall(TableServiceGrpc.METHOD_ROLLBACK_TRANSACTION, request);
+    }
+
+    @Override
+    public void streamReadTable(ReadTableRequest request, StreamObserver<ReadTableResponse> observer) {
+        transport.serverStreamCall(TableServiceGrpc.METHOD_STREAM_READ_TABLE, request, observer);
     }
 
     @Override

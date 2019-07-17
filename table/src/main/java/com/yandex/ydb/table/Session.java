@@ -1,6 +1,7 @@
 package com.yandex.ydb.table;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 import com.yandex.ydb.core.Result;
 import com.yandex.ydb.core.Status;
@@ -9,6 +10,7 @@ import com.yandex.ydb.table.query.DataQuery;
 import com.yandex.ydb.table.query.DataQueryResult;
 import com.yandex.ydb.table.query.ExplainDataQueryResult;
 import com.yandex.ydb.table.query.Params;
+import com.yandex.ydb.table.result.ResultSetReader;
 import com.yandex.ydb.table.settings.AlterTableSettings;
 import com.yandex.ydb.table.settings.BeginTxSettings;
 import com.yandex.ydb.table.settings.CloseSessionSettings;
@@ -21,6 +23,7 @@ import com.yandex.ydb.table.settings.ExecuteSchemeQuerySettings;
 import com.yandex.ydb.table.settings.ExplainDataQuerySettings;
 import com.yandex.ydb.table.settings.KeepAliveSessionSettings;
 import com.yandex.ydb.table.settings.PrepareDataQuerySettings;
+import com.yandex.ydb.table.settings.ReadTableSettings;
 import com.yandex.ydb.table.transaction.Transaction;
 import com.yandex.ydb.table.transaction.TransactionMode;
 import com.yandex.ydb.table.transaction.TxControl;
@@ -100,6 +103,8 @@ public interface Session {
     default CompletableFuture<Result<Transaction>> beginTransaction(TransactionMode transactionMode) {
         return beginTransaction(transactionMode, new BeginTxSettings());
     }
+
+    CompletableFuture<Status> readTable(String tablePath, ReadTableSettings settings, Consumer<ResultSetReader> fn);
 
     CompletableFuture<Result<SessionStatus>> keepAlive(KeepAliveSessionSettings settings);
 

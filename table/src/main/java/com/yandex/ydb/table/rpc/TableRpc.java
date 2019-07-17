@@ -4,6 +4,9 @@ import java.util.concurrent.CompletableFuture;
 
 import com.yandex.ydb.core.Result;
 import com.yandex.ydb.core.rpc.Rpc;
+import com.yandex.ydb.core.rpc.StreamObserver;
+import com.yandex.ydb.table.YdbTable.ReadTableRequest;
+import com.yandex.ydb.table.YdbTable.ReadTableResponse;
 
 import static com.yandex.ydb.table.YdbTable.AlterTableRequest;
 import static com.yandex.ydb.table.YdbTable.AlterTableResponse;
@@ -125,4 +128,8 @@ public interface TableRpc extends Rpc {
      */
     CompletableFuture<Result<RollbackTransactionResponse>> rollbackTransaction(RollbackTransactionRequest request);
 
+    /**
+     * Streaming read table.
+     */
+    void streamReadTable(ReadTableRequest request, StreamObserver<ReadTableResponse> observer);
 }
