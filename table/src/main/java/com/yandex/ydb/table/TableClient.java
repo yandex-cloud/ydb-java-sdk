@@ -9,6 +9,7 @@ import com.yandex.ydb.core.Result;
 import com.yandex.ydb.table.impl.TableClientBuilderImpl;
 import com.yandex.ydb.table.rpc.TableRpc;
 import com.yandex.ydb.table.settings.CreateSessionSettings;
+import com.yandex.ydb.table.stats.SessionPoolStats;
 
 
 /**
@@ -28,6 +29,8 @@ public interface TableClient extends SessionSupplier, AutoCloseable {
     default CompletableFuture<Result<Session>> createSession() {
         return createSession(new CreateSessionSettings());
     }
+
+    SessionPoolStats getSessionPoolStats();
 
     @Override
     void close();

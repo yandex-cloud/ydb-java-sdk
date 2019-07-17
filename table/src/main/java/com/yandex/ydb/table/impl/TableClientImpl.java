@@ -12,6 +12,7 @@ import com.yandex.ydb.table.TableClient;
 import com.yandex.ydb.table.YdbTable;
 import com.yandex.ydb.table.rpc.TableRpc;
 import com.yandex.ydb.table.settings.CreateSessionSettings;
+import com.yandex.ydb.table.stats.SessionPoolStats;
 
 
 /**
@@ -41,6 +42,11 @@ final class TableClientImpl implements TableClient {
     @Override
     public CompletableFuture<Result<Session>> createSession(CreateSessionSettings settings) {
         return createSessionImpl(settings, null);
+    }
+
+    @Override
+    public SessionPoolStats getSessionPoolStats() {
+        return sessionPool.getStats();
     }
 
     CompletableFuture<Result<Session>> createSessionImpl(CreateSessionSettings settings, @Nullable SessionPool sessionPool) {
