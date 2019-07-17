@@ -2,13 +2,8 @@ package com.yandex.ydb.auth.iam;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
-import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -20,6 +15,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yandex.ydb.core.auth.AuthProvider;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.Dsl;
+import org.asynchttpclient.Request;
 
 
 /**
@@ -51,12 +49,12 @@ import com.yandex.ydb.core.auth.AuthProvider;
  */
 public class IamAuthContext implements AutoCloseable {
 
-    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
-    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(10);
+    private static final int CONNECT_TIMEOUT_MILLIS = 5_000;
+    private static final int READ_TIMEOUT_MILLIS = 10_000;
     private static final long TOKEN_TTL_MILLIS = TimeUnit.HOURS.toMillis(1);
 
-    private final URI iamUri;
-    private final HttpClient httpClient;
+    private final String iamUrl;
+    private final AsyncHttpClient httpClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final ConcurrentHashMap<TokenKey, TokenState> tokens = new ConcurrentHashMap<>();
@@ -66,12 +64,14 @@ public class IamAuthContext implements AutoCloseable {
     }
 
     public IamAuthContext(String endpoint) {
-        this.iamUri = URI.create(endpoint + "/iam/v1/tokens");
-        this.httpClient = HttpClient.newBuilder()
-            .connectTimeout(CONNECT_TIMEOUT)
-            .followRedirects(HttpClient.Redirect.NEVER)
-            .version(HttpClient.Version.HTTP_1_1)
-            .build();
+        this.iamUrl = endpoint + "/iam/v1/tokens";
+        this.httpClient = Dsl.asyncHttpClient(Dsl.config()
+            .setConnectTimeout(CONNECT_TIMEOUT_MILLIS)
+            .setReadTimeout(READ_TIMEOUT_MILLIS)
+            .setKeepAlive(true)
+            .setMaxConnections(1)
+            .setFollowRedirect(false)
+            .build());
     }
 
     public CompletableFuture<AuthProvider> authProvider(String accountId, String keyId, PrivateKey privateKey) {
@@ -94,26 +94,27 @@ public class IamAuthContext implements AutoCloseable {
     }
 
     private CompletableFuture<String> fetchToken(String jwt) {
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(iamUri)
-            .timeout(REQUEST_TIMEOUT)
-            .header("Content-Type", "application/json")
-            .header("Accept", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString("{\"jwt\":\"" + jwt + "\"}"))
+        Request request = Dsl.post(iamUrl)
+            .setHeader("Content-Type", "application/json")
+            .setHeader("Accept", "application/json")
+            .setBody("{\"jwt\":\"" + jwt + "\"}")
             .build();
 
-        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofByteArray())
+        return httpClient.executeRequest(request)
+            .toCompletableFuture()
             .thenApply(response -> {
-                byte[] body = response.body();
+                byte[] body = response.getResponseBodyAsBytes();
 
-                if (response.statusCode() != 200) {
-                    String msg = "non OK response: " + response.statusCode() + new String(body, StandardCharsets.UTF_8);
-                    throw new IllegalStateException(msg);
+                if (response.getStatusCode() != 200) {
+                    throw new IllegalStateException(String.format(
+                        "non OK response: %d (%s) %s",
+                        response.getStatusCode(),
+                        response.getStatusText(),
+                        new String(body, StandardCharsets.UTF_8)));
                 }
 
                 try {
-                    var tokenResponse = objectMapper.readValue(body, TokenResponse.class);
-                    return tokenResponse.iamToken;
+                    return objectMapper.readValue(body, TokenResponse.class).iamToken;
                 } catch (IOException e) {
                     String msg = "invalid json: " + new String(body, StandardCharsets.UTF_8);
                     throw new UncheckedIOException(msg, e);
@@ -123,6 +124,10 @@ public class IamAuthContext implements AutoCloseable {
 
     @Override
     public void close() {
+        try {
+            httpClient.close();
+        } catch (IOException ignore) {
+        }
         tokens.clear();
         scheduler.shutdown();
     }
