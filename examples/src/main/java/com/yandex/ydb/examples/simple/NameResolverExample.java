@@ -16,7 +16,7 @@ import com.yandex.ydb.table.transaction.TxControl;
 public class NameResolverExample {
 
     public static void main(String[] args) {
-        GrpcTransport transport = GrpcTransportBuilder.forEndpoint("ydb-ru-myt-0000.search.yandex.net", "/ru/home/dcherednik/mydb")
+        GrpcTransport transport = GrpcTransportBuilder.forEndpoint("ydb-ru.yandex.net", "/ru/home/username/mydb")
             .build();
 
         try (TableClient tableClient = TableClient.newClient(GrpcTableRpc.useTransport(transport)).build()) {
