@@ -21,8 +21,8 @@ public class TokenKeyTest {
 
     @Test
     public void toJwt() {
-        PublicKey publicKey = Keys.publicKey(TokenKeyTest.class.getResourceAsStream("public.txt"));
-        PrivateKey privateKey = Keys.privateKey(TokenKeyTest.class.getResourceAsStream("private.txt"));
+        PublicKey publicKey = Keys.publicKey(getClass().getResourceAsStream("public.txt"));
+        PrivateKey privateKey = Keys.privateKey(getClass().getResourceAsStream("private.txt"));
 
         TokenKey key = new TokenKey("my-account", "my-key");
         long nowMillis = System.currentTimeMillis();
