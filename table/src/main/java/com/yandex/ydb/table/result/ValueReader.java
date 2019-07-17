@@ -1,6 +1,6 @@
 package com.yandex.ydb.table.result;
 
-import com.yandex.ydb.table.types.Type;
+import com.yandex.ydb.table.values.Type;
 
 /**
  * @author Sergey Polovko

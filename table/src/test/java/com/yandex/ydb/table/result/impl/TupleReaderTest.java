@@ -2,7 +2,7 @@ package com.yandex.ydb.table.result.impl;
 
 import com.yandex.ydb.ValueProtos;
 import com.yandex.ydb.table.result.ValueReader;
-import com.yandex.ydb.table.types.proto.ProtoType;
+import com.yandex.ydb.table.values.proto.ProtoType;
 import com.yandex.ydb.table.values.proto.ProtoValue;
 import org.junit.Assert;
 import org.junit.Test;

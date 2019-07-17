@@ -10,10 +10,10 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import com.google.common.collect.ImmutableList;
-import com.yandex.ydb.table.types.TupleType;
-import com.yandex.ydb.table.types.Type;
 import com.yandex.ydb.table.values.PrimitiveValue;
+import com.yandex.ydb.table.values.TupleType;
 import com.yandex.ydb.table.values.TupleValue;
+import com.yandex.ydb.table.values.Type;
 import com.yandex.ydb.table.values.TypedValue;
 import com.yandex.ydb.table.values.Value;
 

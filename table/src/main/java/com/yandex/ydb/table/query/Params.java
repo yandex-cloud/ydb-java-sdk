@@ -8,10 +8,10 @@ import java.util.Objects;
 
 import com.google.common.collect.ImmutableMap;
 import com.yandex.ydb.ValueProtos;
-import com.yandex.ydb.table.types.Type;
-import com.yandex.ydb.table.types.proto.ProtoType;
 import com.yandex.ydb.table.values.PrimitiveValue;
+import com.yandex.ydb.table.values.Type;
 import com.yandex.ydb.table.values.Value;
+import com.yandex.ydb.table.values.proto.ProtoType;
 
 
 /**

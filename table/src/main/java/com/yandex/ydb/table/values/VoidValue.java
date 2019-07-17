@@ -1,7 +1,6 @@
 package com.yandex.ydb.table.values;
 
 import com.yandex.ydb.ValueProtos;
-import com.yandex.ydb.table.types.VoidType;
 import com.yandex.ydb.table.values.proto.ProtoValue;
 
 
@@ -32,6 +31,11 @@ public class VoidValue implements Value<VoidType> {
     @Override
     public String toString() {
         return "Void";
+    }
+
+    @Override
+    public VoidType getType() {
+        return VoidType.of();
     }
 
     @Override

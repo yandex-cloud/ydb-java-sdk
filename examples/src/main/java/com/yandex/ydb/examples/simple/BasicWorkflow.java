@@ -16,7 +16,7 @@ import com.yandex.ydb.table.rpc.grpc.GrpcSchemeRpc;
 import com.yandex.ydb.table.rpc.grpc.GrpcTableRpc;
 import com.yandex.ydb.table.settings.DropTableSettings;
 import com.yandex.ydb.table.transaction.TxControl;
-import com.yandex.ydb.table.types.PrimitiveType;
+import com.yandex.ydb.table.values.PrimitiveType;
 
 import static com.yandex.ydb.table.values.PrimitiveValue.uint32;
 import static java.nio.charset.StandardCharsets.UTF_8;

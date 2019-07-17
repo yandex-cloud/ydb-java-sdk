@@ -7,11 +7,11 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableMap;
 import com.yandex.ydb.examples.pagination.model.School;
-import com.yandex.ydb.table.types.PrimitiveType;
-import com.yandex.ydb.table.types.StructType;
+import com.yandex.ydb.table.values.ListType;
 import com.yandex.ydb.table.values.ListValue;
+import com.yandex.ydb.table.values.PrimitiveType;
 import com.yandex.ydb.table.values.PrimitiveValue;
-import com.yandex.ydb.table.values.StructValue;
+import com.yandex.ydb.table.values.StructType;
 import com.yandex.ydb.table.values.Value;
 
 
@@ -50,8 +50,9 @@ final class PaginationData {
     ));
 
     private static <T> ListValue toListValue(T[] items, StructType type, Function<T, Map<String, Value>> mapper) {
-        return ListValue.of(Arrays.stream(items)
-            .map(e -> StructValue.of(type, mapper.apply(e)))
+        ListType listType = ListType.of(type);
+        return listType.newValue(Arrays.stream(items)
+            .map(e -> type.newValue(mapper.apply(e)))
             .collect(Collectors.toList()));
     }
 }

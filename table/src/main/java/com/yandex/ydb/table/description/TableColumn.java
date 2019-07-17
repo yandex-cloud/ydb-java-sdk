@@ -1,6 +1,6 @@
 package com.yandex.ydb.table.description;
 
-import com.yandex.ydb.table.types.Type;
+import com.yandex.ydb.table.values.Type;
 
 
 /**

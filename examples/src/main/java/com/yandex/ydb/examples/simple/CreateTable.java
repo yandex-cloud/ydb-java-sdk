@@ -8,9 +8,9 @@ import com.yandex.ydb.table.description.TableDescription;
 import com.yandex.ydb.table.rpc.grpc.GrpcTableRpc;
 import com.yandex.ydb.table.settings.CreateTableSettings;
 import com.yandex.ydb.table.settings.PartitioningPolicy;
-import com.yandex.ydb.table.types.PrimitiveType;
-import com.yandex.ydb.table.types.TupleType;
+import com.yandex.ydb.table.values.PrimitiveType;
 import com.yandex.ydb.table.values.PrimitiveValue;
+import com.yandex.ydb.table.values.TupleType;
 import com.yandex.ydb.table.values.TupleValue;
 
 

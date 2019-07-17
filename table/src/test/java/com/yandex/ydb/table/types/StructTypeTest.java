@@ -1,5 +1,7 @@
 package com.yandex.ydb.table.types;
 
+import com.yandex.ydb.table.values.PrimitiveType;
+import com.yandex.ydb.table.values.StructType;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -11,7 +11,7 @@ import com.yandex.ydb.table.rpc.grpc.GrpcTableRpc;
 import com.yandex.ydb.table.transaction.Transaction;
 import com.yandex.ydb.table.transaction.TransactionMode;
 import com.yandex.ydb.table.transaction.TxControl;
-import com.yandex.ydb.table.types.PrimitiveType;
+import com.yandex.ydb.table.values.PrimitiveType;
 
 
 /**

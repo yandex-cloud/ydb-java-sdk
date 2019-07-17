@@ -7,8 +7,8 @@ import com.yandex.ydb.table.description.TableColumn;
 import com.yandex.ydb.table.description.TableDescription;
 import com.yandex.ydb.table.rpc.grpc.GrpcTableRpc;
 import com.yandex.ydb.table.settings.AlterTableSettings;
-import com.yandex.ydb.table.types.OptionalType;
-import com.yandex.ydb.table.types.PrimitiveType;
+import com.yandex.ydb.table.values.OptionalType;
+import com.yandex.ydb.table.values.PrimitiveType;
 
 
 /**

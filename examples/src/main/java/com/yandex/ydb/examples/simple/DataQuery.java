@@ -10,7 +10,7 @@ import com.yandex.ydb.table.settings.AutoPartitioningPolicy;
 import com.yandex.ydb.table.settings.CreateTableSettings;
 import com.yandex.ydb.table.settings.PartitioningPolicy;
 import com.yandex.ydb.table.transaction.TxControl;
-import com.yandex.ydb.table.types.PrimitiveType;
+import com.yandex.ydb.table.values.PrimitiveType;
 
 
 /**

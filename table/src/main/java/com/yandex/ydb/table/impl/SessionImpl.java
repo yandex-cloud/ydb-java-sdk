@@ -50,8 +50,8 @@ import com.yandex.ydb.table.settings.StoragePolicy;
 import com.yandex.ydb.table.transaction.Transaction;
 import com.yandex.ydb.table.transaction.TransactionMode;
 import com.yandex.ydb.table.transaction.TxControl;
-import com.yandex.ydb.table.types.proto.ProtoType;
 import com.yandex.ydb.table.values.TypedValue;
+import com.yandex.ydb.table.values.proto.ProtoType;
 
 
 /**

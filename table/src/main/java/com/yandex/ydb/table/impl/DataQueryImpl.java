@@ -16,8 +16,8 @@ import com.yandex.ydb.table.query.DataQueryResult;
 import com.yandex.ydb.table.query.Params;
 import com.yandex.ydb.table.settings.ExecuteDataQuerySettings;
 import com.yandex.ydb.table.transaction.TxControl;
-import com.yandex.ydb.table.types.Type;
-import com.yandex.ydb.table.types.proto.ProtoType;
+import com.yandex.ydb.table.values.Type;
+import com.yandex.ydb.table.values.proto.ProtoType;
 
 
 /**

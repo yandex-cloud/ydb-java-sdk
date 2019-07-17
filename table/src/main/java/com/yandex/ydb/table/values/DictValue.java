@@ -2,15 +2,12 @@ package com.yandex.ydb.table.values;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
 
 import com.yandex.ydb.ValueProtos;
-import com.yandex.ydb.table.types.DictType;
-import com.yandex.ydb.table.types.Type;
 import com.yandex.ydb.table.values.proto.ProtoValue;
 
 
@@ -19,34 +16,18 @@ import com.yandex.ydb.table.values.proto.ProtoValue;
  */
 public class DictValue implements Value<DictType> {
 
-    private static final DictValue EMPTY = new DictValue(Collections.emptyMap());
-
+    private final DictType type;
     private final Map<Value, Value> items;
 
-    private DictValue(Map<Value, Value> items) {
+    DictValue(DictType type, Map<Value, Value> items) {
+        this.type = type;
         this.items = items;
     }
 
-    public static DictValue of() {
-        return EMPTY;
-    }
-
     public static DictValue of(Value key, Value value) {
-        return new DictValue(Collections.singletonMap(key, value));
-    }
-
-    public static DictValue fromMapCopy(Map<Value, Value> items) {
-        if (items.isEmpty()) {
-            return EMPTY;
-        }
-        return new DictValue(new HashMap<>(items));
-    }
-
-    public static DictValue fromMapOwn(Map<Value, Value> items) {
-        if (items.isEmpty()) {
-            return EMPTY;
-        }
-        return new DictValue(items);
+        return new DictValue(
+            DictType.of(key.getType(), value.getType()),
+            Collections.singletonMap(key, value));
     }
 
     public int size() {
@@ -105,6 +86,11 @@ public class DictValue implements Value<DictType> {
         }
         sb.append(']');
         return sb.toString();
+    }
+
+    @Override
+    public DictType getType() {
+        return type;
     }
 
     @Override

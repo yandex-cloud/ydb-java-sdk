@@ -16,8 +16,8 @@ import com.yandex.ydb.table.query.Params;
 import com.yandex.ydb.table.result.ResultSetReader;
 import com.yandex.ydb.table.rpc.grpc.GrpcTableRpc;
 import com.yandex.ydb.table.transaction.TxControl;
-import com.yandex.ydb.table.types.ListType;
-import com.yandex.ydb.table.types.PrimitiveType;
+import com.yandex.ydb.table.values.ListType;
+import com.yandex.ydb.table.values.PrimitiveType;
 
 import static com.yandex.ydb.table.values.PrimitiveValue.uint32;
 import static com.yandex.ydb.table.values.PrimitiveValue.uint64;

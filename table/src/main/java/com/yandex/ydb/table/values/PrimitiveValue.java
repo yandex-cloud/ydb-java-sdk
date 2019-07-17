@@ -17,7 +17,6 @@ import com.google.common.escape.Escapers;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.UnsafeByteOperations;
 import com.yandex.ydb.ValueProtos;
-import com.yandex.ydb.table.types.PrimitiveType;
 import com.yandex.ydb.table.utils.LittleEndian;
 import com.yandex.ydb.table.values.proto.ProtoValue;
 
@@ -26,8 +25,6 @@ import com.yandex.ydb.table.values.proto.ProtoValue;
  * @author Sergey Polovko
  */
 public abstract class PrimitiveValue implements Value<PrimitiveType> {
-
-    public abstract PrimitiveType getType();
 
     // -- unboxing --
 

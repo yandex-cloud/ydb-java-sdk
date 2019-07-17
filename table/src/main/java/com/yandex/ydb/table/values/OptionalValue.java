@@ -3,35 +3,32 @@ package com.yandex.ydb.table.values;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import com.yandex.ydb.ValueProtos;
-import com.yandex.ydb.table.types.OptionalType;
-import com.yandex.ydb.table.types.Type;
 import com.yandex.ydb.table.values.proto.ProtoValue;
 
 
 /**
  * @author Sergey Polovko
  */
+@ParametersAreNonnullByDefault
 public class OptionalValue implements Value<OptionalType> {
 
-    private static final OptionalValue EMPTY = new OptionalValue();
-
+    private final OptionalType type;
+    @Nullable
     private final Value value;
 
-    private OptionalValue() {
-        this.value = null;
-    }
-
-    private OptionalValue(Value value) {
-        this.value = Objects.requireNonNull(value, "value");
-    }
-
-    public static OptionalValue empty() {
-        return EMPTY;
+    OptionalValue(OptionalType type, @Nullable Value value) {
+        this.type = type;
+        this.value = value;
     }
 
     public static OptionalValue of(Value value) {
-        return new OptionalValue(value);
+        return new OptionalValue(
+            OptionalType.of(value.getType()),
+            Objects.requireNonNull(value, "value"));
     }
 
     public boolean isPresent() {
@@ -75,6 +72,11 @@ public class OptionalValue implements Value<OptionalType> {
             return "Empty[]";
         }
         return "Some[" + value.toString() + ']';
+    }
+
+    @Override
+    public OptionalType getType() {
+        return type;
     }
 
     @Override

@@ -14,7 +14,7 @@ import com.yandex.ydb.table.query.DataQueryResult;
 import com.yandex.ydb.table.query.Params;
 import com.yandex.ydb.table.result.ResultSetReader;
 import com.yandex.ydb.table.transaction.TxControl;
-import com.yandex.ydb.table.types.PrimitiveType;
+import com.yandex.ydb.table.values.PrimitiveType;
 import com.yandex.ydb.table.values.PrimitiveValue;
 
 public class SeriesRepository {

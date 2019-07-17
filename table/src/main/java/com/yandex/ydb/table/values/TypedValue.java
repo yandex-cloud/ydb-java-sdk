@@ -1,8 +1,7 @@
 package com.yandex.ydb.table.values;
 
 import com.yandex.ydb.ValueProtos;
-import com.yandex.ydb.table.types.Type;
-import com.yandex.ydb.table.types.proto.ProtoType;
+import com.yandex.ydb.table.values.proto.ProtoType;
 
 
 /**

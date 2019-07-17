@@ -6,7 +6,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.yandex.ydb.table.types.Type;
+import com.yandex.ydb.table.values.Type;
 import com.yandex.ydb.table.values.TypedValue;
 import com.yandex.ydb.table.values.Value;
 

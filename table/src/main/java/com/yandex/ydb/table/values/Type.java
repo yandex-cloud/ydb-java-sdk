@@ -1,9 +1,11 @@
-package com.yandex.ydb.table.types;
+package com.yandex.ydb.table.values;
 
 /**
  * @author Sergey Polovko
  */
 public interface Type {
+
+    Type[] EMPTY_ARRAY = {};
 
     Kind getKind();
 
