@@ -40,7 +40,7 @@ import static com.yandex.ydb.table.values.PrimitiveValue.uint64;
 /**
  * @author Sergey Polovko
  */
-public class BasicExampleApp implements App {
+public class BasicExample implements App {
 
     private static final int MAX_RETRIES = 5;
     private static final long OVERLOAD_DELAY_MILLIS = 5000;
@@ -51,7 +51,7 @@ public class BasicExampleApp implements App {
     private Session session;
     private Map<String, DataQuery> preparedQueries = new HashMap<>();
 
-    BasicExampleApp(RpcTransport transport, String path) {
+    BasicExample(RpcTransport transport, String path) {
         this.path = path;
         this.tableClient = TableClient.newClient(GrpcTableRpc.useTransport(transport))
             .build();
@@ -500,7 +500,7 @@ public class BasicExampleApp implements App {
     }
 
     /**
-     * Same as {@link BasicExampleApp#execute}, but extracts result.
+     * Same as {@link BasicExample#execute}, but extracts result.
      */
     private <T> T executeWithResult(Function<Session, Result<T>> fn) {
         AtomicReference<Result<T>> result = new AtomicReference<>();
@@ -523,6 +523,6 @@ public class BasicExampleApp implements App {
     }
 
     public static void main(String[] args) {
-        AppRunner.run("BasicExampleApp", BasicExampleApp::new, args);
+        AppRunner.run("BasicExample", BasicExample::new, args);
     }
 }
