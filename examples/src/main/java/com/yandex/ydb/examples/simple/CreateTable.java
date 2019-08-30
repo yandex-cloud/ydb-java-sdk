@@ -1,10 +1,12 @@
 package com.yandex.ydb.examples.simple;
 
+import com.google.common.collect.ImmutableList;
 import com.yandex.ydb.core.rpc.RpcTransport;
 import com.yandex.ydb.table.Session;
 import com.yandex.ydb.table.TableClient;
 import com.yandex.ydb.table.description.TableColumn;
 import com.yandex.ydb.table.description.TableDescription;
+import com.yandex.ydb.table.description.TableIndex;
 import com.yandex.ydb.table.rpc.grpc.GrpcTableRpc;
 import com.yandex.ydb.table.settings.CreateTableSettings;
 import com.yandex.ydb.table.settings.PartitioningPolicy;
@@ -39,10 +41,33 @@ public class CreateTable extends SimpleExample {
                 printTableScheme(tablePath, session);
             }
 
+            {
+                String tablePath = pathPrefix + "TableWithIndexes";
+                session.dropTable(tablePath).join();
+                createTableWithIndexes(tablePath, session);
+                printTableScheme(tablePath, session);
+            }
+
             session.close()
                 .join()
                 .expect("cannot close session");
         }
+    }
+
+    private void createTableWithIndexes(String tablePath, Session session) {
+        TableDescription description = TableDescription.newBuilder()
+            .addNullableColumn("uid", PrimitiveType.uint64())
+            .addNullableColumn("login", PrimitiveType.utf8())
+            .addNullableColumn("firstName", PrimitiveType.utf8())
+            .addNullableColumn("lastName", PrimitiveType.utf8())
+            .setPrimaryKey("uid")
+            .addGlobalIndex("loginIdx", ImmutableList.of("login"))
+            .addGlobalIndex("nameIdx", ImmutableList.of("firstName", "lastName"))
+            .build();
+
+        session.createTable(tablePath, description)
+            .join()
+            .expect("cannot create table " + tablePath);
     }
 
     /**
@@ -111,6 +136,14 @@ public class CreateTable extends SimpleExample {
         i = 1;
         for (TableColumn column : description.getColumns()) {
             System.out.printf("%4d. %s %s\n", i++, column.getName(), column.getType());
+        }
+
+        if (!description.getIndexes().isEmpty()) {
+            System.out.println("indexes:");
+            i = 1;
+            for (TableIndex index : description.getIndexes()) {
+                System.out.printf("%4d. %s %s %s\n", i++, index.getType(), index.getName(), index.getColumns());
+            }
         }
         System.out.println();
     }
