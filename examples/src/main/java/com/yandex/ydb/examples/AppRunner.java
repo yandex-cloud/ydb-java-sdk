@@ -1,5 +1,8 @@
 package com.yandex.ydb.examples;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.yandex.ydb.core.auth.TokenAuthProvider;
@@ -20,6 +23,9 @@ public class AppRunner {
 
         @Parameter(names = { "-p", "--path" }, description = "Base path for tables", help = true)
         String path;
+
+        @Parameter(names = { "-c", "--cert" }, description = "Path to PEM certificate", help = true)
+        String certPath;
     }
 
     public static void run(String appName, App.Factory appFactory, String... params) {
@@ -45,10 +51,19 @@ public class AppRunner {
             System.exit(1);
         }
 
-        try (GrpcTransport transport = GrpcTransport.forEndpoint(args.endpoint, args.database)
-                .withAuthProvider(new TokenAuthProvider(ydbToken))
-                .build())
-        {
+        GrpcTransport.Builder transportBuilder = GrpcTransport.forEndpoint(args.endpoint, args.database)
+            .withAuthProvider(new TokenAuthProvider(ydbToken));
+
+        if (args.certPath != null) {
+            try {
+                transportBuilder.withSecureConnection(Files.readAllBytes(Paths.get(args.certPath)));
+            } catch (Exception e) {
+                System.err.println("Cannot read certificate from file " + args.certPath + ": " + e.getMessage());
+                System.exit(1);
+            }
+        }
+
+        try (GrpcTransport transport = transportBuilder.build()) {
             String path = args.path == null ? args.database : args.path;
             try (App example = appFactory.newApp(transport, path)) {
                 example.run();
