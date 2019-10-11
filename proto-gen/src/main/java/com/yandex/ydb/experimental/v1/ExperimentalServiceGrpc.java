@@ -37,24 +37,6 @@ public final class ExperimentalServiceGrpc {
           io.grpc.protobuf.ProtoUtils.marshaller(com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsRequest.getDefaultInstance()),
           io.grpc.protobuf.ProtoUtils.marshaller(com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsResponse.getDefaultInstance()));
   @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
-  public static final io.grpc.MethodDescriptor<com.yandex.ydb.experimental.ExperimentalProtos.ReadColumnsRequest,
-      com.yandex.ydb.experimental.ExperimentalProtos.ReadColumnsResponse> METHOD_READ_COLUMNS =
-      io.grpc.MethodDescriptor.create(
-          io.grpc.MethodDescriptor.MethodType.UNARY,
-          generateFullMethodName(
-              "Ydb.Experimental.V1.ExperimentalService", "ReadColumns"),
-          io.grpc.protobuf.ProtoUtils.marshaller(com.yandex.ydb.experimental.ExperimentalProtos.ReadColumnsRequest.getDefaultInstance()),
-          io.grpc.protobuf.ProtoUtils.marshaller(com.yandex.ydb.experimental.ExperimentalProtos.ReadColumnsResponse.getDefaultInstance()));
-  @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
-  public static final io.grpc.MethodDescriptor<com.yandex.ydb.experimental.ExperimentalProtos.GetShardLocationsRequest,
-      com.yandex.ydb.experimental.ExperimentalProtos.GetShardLocationsResponse> METHOD_GET_SHARD_LOCATIONS =
-      io.grpc.MethodDescriptor.create(
-          io.grpc.MethodDescriptor.MethodType.UNARY,
-          generateFullMethodName(
-              "Ydb.Experimental.V1.ExperimentalService", "GetShardLocations"),
-          io.grpc.protobuf.ProtoUtils.marshaller(com.yandex.ydb.experimental.ExperimentalProtos.GetShardLocationsRequest.getDefaultInstance()),
-          io.grpc.protobuf.ProtoUtils.marshaller(com.yandex.ydb.experimental.ExperimentalProtos.GetShardLocationsResponse.getDefaultInstance()));
-  @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
   public static final io.grpc.MethodDescriptor<com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryRequest,
       com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryResponse> METHOD_EXECUTE_STREAM_QUERY =
       io.grpc.MethodDescriptor.create(
@@ -103,20 +85,6 @@ public final class ExperimentalServiceGrpc {
 
     /**
      */
-    public void readColumns(com.yandex.ydb.experimental.ExperimentalProtos.ReadColumnsRequest request,
-        io.grpc.stub.StreamObserver<com.yandex.ydb.experimental.ExperimentalProtos.ReadColumnsResponse> responseObserver) {
-      asyncUnimplementedUnaryCall(METHOD_READ_COLUMNS, responseObserver);
-    }
-
-    /**
-     */
-    public void getShardLocations(com.yandex.ydb.experimental.ExperimentalProtos.GetShardLocationsRequest request,
-        io.grpc.stub.StreamObserver<com.yandex.ydb.experimental.ExperimentalProtos.GetShardLocationsResponse> responseObserver) {
-      asyncUnimplementedUnaryCall(METHOD_GET_SHARD_LOCATIONS, responseObserver);
-    }
-
-    /**
-     */
     public void executeStreamQuery(com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryRequest request,
         io.grpc.stub.StreamObserver<com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryResponse> responseObserver) {
       asyncUnimplementedUnaryCall(METHOD_EXECUTE_STREAM_QUERY, responseObserver);
@@ -131,20 +99,6 @@ public final class ExperimentalServiceGrpc {
                 com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsRequest,
                 com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsResponse>(
                   this, METHODID_UPLOAD_ROWS)))
-          .addMethod(
-            METHOD_READ_COLUMNS,
-            asyncUnaryCall(
-              new MethodHandlers<
-                com.yandex.ydb.experimental.ExperimentalProtos.ReadColumnsRequest,
-                com.yandex.ydb.experimental.ExperimentalProtos.ReadColumnsResponse>(
-                  this, METHODID_READ_COLUMNS)))
-          .addMethod(
-            METHOD_GET_SHARD_LOCATIONS,
-            asyncUnaryCall(
-              new MethodHandlers<
-                com.yandex.ydb.experimental.ExperimentalProtos.GetShardLocationsRequest,
-                com.yandex.ydb.experimental.ExperimentalProtos.GetShardLocationsResponse>(
-                  this, METHODID_GET_SHARD_LOCATIONS)))
           .addMethod(
             METHOD_EXECUTE_STREAM_QUERY,
             asyncServerStreamingCall(
@@ -187,22 +141,6 @@ public final class ExperimentalServiceGrpc {
 
     /**
      */
-    public void readColumns(com.yandex.ydb.experimental.ExperimentalProtos.ReadColumnsRequest request,
-        io.grpc.stub.StreamObserver<com.yandex.ydb.experimental.ExperimentalProtos.ReadColumnsResponse> responseObserver) {
-      asyncUnaryCall(
-          getChannel().newCall(METHOD_READ_COLUMNS, getCallOptions()), request, responseObserver);
-    }
-
-    /**
-     */
-    public void getShardLocations(com.yandex.ydb.experimental.ExperimentalProtos.GetShardLocationsRequest request,
-        io.grpc.stub.StreamObserver<com.yandex.ydb.experimental.ExperimentalProtos.GetShardLocationsResponse> responseObserver) {
-      asyncUnaryCall(
-          getChannel().newCall(METHOD_GET_SHARD_LOCATIONS, getCallOptions()), request, responseObserver);
-    }
-
-    /**
-     */
     public void executeStreamQuery(com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryRequest request,
         io.grpc.stub.StreamObserver<com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryResponse> responseObserver) {
       asyncServerStreamingCall(
@@ -236,20 +174,6 @@ public final class ExperimentalServiceGrpc {
     public com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsResponse uploadRows(com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsRequest request) {
       return blockingUnaryCall(
           getChannel(), METHOD_UPLOAD_ROWS, getCallOptions(), request);
-    }
-
-    /**
-     */
-    public com.yandex.ydb.experimental.ExperimentalProtos.ReadColumnsResponse readColumns(com.yandex.ydb.experimental.ExperimentalProtos.ReadColumnsRequest request) {
-      return blockingUnaryCall(
-          getChannel(), METHOD_READ_COLUMNS, getCallOptions(), request);
-    }
-
-    /**
-     */
-    public com.yandex.ydb.experimental.ExperimentalProtos.GetShardLocationsResponse getShardLocations(com.yandex.ydb.experimental.ExperimentalProtos.GetShardLocationsRequest request) {
-      return blockingUnaryCall(
-          getChannel(), METHOD_GET_SHARD_LOCATIONS, getCallOptions(), request);
     }
 
     /**
@@ -289,28 +213,10 @@ public final class ExperimentalServiceGrpc {
       return futureUnaryCall(
           getChannel().newCall(METHOD_UPLOAD_ROWS, getCallOptions()), request);
     }
-
-    /**
-     */
-    public com.google.common.util.concurrent.ListenableFuture<com.yandex.ydb.experimental.ExperimentalProtos.ReadColumnsResponse> readColumns(
-        com.yandex.ydb.experimental.ExperimentalProtos.ReadColumnsRequest request) {
-      return futureUnaryCall(
-          getChannel().newCall(METHOD_READ_COLUMNS, getCallOptions()), request);
-    }
-
-    /**
-     */
-    public com.google.common.util.concurrent.ListenableFuture<com.yandex.ydb.experimental.ExperimentalProtos.GetShardLocationsResponse> getShardLocations(
-        com.yandex.ydb.experimental.ExperimentalProtos.GetShardLocationsRequest request) {
-      return futureUnaryCall(
-          getChannel().newCall(METHOD_GET_SHARD_LOCATIONS, getCallOptions()), request);
-    }
   }
 
   private static final int METHODID_UPLOAD_ROWS = 0;
-  private static final int METHODID_READ_COLUMNS = 1;
-  private static final int METHODID_GET_SHARD_LOCATIONS = 2;
-  private static final int METHODID_EXECUTE_STREAM_QUERY = 3;
+  private static final int METHODID_EXECUTE_STREAM_QUERY = 1;
 
   private static final class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -332,14 +238,6 @@ public final class ExperimentalServiceGrpc {
         case METHODID_UPLOAD_ROWS:
           serviceImpl.uploadRows((com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsRequest) request,
               (io.grpc.stub.StreamObserver<com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsResponse>) responseObserver);
-          break;
-        case METHODID_READ_COLUMNS:
-          serviceImpl.readColumns((com.yandex.ydb.experimental.ExperimentalProtos.ReadColumnsRequest) request,
-              (io.grpc.stub.StreamObserver<com.yandex.ydb.experimental.ExperimentalProtos.ReadColumnsResponse>) responseObserver);
-          break;
-        case METHODID_GET_SHARD_LOCATIONS:
-          serviceImpl.getShardLocations((com.yandex.ydb.experimental.ExperimentalProtos.GetShardLocationsRequest) request,
-              (io.grpc.stub.StreamObserver<com.yandex.ydb.experimental.ExperimentalProtos.GetShardLocationsResponse>) responseObserver);
           break;
         case METHODID_EXECUTE_STREAM_QUERY:
           serviceImpl.executeStreamQuery((com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryRequest) request,
@@ -379,8 +277,6 @@ public final class ExperimentalServiceGrpc {
           serviceDescriptor = result = io.grpc.ServiceDescriptor.newBuilder(SERVICE_NAME)
               .setSchemaDescriptor(new ExperimentalServiceDescriptorSupplier())
               .addMethod(METHOD_UPLOAD_ROWS)
-              .addMethod(METHOD_READ_COLUMNS)
-              .addMethod(METHOD_GET_SHARD_LOCATIONS)
               .addMethod(METHOD_EXECUTE_STREAM_QUERY)
               .build();
         }
