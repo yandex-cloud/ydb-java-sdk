@@ -2,6 +2,8 @@ package com.yandex.ydb.table.impl;
 
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.yandex.ydb.table.SessionStatus;
 import com.yandex.ydb.table.impl.SessionImpl.State;
@@ -19,6 +21,7 @@ import io.netty.util.concurrent.DefaultThreadFactory;
  * @author Sergey Polovko
  */
 final class SessionPool implements PooledObjectHandler<SessionImpl> {
+    private static final Logger logger = Logger.getLogger(SessionPool.class.getName());
 
     private final TableClientImpl tableClient;
 
@@ -92,6 +95,7 @@ final class SessionPool implements PooledObjectHandler<SessionImpl> {
     void release(SessionImpl session) {
         if (session.switchState(State.DISCONNECTED, State.IDLE)) {
             if (!settlersPool.offerIfHaveSpace(session)) {
+                logger.log(Level.FINE, "Destroy {0} because settlers pool overflow", session);
                 session.close(); // do not await session to be closed
             }
         } else {
