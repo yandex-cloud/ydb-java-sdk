@@ -3,6 +3,7 @@ package com.yandex.ydb.examples.basic_example;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -211,7 +212,7 @@ public class BasicExample implements App {
         String query = String.format(
             "PRAGMA TablePathPrefix(\"%s\");\n" +
             "\n" +
-            "SELECT series_id, title, DateTime::ToDate(DateTime::FromDays(release_date)) AS release_date\n" +
+            "SELECT series_id, title, DateTime::ToDate(CAST(DateTime::FromDays(release_date) as Timestamp)) AS release_date\n" +
             "FROM series\n" +
             "WHERE series_id = 1;",
             path);
@@ -345,7 +346,7 @@ public class BasicExample implements App {
             // Execute first query to get the required values to the client.
             // Transaction control settings don't set CommitTx flag to keep transaction active
             // after query execution.
-            TxControl txControl = TxControl.serializableRw();
+            TxControl txControl = TxControl.serializableRw().setCommitTx(false);
             DataQueryResult result = executeWithResult(session -> session.executeDataQuery(query, txControl, params)
                 .join());
 
@@ -418,7 +419,7 @@ public class BasicExample implements App {
 
         // Execute data query.
         // Transaction control settings continues active transaction (tx)
-        Result<DataQueryResult> updateResult = session.executeDataQuery(query, TxControl.id(transaction), params)
+        Result<DataQueryResult> updateResult = session.executeDataQuery(query, TxControl.id(transaction).setCommitTx(false), params)
             .join();
         if (!updateResult.isSuccess()) {
             return updateResult.toStatus();
@@ -463,6 +464,8 @@ public class BasicExample implements App {
             }
 
             assert status != null;
+
+            System.out.println(String.format("status -> %s", Arrays.toString(status.getIssues())));
 
             switch (status.getCode()) {
                 case ABORTED:
