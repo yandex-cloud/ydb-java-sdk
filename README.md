@@ -1,4 +1,4 @@
-Java clients for Ydb
+Java SDK for Yandex Database (YDB)
 ---
 Officially supported Java client for YDB.
 
