@@ -146,32 +146,32 @@ public class BasicExample implements App {
         String query = String.format(
             "PRAGMA TablePathPrefix(\"%s\");\n" +
             "\n" +
-            "DECLARE $seriesData AS \"List<Struct<\n" +
+            "DECLARE $seriesData AS List<Struct<\n" +
             "    series_id: Uint64,\n" +
             "    title: Utf8,\n" +
             "    series_info: Utf8,\n" +
-            "    release_date: Date>>\";\n" +
+            "    release_date: Date>>;\n" +
             "\n" +
-            "DECLARE $seasonsData AS \"List<Struct<\n" +
+            "DECLARE $seasonsData AS List<Struct<\n" +
             "    series_id: Uint64,\n" +
             "    season_id: Uint64,\n" +
             "    title: Utf8,\n" +
             "    first_aired: Date,\n" +
-            "    last_aired: Date>>\";\n" +
+            "    last_aired: Date>>;\n" +
             "\n" +
-            "DECLARE $episodesData AS \"List<Struct<\n" +
+            "DECLARE $episodesData AS List<Struct<\n" +
             "    series_id: Uint64,\n" +
             "    season_id: Uint64,\n" +
             "    episode_id: Uint64,\n" +
             "    title: Utf8,\n" +
-            "    air_date: Date>>\";\n" +
+            "    air_date: Date>>;\n" +
             "\n" +
             "REPLACE INTO series\n" +
             "SELECT\n" +
             "    series_id,\n" +
             "    title,\n" +
             "    series_info,\n" +
-            "    DateTime::ToDays(release_date) AS release_date\n" +
+            "    DateTime::ToMilliseconds(release_date) AS release_date\n" +
             "FROM AS_TABLE($seriesData);\n" +
             "\n" +
             "REPLACE INTO seasons\n" +
@@ -179,8 +179,8 @@ public class BasicExample implements App {
             "    series_id,\n" +
             "    season_id,\n" +
             "    title,\n" +
-            "    DateTime::ToDays(first_aired) AS first_aired,\n" +
-            "    DateTime::ToDays(last_aired) AS last_aired\n" +
+            "    DateTime::ToMilliseconds(first_aired) AS first_aired,\n" +
+            "    DateTime::ToMilliseconds(last_aired) AS last_aired\n" +
             "FROM AS_TABLE($seasonsData);\n" +
             "\n" +
             "REPLACE INTO episodes\n" +
@@ -189,7 +189,7 @@ public class BasicExample implements App {
             "    season_id,\n" +
             "    episode_id,\n" +
             "    title,\n" +
-            "    DateTime::ToDays(air_date) AS air_date\n" +
+            "    DateTime::ToMilliseconds(air_date) AS air_date\n" +
             "FROM AS_TABLE($episodesData);",
             path);
 
@@ -212,7 +212,7 @@ public class BasicExample implements App {
         String query = String.format(
             "PRAGMA TablePathPrefix(\"%s\");\n" +
             "\n" +
-            "SELECT series_id, title, DateTime::ToDate(CAST(DateTime::FromDays(release_date) as Timestamp)) AS release_date\n" +
+            "SELECT series_id, title, DateTime::FromMilliseconds(release_date) AS release_date\n" +
             "FROM series\n" +
             "WHERE series_id = 1;",
             path);
@@ -359,7 +359,7 @@ public class BasicExample implements App {
             long firstAired = resultSet.getColumn(0).getUint64();
 
             // Perform some client logic on returned values
-            fromDate = Instant.EPOCH.plus(firstAired, ChronoUnit.DAYS);
+            fromDate = Instant.ofEpochMilli(firstAired);
             toDate = fromDate.plus(15, ChronoUnit.DAYS);
 
             // Get active transaction id
@@ -412,7 +412,7 @@ public class BasicExample implements App {
         String query = String.format(
             "PRAGMA TablePathPrefix(\"%s\");\n" +
             "DECLARE $airDate AS Date;\n" +
-            "UPDATE episodes SET air_date = DateTime::ToDays($airDate) WHERE title = \"TBD\";",
+            "UPDATE episodes SET air_date = DateTime::ToMilliseconds($airDate) WHERE title = \"TBD\";",
             path);
 
         Params params = Params.of("$airDate", date(Instant.now()));
