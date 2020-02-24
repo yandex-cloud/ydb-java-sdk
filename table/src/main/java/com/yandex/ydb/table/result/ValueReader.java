@@ -1,6 +1,7 @@
 package com.yandex.ydb.table.result;
 
 import com.yandex.ydb.table.values.Type;
+import com.yandex.ydb.table.values.Value;
 
 /**
  * @author Sergey Polovko
@@ -16,6 +17,8 @@ public interface ValueReader extends
 {
 
     void toString(StringBuilder sb);
+
+    Value<?> getGenericValue();
 
     Type getValueType();
 
