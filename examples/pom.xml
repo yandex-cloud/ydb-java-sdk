@@ -8,7 +8,7 @@
   <parent>
     <groupId>com.yandex.ydb</groupId>
     <artifactId>ydb-sdk-parent</artifactId>
-    <version>1.6.1</version>
+    <version>1.6.2</version>
   </parent>
 
   <artifactId>ydb-sdk-examples</artifactId>
@@ -23,7 +23,7 @@
     <dependency>
       <groupId>com.yandex.ydb</groupId>
       <artifactId>ydb-sdk-table</artifactId>
-      <version>1.6.1</version>
+      <version>1.6.2</version>
     </dependency>
 	<dependency>
 	  <groupId>com.beust</groupId>
