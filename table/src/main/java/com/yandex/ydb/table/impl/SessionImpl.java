@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 
 import com.yandex.ydb.StatusCodesProtos.StatusIds;
 import com.yandex.ydb.ValueProtos;
+import com.yandex.ydb.common.CommonProtos;
 import com.yandex.ydb.core.Issue;
 import com.yandex.ydb.core.Result;
 import com.yandex.ydb.core.Status;
@@ -46,6 +47,7 @@ import com.yandex.ydb.table.settings.KeepAliveSessionSettings;
 import com.yandex.ydb.table.settings.PartitioningPolicy;
 import com.yandex.ydb.table.settings.PrepareDataQuerySettings;
 import com.yandex.ydb.table.settings.ReadTableSettings;
+import com.yandex.ydb.table.settings.ReplicationPolicy;
 import com.yandex.ydb.table.settings.RollbackTxSettings;
 import com.yandex.ydb.table.settings.StoragePolicy;
 import com.yandex.ydb.table.transaction.Transaction;
@@ -195,6 +197,22 @@ class SessionImpl implements Session {
                 if (policy.getExternal() != null) {
                     policyProto.getExternalBuilder().setStorageKind(policy.getExternal());
                 }
+            }
+        }
+
+        {
+            ReplicationPolicy policy = settings.getReplicationPolicy();
+            if (policy != null) {
+                YdbTable.ReplicationPolicy.Builder replicationPolicyProto =
+                    request.getProfileBuilder().getReplicationPolicyBuilder();
+                if (policy.getPresetName() != null) {
+                    replicationPolicyProto.setPresetName(policy.getPresetName());
+                }
+                replicationPolicyProto.setReplicasCount(policy.getReplicasCount());
+                replicationPolicyProto.setCreatePerAvailabilityZone(policy.isCreatePerAvailabilityZone() ?
+                    CommonProtos.FeatureFlag.Status.ENABLED : CommonProtos.FeatureFlag.Status.DISABLED);
+                replicationPolicyProto.setAllowPromotion(policy.isAllowPromotion() ?
+                    CommonProtos.FeatureFlag.Status.ENABLED : CommonProtos.FeatureFlag.Status.DISABLED);
             }
         }
 
