@@ -14,6 +14,7 @@ import com.yandex.ydb.table.result.ResultSetReader;
 import com.yandex.ydb.table.settings.AlterTableSettings;
 import com.yandex.ydb.table.settings.BeginTxSettings;
 import com.yandex.ydb.table.settings.CloseSessionSettings;
+import com.yandex.ydb.table.settings.CommitTxSettings;
 import com.yandex.ydb.table.settings.CopyTableSettings;
 import com.yandex.ydb.table.settings.CreateTableSettings;
 import com.yandex.ydb.table.settings.DescribeTableSettings;
@@ -24,6 +25,7 @@ import com.yandex.ydb.table.settings.ExplainDataQuerySettings;
 import com.yandex.ydb.table.settings.KeepAliveSessionSettings;
 import com.yandex.ydb.table.settings.PrepareDataQuerySettings;
 import com.yandex.ydb.table.settings.ReadTableSettings;
+import com.yandex.ydb.table.settings.RollbackTxSettings;
 import com.yandex.ydb.table.transaction.Transaction;
 import com.yandex.ydb.table.transaction.TransactionMode;
 import com.yandex.ydb.table.transaction.TxControl;
@@ -103,6 +105,10 @@ public interface Session {
     default CompletableFuture<Result<Transaction>> beginTransaction(TransactionMode transactionMode) {
         return beginTransaction(transactionMode, new BeginTxSettings());
     }
+
+    CompletableFuture<Status> commitTransaction(String txId, CommitTxSettings settings);
+
+    CompletableFuture<Status> rollbackTransaction(String txId, RollbackTxSettings settings);
 
     CompletableFuture<Status> readTable(String tablePath, ReadTableSettings settings, Consumer<ResultSetReader> fn);
 
