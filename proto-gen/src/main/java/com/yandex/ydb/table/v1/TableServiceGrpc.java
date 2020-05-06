@@ -616,6 +616,37 @@ public final class TableServiceGrpc {
     return getBulkUpsertMethod;
   }
 
+  private static volatile io.grpc.MethodDescriptor<com.yandex.ydb.table.YdbTable.ExecuteStreamQueryRequest,
+      com.yandex.ydb.table.YdbTable.ExecuteStreamQueryResponse> getExecuteStreamQueryMethod;
+
+  @io.grpc.stub.annotations.RpcMethod(
+      fullMethodName = SERVICE_NAME + '/' + "ExecuteStreamQuery",
+      requestType = com.yandex.ydb.table.YdbTable.ExecuteStreamQueryRequest.class,
+      responseType = com.yandex.ydb.table.YdbTable.ExecuteStreamQueryResponse.class,
+      methodType = io.grpc.MethodDescriptor.MethodType.SERVER_STREAMING)
+  public static io.grpc.MethodDescriptor<com.yandex.ydb.table.YdbTable.ExecuteStreamQueryRequest,
+      com.yandex.ydb.table.YdbTable.ExecuteStreamQueryResponse> getExecuteStreamQueryMethod() {
+    io.grpc.MethodDescriptor<com.yandex.ydb.table.YdbTable.ExecuteStreamQueryRequest, com.yandex.ydb.table.YdbTable.ExecuteStreamQueryResponse> getExecuteStreamQueryMethod;
+    if ((getExecuteStreamQueryMethod = TableServiceGrpc.getExecuteStreamQueryMethod) == null) {
+      synchronized (TableServiceGrpc.class) {
+        if ((getExecuteStreamQueryMethod = TableServiceGrpc.getExecuteStreamQueryMethod) == null) {
+          TableServiceGrpc.getExecuteStreamQueryMethod = getExecuteStreamQueryMethod =
+              io.grpc.MethodDescriptor.<com.yandex.ydb.table.YdbTable.ExecuteStreamQueryRequest, com.yandex.ydb.table.YdbTable.ExecuteStreamQueryResponse>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.SERVER_STREAMING)
+              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "ExecuteStreamQuery"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.yandex.ydb.table.YdbTable.ExecuteStreamQueryRequest.getDefaultInstance()))
+              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.yandex.ydb.table.YdbTable.ExecuteStreamQueryResponse.getDefaultInstance()))
+              .setSchemaDescriptor(new TableServiceMethodDescriptorSupplier("ExecuteStreamQuery"))
+              .build();
+        }
+      }
+    }
+    return getExecuteStreamQueryMethod;
+  }
+
   /**
    * Creates a new async stub that supports all call types for the service
    */
@@ -866,6 +897,16 @@ public final class TableServiceGrpc {
       asyncUnimplementedUnaryCall(getBulkUpsertMethod(), responseObserver);
     }
 
+    /**
+     * <pre>
+     * Executes stream query.
+     * </pre>
+     */
+    public void executeStreamQuery(com.yandex.ydb.table.YdbTable.ExecuteStreamQueryRequest request,
+        io.grpc.stub.StreamObserver<com.yandex.ydb.table.YdbTable.ExecuteStreamQueryResponse> responseObserver) {
+      asyncUnimplementedUnaryCall(getExecuteStreamQueryMethod(), responseObserver);
+    }
+
     @java.lang.Override public final io.grpc.ServerServiceDefinition bindService() {
       return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
           .addMethod(
@@ -1001,6 +1042,13 @@ public final class TableServiceGrpc {
                 com.yandex.ydb.table.YdbTable.BulkUpsertRequest,
                 com.yandex.ydb.table.YdbTable.BulkUpsertResponse>(
                   this, METHODID_BULK_UPSERT)))
+          .addMethod(
+            getExecuteStreamQueryMethod(),
+            asyncServerStreamingCall(
+              new MethodHandlers<
+                com.yandex.ydb.table.YdbTable.ExecuteStreamQueryRequest,
+                com.yandex.ydb.table.YdbTable.ExecuteStreamQueryResponse>(
+                  this, METHODID_EXECUTE_STREAM_QUERY)))
           .build();
     }
   }
@@ -1239,6 +1287,17 @@ public final class TableServiceGrpc {
       asyncUnaryCall(
           getChannel().newCall(getBulkUpsertMethod(), getCallOptions()), request, responseObserver);
     }
+
+    /**
+     * <pre>
+     * Executes stream query.
+     * </pre>
+     */
+    public void executeStreamQuery(com.yandex.ydb.table.YdbTable.ExecuteStreamQueryRequest request,
+        io.grpc.stub.StreamObserver<com.yandex.ydb.table.YdbTable.ExecuteStreamQueryResponse> responseObserver) {
+      asyncServerStreamingCall(
+          getChannel().newCall(getExecuteStreamQueryMethod(), getCallOptions()), request, responseObserver);
+    }
   }
 
   /**
@@ -1456,6 +1515,17 @@ public final class TableServiceGrpc {
     public com.yandex.ydb.table.YdbTable.BulkUpsertResponse bulkUpsert(com.yandex.ydb.table.YdbTable.BulkUpsertRequest request) {
       return blockingUnaryCall(
           getChannel(), getBulkUpsertMethod(), getCallOptions(), request);
+    }
+
+    /**
+     * <pre>
+     * Executes stream query.
+     * </pre>
+     */
+    public java.util.Iterator<com.yandex.ydb.table.YdbTable.ExecuteStreamQueryResponse> executeStreamQuery(
+        com.yandex.ydb.table.YdbTable.ExecuteStreamQueryRequest request) {
+      return blockingServerStreamingCall(
+          getChannel(), getExecuteStreamQueryMethod(), getCallOptions(), request);
     }
   }
 
@@ -1703,6 +1773,7 @@ public final class TableServiceGrpc {
   private static final int METHODID_DESCRIBE_TABLE_OPTIONS = 16;
   private static final int METHODID_STREAM_READ_TABLE = 17;
   private static final int METHODID_BULK_UPSERT = 18;
+  private static final int METHODID_EXECUTE_STREAM_QUERY = 19;
 
   private static final class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -1797,6 +1868,10 @@ public final class TableServiceGrpc {
           serviceImpl.bulkUpsert((com.yandex.ydb.table.YdbTable.BulkUpsertRequest) request,
               (io.grpc.stub.StreamObserver<com.yandex.ydb.table.YdbTable.BulkUpsertResponse>) responseObserver);
           break;
+        case METHODID_EXECUTE_STREAM_QUERY:
+          serviceImpl.executeStreamQuery((com.yandex.ydb.table.YdbTable.ExecuteStreamQueryRequest) request,
+              (io.grpc.stub.StreamObserver<com.yandex.ydb.table.YdbTable.ExecuteStreamQueryResponse>) responseObserver);
+          break;
         default:
           throw new AssertionError();
       }
@@ -1877,6 +1952,7 @@ public final class TableServiceGrpc {
               .addMethod(getDescribeTableOptionsMethod())
               .addMethod(getStreamReadTableMethod())
               .addMethod(getBulkUpsertMethod())
+              .addMethod(getExecuteStreamQueryMethod())
               .build();
         }
       }
