@@ -8,12 +8,13 @@
   <parent>
     <groupId>com.yandex.ydb</groupId>
     <artifactId>ydb-sdk-parent</artifactId>
-    <version>1.6.4</version>
+    <version>1.6.5</version>
   </parent>
 
   <artifactId>ydb-sdk-auth-iam</artifactId>
-  <name>IAM authentication module</name>
-  <description>IAM authentication module</description>
+  <name>Yandex Cloud IAM authentication module</name>
+  <description>Yandex Cloud IAM authentication module</description>
+  <version>1.6.5</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -23,32 +24,22 @@
     <dependency>
       <groupId>com.yandex.ydb</groupId>
       <artifactId>ydb-sdk-core</artifactId>
-      <version>1.6.4</version>
+      <version>${project.parent.version}</version>
     </dependency>
-	<dependency>
-	  <groupId>io.jsonwebtoken</groupId>
-	  <artifactId>jjwt-api</artifactId>
-	  <version>0.10.6</version>
-	</dependency>
-	<dependency>
-	  <groupId>io.jsonwebtoken</groupId>
-	  <artifactId>jjwt-impl</artifactId>
-	  <version>0.10.6</version>
-	</dependency>
-	<dependency>
-	  <groupId>io.jsonwebtoken</groupId>
-	  <artifactId>jjwt-jackson</artifactId>
-	  <version>0.10.6</version>
-	</dependency>
-	<dependency>
-	  <groupId>org.bouncycastle</groupId>
-	  <artifactId>bctls-jdk15on</artifactId>
-	  <version>1.61</version>
-	</dependency>
     <dependency>
-        <groupId>org.asynchttpclient</groupId>
-        <artifactId>async-http-client</artifactId>
-        <version>2.8.1</version>
+      <groupId>com.yandex.cloud</groupId>
+      <artifactId>java-sdk-auth</artifactId>
+      <version>2.0.0</version>
+      <exclusions>
+          <exclusion>
+              <groupId>io.grpc</groupId>
+              <artifactId>grpc-netty-shaded</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>io.grpc</groupId>
+              <artifactId>grpc-services</artifactId>
+          </exclusion>
+      </exclusions>
     </dependency>
 	<dependency>
 	  <groupId>junit</groupId>
