@@ -22,6 +22,7 @@ import com.yandex.ydb.OperationProtos.Operation;
 import com.yandex.ydb.StatusCodesProtos.StatusIds.StatusCode;
 import com.yandex.ydb.core.Operations;
 import com.yandex.ydb.core.auth.AuthProvider;
+import com.yandex.ydb.core.utils.Async;
 import com.yandex.ydb.discovery.DiscoveryProtos.EndpointInfo;
 import com.yandex.ydb.discovery.DiscoveryProtos.ListEndpointsRequest;
 import com.yandex.ydb.discovery.DiscoveryProtos.ListEndpointsResponse;
@@ -33,6 +34,7 @@ import io.grpc.NameResolver;
 import io.grpc.Status;
 import io.grpc.SynchronizationContext;
 import io.grpc.internal.GrpcUtil;
+import io.netty.util.Timeout;
 
 
 /**
@@ -54,8 +56,7 @@ final class YdbNameResolver extends NameResolver {
     private volatile boolean shutdown = false;
 
     private final SynchronizationContext synchronizationContext;
-    private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
-    private SynchronizationContext.ScheduledHandle scheduledHandle = null;
+    private Timeout scheduledHandle = null;
     private final Duration discoveryPeriod;
 
     private YdbNameResolver(
@@ -114,7 +115,6 @@ final class YdbNameResolver extends NameResolver {
 
     @Override
     public void shutdown() {
-        scheduledExecutorService.shutdown();
         if (scheduledHandle != null) {
             scheduledHandle.cancel();
             scheduledHandle = null;
@@ -216,7 +216,11 @@ final class YdbNameResolver extends NameResolver {
             }
         });
 
-        scheduledHandle = synchronizationContext.schedule(this::refresh, discoveryPeriod.toMillis(), TimeUnit.MILLISECONDS, scheduledExecutorService);
+        scheduledHandle = Async.runAfter((timeout) -> {
+            if (!timeout.isCancelled()) {
+                synchronizationContext.execute(this::refresh);
+            }
+        }, discoveryPeriod.toMillis(), TimeUnit.MILLISECONDS);
     }
 
     // TODO: resolve name asynchronously

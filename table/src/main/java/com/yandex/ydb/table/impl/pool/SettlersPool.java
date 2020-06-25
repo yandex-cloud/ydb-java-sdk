@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.yandex.ydb.table.utils.Async;
+import com.yandex.ydb.core.utils.Async;
 import io.netty.util.Timeout;
 import io.netty.util.TimerTask;
 

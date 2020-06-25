@@ -19,7 +19,7 @@ import com.yandex.ydb.core.Result;
 import com.yandex.ydb.core.Status;
 import com.yandex.ydb.core.StatusCode;
 import com.yandex.ydb.core.UnexpectedResultException;
-import com.yandex.ydb.table.utils.Async;
+import com.yandex.ydb.core.utils.Async;
 import io.netty.util.Timeout;
 import io.netty.util.TimerTask;
 
