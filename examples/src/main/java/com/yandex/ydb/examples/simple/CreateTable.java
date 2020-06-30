@@ -50,9 +50,9 @@ public class CreateTable extends SimpleExample {
             }
 
             {
-                String tablePath = pathPrefix + "TableWithSlaves";
+                String tablePath = pathPrefix + "TableWithReplicas";
                 session.dropTable(tablePath).join();
-                createTableWithSlaves(tablePath, session);
+                createTableWithReplicas(tablePath, session);
                 printTableScheme(tablePath, session);
             }
 
@@ -125,9 +125,9 @@ public class CreateTable extends SimpleExample {
     }
 
     /**
-     * Will create table with slaves
+     * Will create table with read-only replicas
      */
-    private void createTableWithSlaves(String tablePath, Session session) {
+    private void createTableWithReplicas(String tablePath, Session session) {
         TableDescription description = TableDescription.newBuilder()
             .addNullableColumn("id", PrimitiveType.uint64())
             .addNullableColumn("value", PrimitiveType.utf8())
