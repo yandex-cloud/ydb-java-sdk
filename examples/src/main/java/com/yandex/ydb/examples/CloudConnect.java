@@ -11,12 +11,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Duration;
 
+import com.yandex.ydb.auth.iam.CloudAuthProvider;
 import com.yandex.ydb.core.auth.AuthProvider;
 import com.yandex.ydb.core.grpc.GrpcTransport;
 import com.yandex.ydb.table.TableClient;
 import com.yandex.ydb.table.rpc.grpc.GrpcTableRpc;
-import com.yandex.ydb.auth.iam.CloudAuthProvider;
-
 import yandex.cloud.sdk.auth.provider.ApiKeyCredentialProvider;
 
 public class CloudConnect {
