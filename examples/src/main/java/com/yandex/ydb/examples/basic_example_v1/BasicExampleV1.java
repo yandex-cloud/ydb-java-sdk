@@ -318,7 +318,8 @@ public class BasicExampleV1 implements App {
             .put("$seasonId", uint64(seasonId))
             .put("$episodeId", uint64(episodeId));
 
-        DataQueryResult result = query.execute(TxControl.serializableRw().setCommitTx(true), params)
+        TxControl txControl = TxControl.serializableRw().setCommitTx(true);
+        DataQueryResult result = query.execute(txControl, params)
             .join()
             .expect("prepared query failed");
 
@@ -350,7 +351,7 @@ public class BasicExampleV1 implements App {
             // Execute first query to get the required values to the client.
             // Transaction control settings don't set CommitTx flag to keep transaction active
             // after query execution.
-            TxControl txControl = TxControl.serializableRw();
+            TxControl txControl = TxControl.serializableRw().setCommitTx(false);
             DataQueryResult result = executeWithResult(session -> session.executeDataQuery(query, txControl, params)
                 .join());
 
@@ -423,7 +424,8 @@ public class BasicExampleV1 implements App {
 
         // Execute data query.
         // Transaction control settings continues active transaction (tx)
-        Result<DataQueryResult> updateResult = session.executeDataQuery(query, TxControl.id(transaction), params)
+        TxControl txControl = TxControl.id(transaction).setCommitTx(false);
+        Result<DataQueryResult> updateResult = session.executeDataQuery(query, txControl, params)
             .join();
         if (!updateResult.isSuccess()) {
             return updateResult.toStatus();
