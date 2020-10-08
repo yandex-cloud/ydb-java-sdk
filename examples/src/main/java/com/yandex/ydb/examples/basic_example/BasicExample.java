@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.annotation.Nullable;
@@ -29,6 +30,7 @@ import com.yandex.ydb.table.query.DataQueryResult;
 import com.yandex.ydb.table.query.Params;
 import com.yandex.ydb.table.result.ResultSetReader;
 import com.yandex.ydb.table.rpc.grpc.GrpcTableRpc;
+import com.yandex.ydb.table.settings.ExecuteScanQuerySettings;
 import com.yandex.ydb.table.transaction.Transaction;
 import com.yandex.ydb.table.transaction.TransactionMode;
 import com.yandex.ydb.table.transaction.TxControl;
@@ -71,6 +73,8 @@ public class BasicExample implements App {
         upsertSimple();
 
         selectWithParams();
+
+        executeScanQueryWithParams();
 
         preparedSelect(2, 3, 7);
         preparedSelect(2, 3, 8);
@@ -276,6 +280,36 @@ public class BasicExample implements App {
         System.out.println("\n--[ SelectWithParams ]--");
         // Index of result set corresponds to its order in YQL query
         new TablePrinter(result.getResultSet(0)).print();
+    }
+
+    public void executeScanQueryWithParams() {
+        String query = String.format(
+                "PRAGMA TablePathPrefix(\"%s\");\n" +
+                        "\n" +
+                        "DECLARE $seriesId AS Uint64;\n" +
+                        "DECLARE $seasonId AS Uint64;\n" +
+                        "\n" +
+                        "SELECT sa.title AS season_title, sr.title AS series_title\n" +
+                        "FROM seasons AS sa\n" +
+                        "INNER JOIN series AS sr\n" +
+                        "ON sa.series_id = sr.series_id\n" +
+                        "WHERE sa.series_id = $seriesId AND sa.season_id = $seasonId;",
+                path);
+
+        // Begin new transaction with SerializableRW mode
+        TxControl txControl = TxControl.serializableRw().setCommitTx(true);
+
+        // Type of parameter values should be exactly the same as in DECLARE statements.
+        Params params = Params.of("$seriesId", uint64(2), "$seasonId", uint64(3));
+
+        ExecuteScanQuerySettings settings = ExecuteScanQuerySettings.newBuilder().build();
+        Consumer<ResultSetReader> printer = (ResultSetReader result) -> {
+            new TablePrinter(result).print();
+        };
+
+        System.out.println("\n--[ ExecuteScanQueryWithParams ]--");
+        // Index of result set corresponds to its order in YQL query
+        Status result = execute(session -> session.executeScanQuery(query, params, settings, printer).join());
     }
 
     /**

@@ -21,6 +21,7 @@ import com.yandex.ydb.table.settings.CreateTableSettings;
 import com.yandex.ydb.table.settings.DescribeTableSettings;
 import com.yandex.ydb.table.settings.DropTableSettings;
 import com.yandex.ydb.table.settings.ExecuteDataQuerySettings;
+import com.yandex.ydb.table.settings.ExecuteScanQuerySettings;
 import com.yandex.ydb.table.settings.ExecuteSchemeQuerySettings;
 import com.yandex.ydb.table.settings.ExplainDataQuerySettings;
 import com.yandex.ydb.table.settings.KeepAliveSessionSettings;
@@ -114,6 +115,11 @@ public class SessionStub implements Session {
     @Override
     public CompletableFuture<Status> readTable(String tablePath, ReadTableSettings settings, Consumer<ResultSetReader> fn) {
         return notImplemented("readTable()");
+    }
+
+    @Override
+    public CompletableFuture<Status> executeScanQuery(String query, Params params, ExecuteScanQuerySettings settings, Consumer<ResultSetReader> fn) {
+        return notImplemented("executeScanQuery");
     }
 
     @Override
