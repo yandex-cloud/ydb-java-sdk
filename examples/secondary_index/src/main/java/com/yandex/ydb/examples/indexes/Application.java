@@ -1,5 +1,6 @@
 package com.yandex.ydb.examples.indexes;
 
+import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -41,6 +42,7 @@ public class Application {
         }
         logger.info("Creating rpc transport for endpoint={} database={}", endpoint, database);
         GrpcTransport.Builder builder = GrpcTransport.forEndpoint(endpoint, database)
+                .withReadTimeout(Duration.ofSeconds(10))
                 .withCallExecutor(grpcExecutor);
         if (token != null && !token.isEmpty()) {
             builder.withAuthProvider(new TokenAuthProvider(token));
