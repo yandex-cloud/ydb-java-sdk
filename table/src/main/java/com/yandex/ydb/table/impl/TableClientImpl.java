@@ -14,6 +14,7 @@ import com.yandex.ydb.table.YdbTable;
 import com.yandex.ydb.table.rpc.TableRpc;
 import com.yandex.ydb.table.settings.CreateSessionSettings;
 import com.yandex.ydb.table.stats.SessionPoolStats;
+import com.yandex.ydb.table.utils.OperationParamUtils;
 
 
 /**
@@ -52,6 +53,7 @@ final class TableClientImpl implements TableClient {
 
     CompletableFuture<Result<Session>> createSessionImpl(CreateSessionSettings settings, @Nullable SessionPool sessionPool) {
         YdbTable.CreateSessionRequest request = YdbTable.CreateSessionRequest.newBuilder()
+            .setOperationParams(OperationParamUtils.fromRequestSettings(settings))
             .build();
 
         final long deadlineAfter = settings.getDeadlineAfter();
