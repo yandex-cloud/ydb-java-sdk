@@ -119,12 +119,13 @@ public class PaginationApp implements App {
      */
     private void fillTableDataTransaction() {
         String query = String.format(
+            "\n" +
             "PRAGMA TablePathPrefix(\"%s\");\n" +
             "\n" +
-            "DECLARE $schoolsData AS \"List<Struct<\n" +
+            "DECLARE $schoolsData AS List<Struct<\n" +
             "    city: Utf8,\n" +
             "    number: Uint32,\n" +
-            "    address: Utf8>>\";\n" +
+            "    address: Utf8>>;\n" +
             "\n" +
             "REPLACE INTO schools\n" +
             "SELECT\n" +
@@ -144,24 +145,32 @@ public class PaginationApp implements App {
 
     private List<School> selectPaging(long limit, School.Key lastSchool) {
         String query = String.format(
+            "\n" +
             "PRAGMA TablePathPrefix(\"%s\");\n" +
             "\n" +
             "DECLARE $limit AS Uint64;\n" +
             "DECLARE $lastCity AS Utf8;\n" +
             "DECLARE $lastNumber AS Uint32;\n" +
             "\n" +
-            "$Data = (\n" +
+            "$part1 = (\n" +
             "    SELECT * FROM schools\n" +
             "    WHERE city = $lastCity AND number > $lastNumber\n" +
             "    ORDER BY city, number LIMIT $limit\n" +
+            ");\n" +
             "\n" +
-            "    UNION ALL\n" +
-            "\n" +
+            "$part2 = (\n" +
             "    SELECT * FROM schools\n" +
             "    WHERE city > $lastCity\n" +
             "    ORDER BY city, number LIMIT $limit\n" +
             ");\n" +
-            "SELECT * FROM $Data ORDER BY city, number LIMIT $limit;",
+            "$union = (\n" +
+            "    SELECT * FROM $part1\n" +
+            "    UNION ALL\n" +
+            "    SELECT * FROM $part2\n" +
+            ");\n" +
+            "\n" +
+            "SELECT * FROM $union\n" +
+            "ORDER BY city, number LIMIT $limit;",
             path);
 
         Params params = Params.of(

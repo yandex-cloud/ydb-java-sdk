@@ -80,14 +80,16 @@ public class BatchUpload implements App {
     public void run() {
         createTables();
 
-        String query = String.format("DECLARE $items AS\n" +
-            "'List<Struct<\n" +
+        String query = String.format(
+            "\n" +
+            "DECLARE $items AS\n" +
+            "List<Struct<\n" +
             "HostUid: Uint64,\n"+
                     "UrlUid: Uint64,\n"+
                     "Url: Utf8,\n"+
-                    "Page: Utf8>>';\n"+
+                    "Page: Utf8>>;\n"+
 
-            "REPLACE INTO [%s]\n"+
+            "REPLACE INTO `%s`\n"+
             "SELECT * FROM AS_TABLE($items)\n", tableName);
 
         Generator input = new Generator(recordsCount);
