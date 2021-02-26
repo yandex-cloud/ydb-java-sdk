@@ -15,6 +15,8 @@ import static com.yandex.ydb.table.YdbTable.AlterTableRequest;
 import static com.yandex.ydb.table.YdbTable.AlterTableResponse;
 import static com.yandex.ydb.table.YdbTable.BeginTransactionRequest;
 import static com.yandex.ydb.table.YdbTable.BeginTransactionResponse;
+import static com.yandex.ydb.table.YdbTable.BulkUpsertRequest;
+import static com.yandex.ydb.table.YdbTable.BulkUpsertResponse;
 import static com.yandex.ydb.table.YdbTable.CommitTransactionRequest;
 import static com.yandex.ydb.table.YdbTable.CommitTransactionResponse;
 import static com.yandex.ydb.table.YdbTable.CopyTableRequest;
@@ -140,5 +142,10 @@ public interface TableRpc extends Rpc {
      * Streaming execute scan query.
      */
     StreamControl streamExecuteScanQuery(ExecuteScanQueryRequest request, StreamObserver<ExecuteScanQueryPartialResponse> observer, long deadlineAfter);
+
+    /**
+     * Execute bulk upsert
+     */
+    CompletableFuture<Result<BulkUpsertResponse>> bulkUpsert(BulkUpsertRequest request, long deadlineAfter);
 }
 
