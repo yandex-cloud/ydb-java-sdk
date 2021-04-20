@@ -58,29 +58,29 @@ public final class ScriptingServiceGrpc {
     return getExecuteYqlMethod;
   }
 
-  private static volatile io.grpc.MethodDescriptor<com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlRequest,
-      com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlPartialResponse> getStreamExecuteYqlMethod;
+  private static volatile io.grpc.MethodDescriptor<com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlRequest,
+      com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlPartialResponse> getStreamExecuteYqlMethod;
 
   @io.grpc.stub.annotations.RpcMethod(
       fullMethodName = SERVICE_NAME + '/' + "StreamExecuteYql",
-      requestType = com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlRequest.class,
-      responseType = com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlPartialResponse.class,
+      requestType = com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlRequest.class,
+      responseType = com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlPartialResponse.class,
       methodType = io.grpc.MethodDescriptor.MethodType.SERVER_STREAMING)
-  public static io.grpc.MethodDescriptor<com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlRequest,
-      com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlPartialResponse> getStreamExecuteYqlMethod() {
-    io.grpc.MethodDescriptor<com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlRequest, com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlPartialResponse> getStreamExecuteYqlMethod;
+  public static io.grpc.MethodDescriptor<com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlRequest,
+      com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlPartialResponse> getStreamExecuteYqlMethod() {
+    io.grpc.MethodDescriptor<com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlRequest, com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlPartialResponse> getStreamExecuteYqlMethod;
     if ((getStreamExecuteYqlMethod = ScriptingServiceGrpc.getStreamExecuteYqlMethod) == null) {
       synchronized (ScriptingServiceGrpc.class) {
         if ((getStreamExecuteYqlMethod = ScriptingServiceGrpc.getStreamExecuteYqlMethod) == null) {
           ScriptingServiceGrpc.getStreamExecuteYqlMethod = getStreamExecuteYqlMethod =
-              io.grpc.MethodDescriptor.<com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlRequest, com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlPartialResponse>newBuilder()
+              io.grpc.MethodDescriptor.<com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlRequest, com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlPartialResponse>newBuilder()
               .setType(io.grpc.MethodDescriptor.MethodType.SERVER_STREAMING)
               .setFullMethodName(generateFullMethodName(SERVICE_NAME, "StreamExecuteYql"))
               .setSampledToLocalTracing(true)
               .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlRequest.getDefaultInstance()))
+                  com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlRequest.getDefaultInstance()))
               .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlPartialResponse.getDefaultInstance()))
+                  com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlPartialResponse.getDefaultInstance()))
               .setSchemaDescriptor(new ScriptingServiceMethodDescriptorSupplier("StreamExecuteYql"))
               .build();
         }
@@ -180,8 +180,8 @@ public final class ScriptingServiceGrpc {
      * Executes yql request with streaming result.
      * </pre>
      */
-    public void streamExecuteYql(com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlRequest request,
-        io.grpc.stub.StreamObserver<com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlPartialResponse> responseObserver) {
+    public void streamExecuteYql(com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlRequest request,
+        io.grpc.stub.StreamObserver<com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlPartialResponse> responseObserver) {
       asyncUnimplementedUnaryCall(getStreamExecuteYqlMethod(), responseObserver);
     }
 
@@ -205,8 +205,8 @@ public final class ScriptingServiceGrpc {
             getStreamExecuteYqlMethod(),
             asyncServerStreamingCall(
               new MethodHandlers<
-                com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlRequest,
-                com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlPartialResponse>(
+                com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlRequest,
+                com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlPartialResponse>(
                   this, METHODID_STREAM_EXECUTE_YQL)))
           .addMethod(
             getExplainYqlMethod(),
@@ -246,8 +246,8 @@ public final class ScriptingServiceGrpc {
      * Executes yql request with streaming result.
      * </pre>
      */
-    public void streamExecuteYql(com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlRequest request,
-        io.grpc.stub.StreamObserver<com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlPartialResponse> responseObserver) {
+    public void streamExecuteYql(com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlRequest request,
+        io.grpc.stub.StreamObserver<com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlPartialResponse> responseObserver) {
       asyncServerStreamingCall(
           getChannel().newCall(getStreamExecuteYqlMethod(), getCallOptions()), request, responseObserver);
     }
@@ -287,8 +287,8 @@ public final class ScriptingServiceGrpc {
      * Executes yql request with streaming result.
      * </pre>
      */
-    public java.util.Iterator<com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlPartialResponse> streamExecuteYql(
-        com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlRequest request) {
+    public java.util.Iterator<com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlPartialResponse> streamExecuteYql(
+        com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlRequest request) {
       return blockingServerStreamingCall(
           getChannel(), getStreamExecuteYqlMethod(), getCallOptions(), request);
     }
@@ -358,8 +358,8 @@ public final class ScriptingServiceGrpc {
               (io.grpc.stub.StreamObserver<com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlResponse>) responseObserver);
           break;
         case METHODID_STREAM_EXECUTE_YQL:
-          serviceImpl.streamExecuteYql((com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlRequest) request,
-              (io.grpc.stub.StreamObserver<com.yandex.ydb.scripting.ScriptingProtos.StreamExecuteYqlPartialResponse>) responseObserver);
+          serviceImpl.streamExecuteYql((com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlRequest) request,
+              (io.grpc.stub.StreamObserver<com.yandex.ydb.scripting.ScriptingProtos.ExecuteYqlPartialResponse>) responseObserver);
           break;
         case METHODID_EXPLAIN_YQL:
           serviceImpl.explainYql((com.yandex.ydb.scripting.ScriptingProtos.ExplainYqlRequest) request,
