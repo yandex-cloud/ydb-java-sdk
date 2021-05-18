@@ -1,11 +1,13 @@
 package com.yandex.ydb.table.query;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import com.yandex.ydb.core.Result;
 import com.yandex.ydb.table.settings.ExecuteDataQuerySettings;
 import com.yandex.ydb.table.transaction.TxControl;
+import com.yandex.ydb.table.values.Type;
 
 
 /**
@@ -16,6 +18,13 @@ public interface DataQuery {
     String getId();
 
     Params newParams();
+
+    /**
+     * Returns parameter types
+     *
+     * @return unmodifiable map of types
+     */
+    Map<String, Type> types();
 
     Optional<String> getText();
 

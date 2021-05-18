@@ -6,6 +6,7 @@ import java.util.Map;
 import com.yandex.ydb.ValueProtos;
 import com.yandex.ydb.table.result.ResultSetReader;
 import com.yandex.ydb.table.result.ValueReader;
+import com.yandex.ydb.table.values.Type;
 
 
 /**
@@ -55,7 +56,7 @@ final class ProtoResultSetReader implements ResultSetReader {
 
     @Override
     public void setRowIndex(int index) {
-        if (index >= resultSet.getRowsCount()) {
+        if (index < 0 || index >= resultSet.getRowsCount()) {
             currentRow = null;
         } else {
             rowIndex = index;
@@ -106,11 +107,21 @@ final class ProtoResultSetReader implements ResultSetReader {
         return getColumn(index);
     }
 
+    @Override
+    public Type getColumnType(int index) {
+        AbstractValueReader reader = columnReaders[index];
+        return reader.getType();
+    }
+
     private int columnIndex(String name) {
         Integer index = columnIndexes.get(name);
         if (index == null) {
             throw new IllegalArgumentException("unknown column '" + name + "\'");
         }
         return index;
+    }
+
+    ValueProtos.ResultSet getResultSet() {
+        return resultSet;
     }
 }
