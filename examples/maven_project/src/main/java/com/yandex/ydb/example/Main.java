@@ -18,8 +18,10 @@ import yandex.cloud.sdk.auth.provider.ComputeEngineCredentialProvider;
 import yandex.cloud.sdk.auth.provider.CredentialProvider;
 import yandex.cloud.sdk.auth.provider.IamTokenCredentialProvider;
 import yandex.cloud.sdk.auth.provider.OauthCredentialProvider;
+import yandex.cloud.sdk.auth.provider.ApiKeyCredentialProvider;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.stream.Collectors;
 
@@ -35,15 +37,23 @@ public final class Main {
         var database = args[1];
 
         CredentialProvider credentialProvider;
-        var oauthToken = System.getenv("OAUTH_TOKEN");
         var iamToken = System.getenv("IAM_TOKEN");
-        if (oauthToken != null) {
+        var oauthToken = System.getenv("YC_TOKEN");
+        if (oauthToken == null) {
+            oauthToken = System.getenv("OAUTH_TOKEN"); // Deprecated name
+        }
+        var saKeyFile = System.getenv("SA_KEY_FILE");
+        if (iamToken != null) {
+            credentialProvider = IamTokenCredentialProvider.builder()
+                    .token(iamToken)
+                    .build();
+        } else if (oauthToken != null) {
             credentialProvider = OauthCredentialProvider.builder()
                     .oauth(oauthToken)
                     .build();
-        } else if (iamToken != null) {
-            credentialProvider = IamTokenCredentialProvider.builder()
-                    .token(iamToken)
+        } else if (saKeyFile != null) {
+            credentialProvider = ApiKeyCredentialProvider.builder()
+                    .fromFile(Paths.get(saKeyFile))
                     .build();
         } else {
             credentialProvider = ComputeEngineCredentialProvider.builder()
