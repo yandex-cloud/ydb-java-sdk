@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -16,8 +17,13 @@ import java.util.stream.IntStream;
 
 import com.yandex.ydb.jdbc.YdbConst;
 import com.yandex.ydb.jdbc.YdbDriver;
+import com.yandex.ydb.jdbc.YdbPreparedStatement;
 import com.yandex.ydb.jdbc.YdbResultSet;
 import com.yandex.ydb.jdbc.exception.YdbNonRetryableException;
+import com.yandex.ydb.table.values.ListType;
+import com.yandex.ydb.table.values.ListValue;
+import com.yandex.ydb.table.values.PrimitiveType;
+import com.yandex.ydb.table.values.PrimitiveValue;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -509,6 +515,32 @@ class YdbConnectionImplTest extends AbstractTest {
         assertThrowsMsgLike(YdbNonRetryableException.class,
                 () -> createTestTable(tableName, sql),
                 expectedError);
+    }
+
+    @Test
+    void testWarningInIndexUsage() throws SQLException {
+        connection.createStatement().executeSchemeQuery("--!syntax_v1\n" +
+                "create table unit_0_indexed (" +
+                "id Int32, value Int32, " +
+                "primary key (id), " +
+                "index idx_value global on (value))");
+
+        String query = "--!syntax_v1\n" +
+                "declare $list as List<Int32>;\n" +
+                "select * from unit_0_indexed view idx_value where value in $list;";
+
+        ListValue value = ListType.of(PrimitiveType.int32()).newValue(
+                Arrays.asList(PrimitiveValue.int32(1), PrimitiveValue.int32(2)));
+        YdbPreparedStatement ps = connection.prepareStatement(query);
+        ps.setObject("list", value);
+        YdbResultSet rs = ps.executeQuery();
+        assertFalse(rs.next());
+
+        SQLWarning warnings = ps.getWarnings();
+        assertNotNull(warnings);
+
+        // TODO: add proper tests and driver property after https://a.yandex-team.ru/review/1781801/details merge
+        System.out.println("WARNING: " + warnings);
     }
 
     //
