@@ -1,0 +1,12 @@
+[
+  {
+    "COLUMN_NAME": "TABLE_SCHEM",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "TABLE_CATALOG",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  }
+]

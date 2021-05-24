@@ -29,11 +29,10 @@ import com.yandex.ydb.jdbc.exception.YdbConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.yandex.ydb.jdbc.YdbConst.JDBC_YDB_PREFIX;
+
 public class YdbProperties {
     private static final Logger LOGGER = LoggerFactory.getLogger(YdbProperties.class);
-
-    private static final String JDBC_PREFIX = "jdbc:";
-    private static final String JDBC_YDB_PREFIX = JDBC_PREFIX + "ydb:";
 
     private final YdbConnectionProperties connectionProperties;
     private final YdbClientProperties clientProperties;
@@ -78,7 +77,7 @@ public class YdbProperties {
     @SuppressWarnings("UnstableApiUsage")
     public static YdbProperties from(String url, Properties origProperties) throws SQLException {
         if (!isYdb(url)) {
-            throw new YdbConfigurationException("Not an YDB URL, must starts from " + JDBC_YDB_PREFIX);
+            throw new YdbConfigurationException("[" + url + "] is not a YDB URL, must starts from " + JDBC_YDB_PREFIX);
         }
 
         url = url.substring(JDBC_YDB_PREFIX.length());

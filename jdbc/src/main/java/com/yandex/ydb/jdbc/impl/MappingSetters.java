@@ -5,15 +5,16 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.charset.Charset;
-import java.sql.Date;
 import java.sql.SQLException;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -22,6 +23,9 @@ import com.google.common.io.CharStreams;
 import com.yandex.ydb.jdbc.exception.YdbExecutionException;
 import com.yandex.ydb.table.values.DecimalType;
 import com.yandex.ydb.table.values.DecimalValue;
+import com.yandex.ydb.table.values.ListType;
+import com.yandex.ydb.table.values.ListValue;
+import com.yandex.ydb.table.values.OptionalType;
 import com.yandex.ydb.table.values.PrimitiveType;
 import com.yandex.ydb.table.values.PrimitiveValue;
 import com.yandex.ydb.table.values.Type;
@@ -32,8 +36,6 @@ import static com.yandex.ydb.jdbc.YdbConst.CANNOT_LOAD_DATA_FROM_READER;
 import static com.yandex.ydb.jdbc.YdbConst.UNABLE_TO_CAST;
 
 public class MappingSetters {
-
-    static final Charset DEFAULT_CHARSET = Charset.defaultCharset();
 
     static Setters buildSetters(Type type) {
         return buildToValueImpl(type);
@@ -100,6 +102,12 @@ public class MappingSetters {
             }
         } else if (kind == Type.Kind.DECIMAL) {
             return x -> castToDecimalValue((DecimalType) type, x);
+        } else if (kind == Type.Kind.LIST) {
+            ListType listType = (ListType) type;
+            Setters itemSetter = buildToValueImpl(listType.getItemType());
+            return x -> castAsList(listType, itemSetter, x);
+        } else if (kind == Type.Kind.OPTIONAL) {
+            return buildToValueImpl(((OptionalType) type).getItemType());
         } else {
             return x -> {
                 throw castNotSupported(kind, x);
@@ -107,30 +115,53 @@ public class MappingSetters {
         }
     }
 
+    private static String toString(Object x) {
+        return x == null ? "null" : (x.getClass() + ": " + x);
+    }
 
     private static SQLException castNotSupported(PrimitiveType.Id type, Object x) {
-        return new SQLException(String.format(UNABLE_TO_CAST, x, type));
+        return new SQLException(String.format(UNABLE_TO_CAST, toString(x), type));
     }
 
     private static SQLException castNotSupported(Type.Kind kind, Object x) {
-        return new SQLException(String.format(UNABLE_TO_CAST, x, kind));
+        return new SQLException(String.format(UNABLE_TO_CAST, toString(x), kind));
+    }
+
+    private static ListValue castAsList(ListType type, Setters itemSetter, Object x) throws SQLException {
+        if (x instanceof Collection<?>) {
+            Collection<?> values = (Collection<?>) x;
+            int len = values.size();
+            Value<?>[] result = new Value[len];
+            int index = 0;
+            for (Object value : values) {
+                if (value != null) {
+                    result[index++] = itemSetter.toValue(value);
+                }
+            }
+            if (index < result.length) {
+                result = Arrays.copyOf(result, index); // Some values are null
+            }
+            return type.newValueOwn(result);
+        } else {
+            throw castNotSupported(type.getKind(), x);
+        }
     }
 
     private static byte[] castAsBytes(PrimitiveType.Id type, Object x) throws SQLException {
         if (x instanceof byte[]) {
             return (byte[]) x;
         } else if (x instanceof String) {
-            return ((String) x).getBytes(DEFAULT_CHARSET);
+            return ((String) x).getBytes();
         } else if (x instanceof InputStream) {
             return ByteStream.fromInputStream((InputStream) x, -1).asByteArray();
         } else if (x instanceof Reader) {
-            return CharStream.fromReader((Reader) x, -1).asString().getBytes(DEFAULT_CHARSET);
+            return CharStream.fromReader((Reader) x, -1).asString().getBytes();
         } else if (x instanceof ByteStream) {
             return ((ByteStream) x).asByteArray();
         } else if (x instanceof CharStream) {
-            return ((CharStream) x).asString().getBytes(DEFAULT_CHARSET);
+            return ((CharStream) x).asString().getBytes();
         } else {
-            return castAsString(type, x).getBytes(DEFAULT_CHARSET);
+            return castAsString(type, x).getBytes();
         }
     }
 
@@ -138,15 +169,15 @@ public class MappingSetters {
         if (x instanceof byte[]) {
             return (byte[]) x;
         } else if (x instanceof String) {
-            return ((String) x).getBytes(DEFAULT_CHARSET);
+            return ((String) x).getBytes();
         } else if (x instanceof InputStream) {
             return ByteStream.fromInputStream((InputStream) x, -1).asByteArray();
         } else if (x instanceof Reader) {
-            return CharStream.fromReader((Reader) x, -1).asString().getBytes(DEFAULT_CHARSET);
+            return CharStream.fromReader((Reader) x, -1).asString().getBytes();
         } else if (x instanceof ByteStream) {
             return ((ByteStream) x).asByteArray();
         } else if (x instanceof CharStream) {
-            return ((CharStream) x).asString().getBytes(DEFAULT_CHARSET);
+            return ((CharStream) x).asString().getBytes();
         }
         throw castNotSupported(type, x);
     }
@@ -156,13 +187,13 @@ public class MappingSetters {
         if (x instanceof String) {
             return (String) x;
         } else if (x instanceof byte[]) {
-            return new String((byte[]) x, DEFAULT_CHARSET);
+            return new String((byte[]) x);
         } else if (x instanceof InputStream) {
-            return new String(ByteStream.fromInputStream((InputStream) x, -1).asByteArray(), DEFAULT_CHARSET);
+            return new String(ByteStream.fromInputStream((InputStream) x, -1).asByteArray());
         } else if (x instanceof Reader) {
             return CharStream.fromReader((Reader) x, -1).asString();
         } else if (x instanceof ByteStream) {
-            return new String(((ByteStream) x).asByteArray(), DEFAULT_CHARSET);
+            return new String(((ByteStream) x).asByteArray());
         } else if (x instanceof CharStream) {
             return ((CharStream) x).asString();
         } else {
@@ -174,13 +205,13 @@ public class MappingSetters {
         if (x instanceof String) {
             return (String) x;
         } else if (x instanceof byte[]) {
-            return new String((byte[]) x, DEFAULT_CHARSET);
+            return new String((byte[]) x);
         } else if (x instanceof InputStream) {
-            return new String(ByteStream.fromInputStream((InputStream) x, -1).asByteArray(), DEFAULT_CHARSET);
+            return new String(ByteStream.fromInputStream((InputStream) x, -1).asByteArray());
         } else if (x instanceof Reader) {
             return CharStream.fromReader((Reader) x, -1).asString();
         } else if (x instanceof ByteStream) {
-            return new String(((ByteStream) x).asByteArray(), DEFAULT_CHARSET);
+            return new String(((ByteStream) x).asByteArray());
         } else if (x instanceof CharStream) {
             return ((CharStream) x).asString();
         }
@@ -191,7 +222,7 @@ public class MappingSetters {
         if (x instanceof String) {
             return PrimitiveValue.uuid((String) x);
         } else if (x instanceof byte[]) {
-            return PrimitiveValue.uuid(new String((byte[]) x, DEFAULT_CHARSET));
+            return PrimitiveValue.uuid(new String((byte[]) x));
         } else if (x instanceof UUID) {
             return PrimitiveValue.uuid((UUID) x);
         }
@@ -242,6 +273,8 @@ public class MappingSetters {
             return (Byte) x;
         } else if (x instanceof Boolean) {
             return ((Boolean) x) ? 1L : 0L;
+        } else if (x instanceof BigInteger) {
+            return ((BigInteger) x).longValue();
         }
         throw castNotSupported(type, x);
     }
@@ -324,10 +357,10 @@ public class MappingSetters {
     private static PrimitiveValue castToDateTime(PrimitiveType.Id type, Object x) throws SQLException {
         if (x instanceof Instant) {
             return PrimitiveValue.datetime((Instant) x);
+        } else if (x instanceof LocalDateTime) {
+            return PrimitiveValue.datetime((LocalDateTime) x);
         } else if (x instanceof Long) {
             return PrimitiveValue.datetime(TimeUnit.MILLISECONDS.toSeconds((Long) x));
-        } else if (x instanceof Time) {
-            return PrimitiveValue.datetime(TimeUnit.MILLISECONDS.toSeconds(((Time) x).getTime()));
         } else if (x instanceof Date) {
             return PrimitiveValue.datetime(TimeUnit.MILLISECONDS.toSeconds(((Date) x).getTime()));
         } else if (x instanceof Timestamp) {
@@ -341,8 +374,6 @@ public class MappingSetters {
             return PrimitiveValue.timestamp((Instant) x);
         } else if (x instanceof Long) {
             return PrimitiveValue.timestamp(TimeUnit.MILLISECONDS.toMicros((Long) x));
-        } else if (x instanceof Time) {
-            return PrimitiveValue.timestamp(TimeUnit.MILLISECONDS.toMicros(((Time) x).getTime()));
         } else if (x instanceof Date) {
             return PrimitiveValue.timestamp(TimeUnit.MILLISECONDS.toMicros(((Date) x).getTime()));
         } else if (x instanceof Timestamp) {
@@ -371,7 +402,6 @@ public class MappingSetters {
         }
         throw castNotSupported(type.getKind(), x);
     }
-
 
     interface Setters {
         Value<?> toValue(Object value) throws SQLException;

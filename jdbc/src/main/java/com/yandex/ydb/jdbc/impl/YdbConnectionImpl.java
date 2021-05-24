@@ -4,7 +4,6 @@ import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
-import java.sql.DatabaseMetaData;
 import java.sql.NClob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -26,14 +25,17 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Suppliers;
 import com.yandex.ydb.core.Issue;
 import com.yandex.ydb.core.Result;
 import com.yandex.ydb.core.Status;
 import com.yandex.ydb.core.StatusCode;
 import com.yandex.ydb.jdbc.YdbConnection;
 import com.yandex.ydb.jdbc.YdbConst;
+import com.yandex.ydb.jdbc.YdbDatabaseMetaData;
 import com.yandex.ydb.jdbc.YdbPreparedStatement;
 import com.yandex.ydb.jdbc.YdbStatement;
+import com.yandex.ydb.jdbc.YdbTypes;
 import com.yandex.ydb.jdbc.exception.YdbRetryableException;
 import com.yandex.ydb.jdbc.impl.YdbPreparedStatementBatchedImpl.StructBatchConfiguration;
 import com.yandex.ydb.jdbc.settings.YdbOperationProperties;
@@ -53,11 +55,11 @@ import static com.yandex.ydb.jdbc.YdbConst.ABORT_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.ARRAYS_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.AUTO_GENERATED_KEYS_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.BLOB_UNSUPPORTED;
+import static com.yandex.ydb.jdbc.YdbConst.CANNOT_UNWRAP_TO;
 import static com.yandex.ydb.jdbc.YdbConst.CHANGE_ISOLATION_INSIDE_TX;
 import static com.yandex.ydb.jdbc.YdbConst.CLOB_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.CLOSED_CONNECTION;
 import static com.yandex.ydb.jdbc.YdbConst.NCLOB_UNSUPPORTED;
-import static com.yandex.ydb.jdbc.YdbConst.NOTHING_TO_UNWRAP;
 import static com.yandex.ydb.jdbc.YdbConst.ONLINE_CONSISTENT_READ_ONLY;
 import static com.yandex.ydb.jdbc.YdbConst.ONLINE_INCONSISTENT_READ_ONLY;
 import static com.yandex.ydb.jdbc.YdbConst.PREPARED_CALLS_UNSUPPORTED;
@@ -77,13 +79,16 @@ public class YdbConnectionImpl implements YdbConnection {
     private static final Logger LOGGER = LoggerFactory.getLogger(YdbConnectionImpl.class);
 
     //
-
     private final MutableState state = new MutableState();
 
     private final Supplier<SchemeClient> schemeClient;
     private final Session session;
     private final YdbOperationProperties properties;
     private final Validator validator;
+
+    private final Supplier<YdbDatabaseMetaData> metaDataSupplier;
+
+    private final String url;
     @Nullable
     private final String database;
 
@@ -91,12 +96,16 @@ public class YdbConnectionImpl implements YdbConnection {
                              Session session,
                              YdbOperationProperties properties,
                              Validator validator,
+                             String url,
                              @Nullable String database) {
         this.schemeClient = Objects.requireNonNull(schemeClient);
         this.session = Objects.requireNonNull(session);
         this.properties = Objects.requireNonNull(properties);
         this.validator = Objects.requireNonNull(validator);
+        this.url = Objects.requireNonNull(url);
         this.database = database;
+
+        this.metaDataSupplier = Suppliers.memoize(() -> new YdbDatabaseMetaDataImpl(this))::get;
 
         this.state.autoCommit = properties.isAutoCommit();
         this.state.transactionLevel = properties.getTransactionLevel();
@@ -145,12 +154,13 @@ public class YdbConnectionImpl implements YdbConnection {
     public void commit() throws SQLException {
         ensureOpened();
 
-        if (state.txId != null) {
+        String txId = state.txId;
+        if (txId != null) {
             this.clearWarnings();
             try {
                 this.joinStatusImpl(
-                        () -> "Commit",
-                        () -> this.session.commitTransaction(state.txId, validator.init(new CommitTxSettings())));
+                        () -> "Commit TxId: " + txId,
+                        () -> this.session.commitTransaction(txId, validator.init(new CommitTxSettings())));
                 this.clearTx();
             } catch (YdbRetryableException e) {
                 if (e.getStatusCode() == StatusCode.NOT_FOUND) {
@@ -165,18 +175,19 @@ public class YdbConnectionImpl implements YdbConnection {
     public void rollback() throws SQLException {
         ensureOpened();
 
-        if (state.txId != null) {
+        String txId = state.txId;
+        if (txId != null) {
             this.clearWarnings();
             try {
                 this.joinStatusImpl(
-                        () -> "Rollback",
-                        () -> this.session.rollbackTransaction(state.txId, validator.init(new RollbackTxSettings())));
+                        () -> "Rollback TxId: " + txId,
+                        () -> this.session.rollbackTransaction(txId, validator.init(new RollbackTxSettings())));
                 this.clearTx();
             } catch (YdbRetryableException e) {
                 if (e.getStatusCode() == StatusCode.NOT_FOUND) {
                     this.clearTx();
                     LOGGER.warn("Unable to rollback transaction {}, it seems the transaction is expired",
-                            state.txId, e);
+                            txId, e);
                 } else {
                     throw e;
                 }
@@ -188,11 +199,14 @@ public class YdbConnectionImpl implements YdbConnection {
     public void close() throws SQLException {
         if (!state.closed) {
             this.clearWarnings();
-            LOGGER.debug("Closing session {}", session.getId());
             try {
-                this.joinStatusImpl(
-                        () -> "Close",
-                        () -> this.session.close(validator.init(new CloseSessionSettings())));
+                if (session.release()) {
+                    LOGGER.info("Releasing sesession: {}", session.getId());
+                } else {
+                    this.joinStatusImpl(
+                            () -> "Closing session: " + session.getId(),
+                            () -> this.session.close(validator.init(new CloseSessionSettings())));
+                }
             } finally {
                 state.closed = true;
                 this.clearTx();
@@ -206,8 +220,8 @@ public class YdbConnectionImpl implements YdbConnection {
     }
 
     @Override
-    public DatabaseMetaData getMetaData() throws SQLException {
-        throw new SQLFeatureNotSupportedException("metadata is not supported yet");
+    public YdbDatabaseMetaData getMetaData() {
+        return metaDataSupplier.get();
     }
 
     @Override
@@ -359,6 +373,14 @@ public class YdbConnectionImpl implements YdbConnection {
 
 
     @Override
+    public YdbPreparedStatement prepareStatementInMemory(String origSql) throws SQLException {
+        ensureOpened();
+        this.clearWarnings();
+        String sql = this.prepareYdbSql(origSql);
+        return new YdbPreparedStatementInMemoryImpl(this, ResultSet.TYPE_SCROLL_INSENSITIVE, sql);
+    }
+
+    @Override
     public YdbPreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException {
         if (autoGeneratedKeys != Statement.NO_GENERATED_KEYS) {
             throw new SQLFeatureNotSupportedException(AUTO_GENERATED_KEYS_UNSUPPORTED);
@@ -411,9 +433,8 @@ public class YdbConnectionImpl implements YdbConnection {
 
     @Override
     public String getSchema() {
-        return database;
+        return null;
     }
-
 
     @Override
     public int getNetworkTimeout() throws SQLException {
@@ -423,9 +444,24 @@ public class YdbConnectionImpl implements YdbConnection {
 
     //
 
+
+    protected String getUrl() {
+        return url;
+    }
+
+    @Nullable
+    protected String getDatabase() {
+        return database;
+    }
+
     @Override
-    public Supplier<SchemeClient> getYdbScheme() {
-        return schemeClient;
+    public YdbTypes getYdbTypes() {
+        return YdbTypesImpl.getInstance();
+    }
+
+    @Override
+    public SchemeClient getYdbScheme() {
+        return schemeClient.get();
     }
 
     @Override
@@ -513,9 +549,15 @@ public class YdbConnectionImpl implements YdbConnection {
     }
 
     protected String prepareYdbSql(String sql) {
+        for (QueryType type : QueryType.values()) {
+            if (sql.contains(type.getAlternativePrefix())) {
+                sql = sql.replace(type.getAlternativePrefix(), type.getPrefix()); // Support alternative mode
+            }
+        }
+
         if (properties.isEnforceSqlV1()) {
             if (!sql.contains(YdbConst.PREFIX_SYNTAX_V1)) {
-                return YdbConst.PREFIX_SYNTAX_V1 + "\n" + sql;
+                sql = YdbConst.PREFIX_SYNTAX_V1 + "\n" + sql;
             }
         }
         return sql;
@@ -653,11 +695,14 @@ public class YdbConnectionImpl implements YdbConnection {
 
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
-        throw new SQLException(NOTHING_TO_UNWRAP);
+        if (iface.isAssignableFrom(getClass())) {
+            return iface.cast(this);
+        }
+        throw new SQLException(CANNOT_UNWRAP_TO + iface);
     }
 
     @Override
     public boolean isWrapperFor(Class<?> iface) {
-        return false;
+        return iface.isAssignableFrom(getClass());
     }
 }

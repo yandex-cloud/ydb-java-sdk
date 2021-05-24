@@ -33,6 +33,8 @@ class YdbPreparedStatementImplTest extends AbstractYdbPreparedStatementImplTest 
         });
     }
 
+
+
     @Override
     protected YdbPreparedStatement getTestStatement(YdbConnection connection,
                                                     String column,
@@ -48,11 +50,16 @@ class YdbPreparedStatementImplTest extends AbstractYdbPreparedStatementImplTest 
 
     @Override
     protected YdbPreparedStatement getTestAllValuesStatement(YdbConnection connection) throws SQLException {
-        return connection.prepareStatement(subst(PREPARE_ALL, "unit_2"));
+        return connection.prepareStatement(subst("unit_2", PREPARE_ALL));
     }
 
     @Override
     protected boolean expectParameterPrefixed() {
         return true;
+    }
+
+    @Override
+    protected boolean sqlTypeRequired() {
+        return false;
     }
 }

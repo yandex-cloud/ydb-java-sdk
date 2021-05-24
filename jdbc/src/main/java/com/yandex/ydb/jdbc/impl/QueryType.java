@@ -16,13 +16,19 @@ public enum QueryType {
     EXPLAIN_QUERY("--jdbc:EXPLAIN");
 
     private final String prefix;
+    private final String alternativePrefix;
 
     QueryType(String prefix) {
         this.prefix = prefix;
+        this.alternativePrefix = "!" + prefix;
     }
 
     public String getPrefix() {
         return prefix;
+    }
+
+    public String getAlternativePrefix() {
+        return alternativePrefix;
     }
 
     public static Collection<String> prefixes() {

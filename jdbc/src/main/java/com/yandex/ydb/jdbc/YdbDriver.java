@@ -33,6 +33,7 @@ import com.yandex.ydb.table.rpc.grpc.GrpcTableRpc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.yandex.ydb.jdbc.YdbConst.JDBC_YDB_PREFIX;
 import static com.yandex.ydb.jdbc.YdbConst.YDB_DRIVER_USES_SL4J;
 
 /**
@@ -77,6 +78,7 @@ public class YdbDriver implements Driver {
                 session.expect("New Session Created"),
                 operationProperties,
                 validator,
+                url, // raw URL
                 properties.getConnectionProperties().getDatabase());
     }
 
@@ -87,17 +89,18 @@ public class YdbDriver implements Driver {
 
     @Override
     public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
-        return YdbProperties.from(url, info).toDriverProperties();
+        String targetUrl = acceptsURL(url) ? url : JDBC_YDB_PREFIX;
+        return YdbProperties.from(targetUrl, info).toDriverProperties();
     }
 
     @Override
     public int getMajorVersion() {
-        return 1;
+        return YdbDriverInfo.DRIVER_MAJOR_VERSION;
     }
 
     @Override
     public int getMinorVersion() {
-        return 0;
+        return YdbDriverInfo.DRIVER_MINOR_VERSION;
     }
 
     @Override

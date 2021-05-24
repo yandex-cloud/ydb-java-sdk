@@ -3,7 +3,10 @@ package com.yandex.ydb.jdbc.impl;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import com.yandex.ydb.jdbc.exception.YdbExecutionException;
 import com.yandex.ydb.table.query.DataQuery;
@@ -15,7 +18,7 @@ import static com.yandex.ydb.jdbc.YdbConst.BATCH_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.INDEXED_PARAMETERS_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.PARAMETER_NOT_FOUND;
 
-public class YdbPreparedStatementImpl extends AbstractYdbPreparedStatementImpl {
+public class YdbPreparedStatementImpl extends AbstractYdbDataQueryPreparedStatementImpl {
 
     private final DataQuery dataQuery;
     private final MutableState state = new MutableState();
@@ -61,7 +64,7 @@ public class YdbPreparedStatementImpl extends AbstractYdbPreparedStatementImpl {
     //
 
     @Override
-    protected void setImpl(String origParameterName, Object x) throws SQLException {
+    protected void setImpl(String origParameterName, @Nullable Object x, int sqlType) throws SQLException {
         String parameterName;
         if (enforceVariablePrefix && !origParameterName.startsWith("$")) {
             parameterName = "$" + origParameterName;
@@ -74,7 +77,7 @@ public class YdbPreparedStatementImpl extends AbstractYdbPreparedStatementImpl {
     }
 
     @Override
-    protected void setImpl(int parameterIndex, Object x) throws SQLException {
+    protected void setImpl(int parameterIndex, @Nullable Object x, int sqlType) throws SQLException {
         /*
         Yes, we can figure out the parameter index - we know how to build parameters metadata.
         However, the actual parameter indexes could be different from ones specified in SQL.
@@ -91,8 +94,13 @@ public class YdbPreparedStatementImpl extends AbstractYdbPreparedStatementImpl {
     }
 
     @Override
-    protected Map<String, Type> getParameterTypes() {
-        return dataQuery.types();
+    protected Map<String, TypeDescription> getParameterTypes() {
+        Map<String, Type> source = dataQuery.types();
+        Map<String, TypeDescription> target = new LinkedHashMap<>(source.size());
+        for (Map.Entry<String, Type> entry : source.entrySet()) {
+            target.put(entry.getKey(), TypeDescription.of(entry.getValue()));
+        }
+        return target;
     }
 
     //

@@ -1,0 +1,47 @@
+[
+  {
+    "TABLE_CAT": null,
+    "TABLE_SCHEM": null,
+    "TABLE_NAME": "unit_1_multi_idx",
+    "NON_UNIQUE": true,
+    "INDEX_QUALIFIER": null,
+    "INDEX_NAME": "idx_1",
+    "TYPE": 2,
+    "ORDINAL_POSITION": 1,
+    "COLUMN_NAME": "value3",
+    "ASC_OR_DESC": null,
+    "CARDINALITY": 0,
+    "PAGES": 0,
+    "FILTER_CONDITION": null
+  },
+  {
+    "TABLE_CAT": null,
+    "TABLE_SCHEM": null,
+    "TABLE_NAME": "unit_1_multi_idx",
+    "NON_UNIQUE": true,
+    "INDEX_QUALIFIER": null,
+    "INDEX_NAME": "idx_2",
+    "TYPE": 2,
+    "ORDINAL_POSITION": 1,
+    "COLUMN_NAME": "value1",
+    "ASC_OR_DESC": null,
+    "CARDINALITY": 0,
+    "PAGES": 0,
+    "FILTER_CONDITION": null
+  },
+  {
+    "TABLE_CAT": null,
+    "TABLE_SCHEM": null,
+    "TABLE_NAME": "unit_1_multi_idx",
+    "NON_UNIQUE": true,
+    "INDEX_QUALIFIER": null,
+    "INDEX_NAME": "idx_2",
+    "TYPE": 2,
+    "ORDINAL_POSITION": 2,
+    "COLUMN_NAME": "value2",
+    "ASC_OR_DESC": null,
+    "CARDINALITY": 0,
+    "PAGES": 0,
+    "FILTER_CONDITION": null
+  }
+]

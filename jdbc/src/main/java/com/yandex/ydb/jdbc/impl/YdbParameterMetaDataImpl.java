@@ -2,16 +2,14 @@ package com.yandex.ydb.jdbc.impl;
 
 import java.sql.ParameterMetaData;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 import com.yandex.ydb.jdbc.YdbParameterMetaData;
-import com.yandex.ydb.table.values.Type;
 
-import static com.yandex.ydb.jdbc.YdbConst.NOTHING_TO_UNWRAP;
+import static com.yandex.ydb.jdbc.YdbConst.CANNOT_UNWRAP_TO;
 import static com.yandex.ydb.jdbc.YdbConst.PARAMETER_NOT_FOUND;
 import static com.yandex.ydb.jdbc.YdbConst.PARAMETER_NUMBER_NOT_FOUND;
 
@@ -19,7 +17,7 @@ public class YdbParameterMetaDataImpl implements YdbParameterMetaData {
 
     private final Configuration cfg;
 
-    public YdbParameterMetaDataImpl(Map<String, Type> types) {
+    public YdbParameterMetaDataImpl(Map<String, TypeDescription> types) {
         this.cfg = asConfiguration(types);
     }
 
@@ -57,7 +55,7 @@ public class YdbParameterMetaDataImpl implements YdbParameterMetaData {
 
     @Override
     public String getParameterTypeName(int param) throws SQLException {
-        return getDescription(param).sqlTypes.getDatabaseType();
+        return getDescription(param).type.toString();
     }
 
     @Override
@@ -95,15 +93,15 @@ public class YdbParameterMetaDataImpl implements YdbParameterMetaData {
         return cfg.descriptions[getIndex(param)];
     }
 
-    private static Configuration asConfiguration(Map<String, Type> types) {
+    private static Configuration asConfiguration(Map<String, TypeDescription> types) {
         // TODO: cache?
         int count = types.size();
         TypeDescription[] descriptions = new TypeDescription[count];
         String[] names = new String[count];
         Map<String, Integer> indexes = new HashMap<>(count);
         int index = 0;
-        for (Map.Entry<String, Type> entry : types.entrySet()) {
-            descriptions[index] = TypeDescription.of(entry.getValue());
+        for (Map.Entry<String, TypeDescription> entry : types.entrySet()) {
+            descriptions[index] = entry.getValue();
             names[index] = entry.getKey();
             indexes.put(entry.getKey(), index);
             index++;
@@ -125,16 +123,16 @@ public class YdbParameterMetaDataImpl implements YdbParameterMetaData {
         }
     }
 
-
-    // UNSUPPORTED
-
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
-        throw new SQLFeatureNotSupportedException(NOTHING_TO_UNWRAP);
+        if (iface.isAssignableFrom(getClass())) {
+            return iface.cast(this);
+        }
+        throw new SQLException(CANNOT_UNWRAP_TO + iface);
     }
 
     @Override
     public boolean isWrapperFor(Class<?> iface) {
-        return false;
+        return iface.isAssignableFrom(getClass());
     }
 }

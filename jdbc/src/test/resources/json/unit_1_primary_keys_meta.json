@@ -1,0 +1,32 @@
+[
+  {
+    "COLUMN_NAME": "TABLE_CAT",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "TABLE_SCHEM",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "TABLE_NAME",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "COLUMN_NAME",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "KEY_SEQ",
+    "COLUMN_TYPE": 5,
+    "COLUMN_TYPE_NAME": "Int16"
+  },
+  {
+    "COLUMN_NAME": "PK_NAME",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  }
+]

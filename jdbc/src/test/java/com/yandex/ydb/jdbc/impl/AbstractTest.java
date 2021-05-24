@@ -7,13 +7,13 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.sql.Date;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Time;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,25 +25,23 @@ import com.yandex.ydb.jdbc.TestHelper;
 import com.yandex.ydb.jdbc.YdbConnection;
 import com.yandex.ydb.jdbc.YdbConst;
 import com.yandex.ydb.jdbc.YdbDriver;
-import org.apache.logging.log4j.core.lookup.StrSubstitutor;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.yandex.ydb.jdbc.TestHelper.stringFileReference;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public abstract class AbstractTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractTest.class);
 
     static final String CREATE_TABLE = stringFileReference("classpath:sql/create_table.sql");
+    static final String SIMPLE_TABLE = "unit_1";
+    static final String PREPARED_TABLE = "unit_2";
 
     // TODO: test fast connection reuse
-
-    protected static boolean reuseConnection = true;
-    protected static YdbConnection connection;
+    private static final boolean reuseConnection = Boolean.parseBoolean(System.getProperty("REUSE_CONNECTION", "true"));
+    private static YdbConnection connection;
 
     @Nullable
     static InputStream stream(@Nullable String value) {
@@ -67,11 +65,6 @@ public abstract class AbstractTest {
                 }
             }
         };
-    }
-
-    @BeforeEach
-    void beforeEach() throws SQLException {
-        getTestConnection();
     }
 
     @AfterEach
@@ -108,29 +101,34 @@ public abstract class AbstractTest {
         return connection;
     }
 
+    protected void configureOnce(TestHelper.SQLSimpleRun run) throws SQLException {
+        TestHelper.configureOnce(this.getClass(), run);
+    }
+
+    protected void cleanupSimpleTestTable() throws SQLException {
+        cleanupTable(SIMPLE_TABLE);
+    }
+
+    protected void cleanupTable(String table) throws SQLException {
+        YdbConnection connection = getTestConnection();
+        connection.createStatement().executeUpdate("delete from " + table);
+        connection.commit();
+    }
+
     protected static void recreatePreparedTestTable() throws SQLException {
-        createTestTable("unit_2", CREATE_TABLE);
+        createTestTable(PREPARED_TABLE, CREATE_TABLE);
     }
 
     protected static void recreateSimpleTestTable() throws SQLException {
-        createTestTable("unit_1", CREATE_TABLE);
+        createTestTable(SIMPLE_TABLE, CREATE_TABLE);
     }
 
     protected static void createTestTable(String tableName, String expression) throws SQLException {
-        try (Statement statement = getTestConnection().createStatement()) {
-            try {
-                assertFalse(statement.execute(String.format("--jdbc:SCHEME\ndrop table %s", tableName)));
-            } catch (Exception e) {
-                // do nothing
-            }
-            assertFalse(statement.execute(subst(expression, tableName)));
-        }
+        TestHelper.initTable(getTestConnection(), tableName, expression);
     }
 
-    protected static String subst(String sql, String tableName) {
-        Map<String, String> map = new HashMap<>();
-        map.put("tableName", tableName);
-        return new StrSubstitutor(map).replace(sql);
+    protected static String subst(String tableName, String sql) {
+        return TestHelper.withTableName(tableName, sql);
     }
 
     protected static <T> Object castCompatible(T value) throws SQLException {
@@ -166,5 +164,9 @@ public abstract class AbstractTest {
         return Stream.of(lists)
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
+    }
+
+    protected static <T> Set<T> set(T... values) {
+        return new HashSet<>(Arrays.asList(values));
     }
 }

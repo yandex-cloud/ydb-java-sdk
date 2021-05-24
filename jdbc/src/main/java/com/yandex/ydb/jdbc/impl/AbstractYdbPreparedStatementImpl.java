@@ -17,18 +17,15 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Calendar;
-import java.util.Map;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Suppliers;
-import com.yandex.ydb.jdbc.YdbParameterMetaData;
+import com.yandex.ydb.jdbc.YdbConst;
 import com.yandex.ydb.jdbc.YdbPreparedStatement;
 import com.yandex.ydb.jdbc.YdbResultSet;
-import com.yandex.ydb.table.query.DataQuery;
 import com.yandex.ydb.table.query.Params;
 import com.yandex.ydb.table.values.OptionalValue;
 import com.yandex.ydb.table.values.Type;
@@ -37,13 +34,13 @@ import com.yandex.ydb.table.values.Value;
 import static com.yandex.ydb.jdbc.YdbConst.ARRAYS_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.ASCII_STREAM_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.BLOB_UNSUPPORTED;
+import static com.yandex.ydb.jdbc.YdbConst.CANNOT_UNWRAP_TO;
 import static com.yandex.ydb.jdbc.YdbConst.CLOB_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.CUSTOM_SQL_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.INVALID_PARAMETER_TYPE;
 import static com.yandex.ydb.jdbc.YdbConst.METADATA_RS_UNSUPPORTED_IN_PS;
 import static com.yandex.ydb.jdbc.YdbConst.MISSING_REQUIRED_VALUE;
 import static com.yandex.ydb.jdbc.YdbConst.NCLOB_UNSUPPORTED;
-import static com.yandex.ydb.jdbc.YdbConst.NOTHING_TO_UNWRAP;
 import static com.yandex.ydb.jdbc.YdbConst.QUERY_EXPECT_RESULT_SET;
 import static com.yandex.ydb.jdbc.YdbConst.QUERY_EXPECT_UPDATE;
 import static com.yandex.ydb.jdbc.YdbConst.REF_UNSUPPORTED;
@@ -53,24 +50,16 @@ import static com.yandex.ydb.jdbc.YdbConst.UNABLE_TO_SET_NULL_VALUE;
 import static com.yandex.ydb.jdbc.YdbConst.UNSUPPORTED_QUERY_TYPE_IN_PS;
 
 public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl implements YdbPreparedStatement {
-
-    private final Supplier<YdbParameterMetaData> metaDataSupplier;
     private final String query;
     private final QueryType queryType;
-    private final DataQuery dataQuery;
 
     protected AbstractYdbPreparedStatementImpl(YdbConnectionImpl connection,
                                                int resultSetType,
-                                               String query,
-                                               DataQuery dataQuery) throws SQLException {
+                                               String query) throws SQLException {
         super(connection, resultSetType);
         this.query = Objects.requireNonNull(query);
         this.queryType = checkQueryType(connection.decodeQueryType(query));
-        this.dataQuery = Objects.requireNonNull(dataQuery);
         this.setPoolable(true); // By default
-
-        this.metaDataSupplier = Suppliers.memoize(() ->
-                new YdbParameterMetaDataImpl(getParameterTypes()))::get;
     }
 
     @Override
@@ -145,7 +134,7 @@ public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl 
 
     @Override
     public void setNull(String parameterName, int sqlType) throws SQLException {
-        setNull(parameterName); // TODO: check targetSqlType
+        setImpl(parameterName, null, sqlType);
     }
 
     @Override
@@ -185,32 +174,32 @@ public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl 
 
     @Override
     public void setBigDecimal(String parameterName, BigDecimal x) throws SQLException {
-        setImpl(parameterName, x);
+        setImpl(parameterName, x, Types.DECIMAL);
     }
 
     @Override
     public void setString(String parameterName, String x) throws SQLException {
-        setImpl(parameterName, x);
+        setImpl(parameterName, x, Types.VARCHAR);
     }
 
     @Override
     public void setBytes(String parameterName, byte[] x) throws SQLException {
-        setImpl(parameterName, x);
+        setImpl(parameterName, x, Types.BINARY);
     }
 
     @Override
     public void setDate(String parameterName, Date x) throws SQLException {
-        setImpl(parameterName, x);
+        setImpl(parameterName, x, Types.DATE);
     }
 
     @Override
     public void setTime(String parameterName, Time x) throws SQLException {
-        setImpl(parameterName, x);
+        setImpl(parameterName, x, Types.TIME);
     }
 
     @Override
     public void setTimestamp(String parameterName, Timestamp x) throws SQLException {
-        setImpl(parameterName, x);
+        setImpl(parameterName, x, Types.TIMESTAMP);
     }
 
     @Override
@@ -225,7 +214,7 @@ public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl 
 
     @Override
     public void setObject(String parameterName, Object x, int targetSqlType) throws SQLException {
-        setImpl(parameterName, x); // TODO: check targetSqlType
+        setImpl(parameterName, x, targetSqlType);
     }
 
     @Override
@@ -235,32 +224,32 @@ public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl 
 
     @Override
     public void setDate(String parameterName, Date x, Calendar cal) throws SQLException {
-        setImpl(parameterName, x); // TODO: check cal
+        setImpl(parameterName, x, Types.DATE); // TODO: check cal
     }
 
     @Override
     public void setTime(String parameterName, Time x, Calendar cal) throws SQLException {
-        setImpl(parameterName, x); // TODO: check cal
+        setImpl(parameterName, x, Types.TIME); // TODO: check cal
     }
 
     @Override
     public void setTimestamp(String parameterName, Timestamp x, Calendar cal) throws SQLException {
-        setImpl(parameterName, x); // TODO: check cal
+        setImpl(parameterName, x, Types.TIMESTAMP); // TODO: check cal
     }
 
     @Override
     public void setNull(String parameterName, int sqlType, String typeName) throws SQLException {
-        setImpl(parameterName, null); // TODO: check sqlType, typeName
+        setImpl(parameterName, null, sqlType); // TODO: check typeName
     }
 
     @Override
     public void setURL(String parameterName, URL x) throws SQLException {
-        setImpl(parameterName, x);
+        setImpl(parameterName, x, Types.VARCHAR);
     }
 
     @Override
     public void setNString(String parameterName, String value) throws SQLException {
-        setImpl(parameterName, value);
+        setImpl(parameterName, value, Types.VARCHAR);
     }
 
     @Override
@@ -285,7 +274,7 @@ public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl 
 
     @Override
     public void setObject(String parameterName, Object x, int targetSqlType, int scaleOrLength) throws SQLException {
-        setImpl(parameterName, x); // TODO: check targetSqlType and scaleOrLength
+        setImpl(parameterName, x, targetSqlType); // TODO: check scaleOrLength
     }
 
     @Override
@@ -330,7 +319,7 @@ public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl 
 
     @Override
     public void setNull(int parameterIndex, int sqlType) throws SQLException {
-        setImpl(parameterIndex, null); // TODO: check sqlType
+        setImpl(parameterIndex, null, sqlType);
     }
 
     @Override
@@ -370,32 +359,32 @@ public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl 
 
     @Override
     public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
-        setImpl(parameterIndex, x);
+        setImpl(parameterIndex, x, Types.DECIMAL);
     }
 
     @Override
     public void setString(int parameterIndex, String x) throws SQLException {
-        setImpl(parameterIndex, x);
+        setImpl(parameterIndex, x, Types.VARCHAR);
     }
 
     @Override
     public void setBytes(int parameterIndex, byte[] x) throws SQLException {
-        setImpl(parameterIndex, x);
+        setImpl(parameterIndex, x, Types.BINARY);
     }
 
     @Override
     public void setDate(int parameterIndex, Date x) throws SQLException {
-        setImpl(parameterIndex, x);
+        setImpl(parameterIndex, x, Types.DATE);
     }
 
     @Override
     public void setTime(int parameterIndex, Time x) throws SQLException {
-        setImpl(parameterIndex, x);
+        setImpl(parameterIndex, x, Types.TIME);
     }
 
     @Override
     public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
-        setImpl(parameterIndex, x);
+        setImpl(parameterIndex, x, Types.TIMESTAMP);
     }
 
     @Override
@@ -416,7 +405,7 @@ public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl 
 
     @Override
     public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException {
-        setImpl(parameterIndex, x); // TODO: check targetSqlType
+        setImpl(parameterIndex, x, targetSqlType);
     }
 
     @Override
@@ -446,32 +435,32 @@ public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl 
 
     @Override
     public void setDate(int parameterIndex, Date x, Calendar cal) throws SQLException {
-        setImpl(parameterIndex, x); // TODO: check cal
+        setImpl(parameterIndex, x, Types.DATE); // TODO: check cal
     }
 
     @Override
     public void setTime(int parameterIndex, Time x, Calendar cal) throws SQLException {
-        setImpl(parameterIndex, x); // TODO: check cal
+        setImpl(parameterIndex, x, Types.TIME); // TODO: check cal
     }
 
     @Override
     public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) throws SQLException {
-        setImpl(parameterIndex, x); // TODO: check cal
+        setImpl(parameterIndex, x, Types.TIMESTAMP); // TODO: check cal
     }
 
     @Override
     public void setNull(int parameterIndex, int sqlType, String typeName) throws SQLException {
-        setImpl(parameterIndex, null); // TODO: check sqlType, typeName
+        setImpl(parameterIndex, null, sqlType); // TODO: check typeName
     }
 
     @Override
     public void setURL(int parameterIndex, URL x) throws SQLException {
-        setImpl(parameterIndex, x);
+        setImpl(parameterIndex, x, Types.VARCHAR);
     }
 
     @Override
     public void setNString(int parameterIndex, String value) throws SQLException {
-        setImpl(parameterIndex, value);
+        setImpl(parameterIndex, value, Types.VARCHAR);
     }
 
     @Override
@@ -506,7 +495,7 @@ public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl 
 
     @Override
     public void setObject(int parameterIndex, Object x, int targetSqlType, int scaleOrLength) throws SQLException {
-        setImpl(parameterIndex, x); // TODO: handle targetSqlType, scaleOrLength
+        setImpl(parameterIndex, x, targetSqlType); // TODO: handle scaleOrLength
     }
 
     @Override
@@ -559,11 +548,6 @@ public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl 
         setImplReader(parameterIndex, reader);
     }
 
-    @Override
-    public YdbParameterMetaData getParameterMetaData() {
-        return metaDataSupplier.get();
-    }
-
 
     @Override
     public abstract void clearParameters();
@@ -572,18 +556,24 @@ public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl 
 
     protected abstract Params getParams();
 
-    protected abstract Map<String, Type> getParameterTypes();
+    protected void setImpl(String parameterName, @Nullable Object x) throws SQLException {
+        setImpl(parameterName, x, YdbConst.UNKNOWN_SQL_TYPE);
+    }
 
-    protected abstract void setImpl(String parameterName, Object x) throws SQLException;
+    protected void setImpl(int parameterIndex, @Nullable Object x) throws SQLException {
+        setImpl(parameterIndex, x, YdbConst.UNKNOWN_SQL_TYPE);
+    }
 
-    protected abstract void setImpl(int parameterIndex, Object x) throws SQLException;
+    protected abstract void setImpl(String parameterName, @Nullable Object x, int sqlType) throws SQLException;
+
+    protected abstract void setImpl(int parameterIndex, @Nullable Object x, int sqlType) throws SQLException;
 
     private void setImplReader(String parameterName, Reader reader) throws SQLException {
         setImplReader(parameterName, reader, -1);
     }
 
     private void setImplReader(String parameterName, Reader reader, long length) throws SQLException {
-        setImpl(parameterName, MappingSetters.CharStream.fromReader(reader, length));
+        setImpl(parameterName, MappingSetters.CharStream.fromReader(reader, length), Types.VARCHAR);
     }
 
     private void setImplStream(String parameterName, InputStream stream) throws SQLException {
@@ -591,7 +581,7 @@ public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl 
     }
 
     private void setImplStream(String parameterName, InputStream stream, long length) throws SQLException {
-        setImpl(parameterName, MappingSetters.ByteStream.fromInputStream(stream, length));
+        setImpl(parameterName, MappingSetters.ByteStream.fromInputStream(stream, length), Types.BINARY);
     }
 
     private void setImplReader(int parameterIndex, Reader reader) throws SQLException {
@@ -599,7 +589,7 @@ public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl 
     }
 
     private void setImplReader(int parameterIndex, Reader reader, long length) throws SQLException {
-        setImpl(parameterIndex, MappingSetters.CharStream.fromReader(reader, length));
+        setImpl(parameterIndex, MappingSetters.CharStream.fromReader(reader, length), Types.VARCHAR);
     }
 
     private void setImplStream(int parameterIndex, InputStream stream) throws SQLException {
@@ -607,7 +597,7 @@ public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl 
     }
 
     private void setImplStream(int parameterIndex, InputStream stream, long length) throws SQLException {
-        setImpl(parameterIndex, MappingSetters.ByteStream.fromInputStream(stream, length));
+        setImpl(parameterIndex, MappingSetters.ByteStream.fromInputStream(stream, length), Types.BINARY);
     }
 
     @Nullable
@@ -658,8 +648,8 @@ public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl 
         }
     }
 
-    protected DataQuery getDataQuery() {
-        return dataQuery;
+    protected QueryType getQueryType() {
+        return queryType;
     }
 
     private QueryType checkQueryType(QueryType queryType) throws SQLException {
@@ -672,29 +662,9 @@ public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl 
         }
     }
 
-    private boolean executeImpl() throws SQLException {
-        switch (queryType) {
-            case DATA_QUERY:
-                return executeDataQueryImpl(
-                        getParams(),
-                        params -> QueryType.DATA_QUERY + " [" + dataQuery.getId() + "] >>\n" +
-                                dataQuery.getText().orElse("<empty>") +
-                                "\n\nParams: " + paramsToString(params),
-                        (tx, params, execParams) -> {
-                            try {
-                                return dataQuery.execute(tx, params, execParams);
-                            } finally {
-                                afterExecute();
-                            }
-                        });
-            case SCAN_QUERY:
-                return executeScanQueryImpl();
-            default:
-                throw new SQLException(UNSUPPORTED_QUERY_TYPE_IN_PS + queryType);
-        }
-    }
+    protected abstract boolean executeImpl() throws SQLException;
 
-    private boolean executeScanQueryImpl() throws SQLException {
+    protected boolean executeScanQueryImpl() throws SQLException {
         return executeScanQueryImpl(
                 query,
                 getParams(),
@@ -831,11 +801,14 @@ public abstract class AbstractYdbPreparedStatementImpl extends YdbStatementImpl 
 
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
-        throw new SQLException(NOTHING_TO_UNWRAP);
+        if (iface.isAssignableFrom(getClass())) {
+            return iface.cast(this);
+        }
+        throw new SQLException(CANNOT_UNWRAP_TO + iface);
     }
 
     @Override
     public boolean isWrapperFor(Class<?> iface) {
-        return false;
+        return iface.isAssignableFrom(getClass());
     }
 }

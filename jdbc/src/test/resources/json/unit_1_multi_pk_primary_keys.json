@@ -1,0 +1,18 @@
+{
+  "key1": {
+    "TABLE_CAT": null,
+    "TABLE_SCHEM": null,
+    "TABLE_NAME": "unit_1_multi_pk",
+    "COLUMN_NAME": "key1",
+    "KEY_SEQ": 1,
+    "PK_NAME": null
+  },
+  "key2": {
+    "TABLE_CAT": null,
+    "TABLE_SCHEM": null,
+    "TABLE_NAME": "unit_1_multi_pk",
+    "COLUMN_NAME": "key2",
+    "KEY_SEQ": 2,
+    "PK_NAME": null
+  }
+}

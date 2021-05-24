@@ -9,7 +9,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -44,10 +43,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.yandex.ydb.jdbc.YdbConst.AUTO_GENERATED_KEYS_UNSUPPORTED;
+import static com.yandex.ydb.jdbc.YdbConst.CANNOT_UNWRAP_TO;
 import static com.yandex.ydb.jdbc.YdbConst.CLOSED_CONNECTION;
 import static com.yandex.ydb.jdbc.YdbConst.DIRECTION_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.NAMED_CURSORS_UNSUPPORTED;
-import static com.yandex.ydb.jdbc.YdbConst.NOTHING_TO_UNWRAP;
 import static com.yandex.ydb.jdbc.YdbConst.QUERY_EXPECT_RESULT_SET;
 import static com.yandex.ydb.jdbc.YdbConst.QUERY_EXPECT_UPDATE;
 import static com.yandex.ydb.jdbc.YdbConst.RESULT_IS_TRUNCATED;
@@ -260,8 +259,6 @@ public class YdbStatementImpl implements YdbStatement {
 
     @Override
     public void clearBatch() throws SQLException {
-        ensureOpened();
-
         batch.clear();
     }
 
@@ -270,11 +267,22 @@ public class YdbStatementImpl implements YdbStatement {
         ensureOpened();
 
         if (batch.isEmpty()) {
+            LOGGER.debug("Batch is empty, nothing to execute");
             return new int[0];
         }
-        String sql = String.join(";\n", batch);
-        execute(sql);
-        return new int[batch.size()]; // TODO: not actual batches, no update count
+
+        try {
+            LOGGER.debug("Executing batch of {} item(s)", batch.size());
+
+            String sql = String.join(";\n", batch);
+            execute(sql);
+
+            int[] ret = new int[batch.size()];
+            Arrays.fill(ret, SUCCESS_NO_INFO);
+            return ret;
+        } finally {
+            clearBatch();
+        }
     }
 
     @Override
@@ -381,8 +389,10 @@ public class YdbStatementImpl implements YdbStatement {
         }
     }
 
-    private boolean executeSchemeQueryImpl(String sql) throws SQLException {
+    private boolean executeSchemeQueryImpl(String origSql) throws SQLException {
         ensureOpened();
+
+        String sql = connection.prepareYdbSql(origSql);
 
         // Scheme query does not affect transactions or result sets
         ExecuteSchemeQuerySettings settings = new ExecuteSchemeQuerySettings();
@@ -443,10 +453,12 @@ public class YdbStatementImpl implements YdbStatement {
     }
 
 
-    protected boolean executeScanQueryImpl(String sql,
+    protected boolean executeScanQueryImpl(String origSql,
                                            Params params,
                                            Function<Params, String> operation) throws SQLException {
         ensureOpened();
+
+        String sql = connection.prepareYdbSql(origSql);
 
         // TODO: support stats?
         Duration scanQueryTimeout = properties.getScanQueryTimeout();
@@ -473,8 +485,10 @@ public class YdbStatementImpl implements YdbStatement {
         return true;
     }
 
-    protected boolean executeExplainQueryImpl(String sql) throws SQLException {
+    protected boolean executeExplainQueryImpl(String origSql) throws SQLException {
         ensureOpened();
+
+        String sql = connection.prepareYdbSql(origSql);
 
         ExplainDataQuerySettings settings = new ExplainDataQuerySettings();
         validator.init(settings);
@@ -487,10 +501,9 @@ public class YdbStatementImpl implements YdbStatement {
 
         ExplainDataQueryResult explainDataQuery = result.expect("Explain Data Query");
 
-        Map<String, String> params = new LinkedHashMap<>();
-        params.put(YdbConst.EXPLAIN_COLUMN_AST, explainDataQuery.getQueryAst());
-        params.put(YdbConst.EXPLAIN_COLUMN_PLAN, explainDataQuery.getQueryPlan());
-
+        Map<String, Object> params = MappingResultSets.stableMap(
+                YdbConst.EXPLAIN_COLUMN_AST, explainDataQuery.getQueryAst(),
+                YdbConst.EXPLAIN_COLUMN_PLAN, explainDataQuery.getQueryPlan());
         ResultSetReader resultSetReader = MappingResultSets.readerFromMap(params);
         state.lastResultSets = new YdbResultSetImpl[]{new YdbResultSetImpl(this, resultSetReader)};
         return true;
@@ -610,7 +623,7 @@ public class YdbStatementImpl implements YdbStatement {
 
     @Override
     public ResultSet getGeneratedKeys() throws SQLException {
-        throw new SQLFeatureNotSupportedException(AUTO_GENERATED_KEYS_UNSUPPORTED);
+        return null; // --
     }
 
     @Override
@@ -635,11 +648,14 @@ public class YdbStatementImpl implements YdbStatement {
 
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
-        throw new SQLException(NOTHING_TO_UNWRAP);
+        if (iface.isAssignableFrom(getClass())) {
+            return iface.cast(this);
+        }
+        throw new SQLException(CANNOT_UNWRAP_TO + iface);
     }
 
     @Override
     public boolean isWrapperFor(Class<?> iface) {
-        return false;
+        return iface.isAssignableFrom(getClass());
     }
 }

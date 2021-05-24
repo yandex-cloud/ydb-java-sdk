@@ -1,0 +1,42 @@
+[
+  {
+    "COLUMN_NAME": "SCOPE",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "COLUMN_NAME",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "DATA_TYPE",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "TYPE_NAME",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "COLUMN_SIZE",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "BUFFER_LENGTH",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "DECIMAL_DIGITS",
+    "COLUMN_TYPE": 5,
+    "COLUMN_TYPE_NAME": "Int16"
+  },
+  {
+    "COLUMN_NAME": "PSEUDO_COLUMN",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  }
+]

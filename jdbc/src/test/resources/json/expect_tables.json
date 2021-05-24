@@ -1,0 +1,62 @@
+{
+  "dir1/t1": {
+    "TABLE_CAT": null,
+    "TABLE_SCHEM": null,
+    "TABLE_NAME": "dir1/t1",
+    "TABLE_TYPE": "TABLE",
+    "REMARKS": null,
+    "TYPE_CAT": null,
+    "TYPE_SCHEM": null,
+    "TYPE_NAME": null,
+    "SELF_REFERENCING_COL_NAME": null,
+    "REF_GENERATION": null
+  },
+  "dir1/t2": {
+    "TABLE_CAT": null,
+    "TABLE_SCHEM": null,
+    "TABLE_NAME": "dir1/t2",
+    "TABLE_TYPE": "TABLE",
+    "REMARKS": null,
+    "TYPE_CAT": null,
+    "TYPE_SCHEM": null,
+    "TYPE_NAME": null,
+    "SELF_REFERENCING_COL_NAME": null,
+    "REF_GENERATION": null
+  },
+  "dir2/dir1/t1": {
+    "TABLE_CAT": null,
+    "TABLE_SCHEM": null,
+    "TABLE_NAME": "dir2/dir1/t1",
+    "TABLE_TYPE": "TABLE",
+    "REMARKS": null,
+    "TYPE_CAT": null,
+    "TYPE_SCHEM": null,
+    "TYPE_NAME": null,
+    "SELF_REFERENCING_COL_NAME": null,
+    "REF_GENERATION": null
+  },
+  "dir2/t1": {
+    "TABLE_CAT": null,
+    "TABLE_SCHEM": null,
+    "TABLE_NAME": "dir2/t1",
+    "TABLE_TYPE": "TABLE",
+    "REMARKS": null,
+    "TYPE_CAT": null,
+    "TYPE_SCHEM": null,
+    "TYPE_NAME": null,
+    "SELF_REFERENCING_COL_NAME": null,
+    "REF_GENERATION": null
+  },
+  "t1": {
+    "TABLE_CAT": null,
+    "TABLE_SCHEM": null,
+    "TABLE_NAME": "t1",
+    "TABLE_TYPE": "TABLE",
+    "REMARKS": null,
+    "TYPE_CAT": null,
+    "TYPE_SCHEM": null,
+    "TYPE_NAME": null,
+    "SELF_REFERENCING_COL_NAME": null,
+    "REF_GENERATION": null
+  }
+}

@@ -6,7 +6,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.yandex.ydb.table.values.Type;
+
 public interface YdbResultSetMetaData extends ResultSetMetaData {
+
+    /**
+     * Returns native YDB type for column
+     *
+     * @param column column, 1..N
+     * @return YDB type
+     */
+    Type getYdbType(int column) throws SQLException;
 
     /**
      * Returns column index by it's name, could be useful sometimes; basically because in YDB you should always

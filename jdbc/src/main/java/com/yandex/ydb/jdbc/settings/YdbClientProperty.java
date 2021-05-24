@@ -12,14 +12,16 @@ public class YdbClientProperty<T> extends AbstractYdbProperty<T, TableClient.Bui
     private static final PropertiesCollector<YdbClientProperty<?>> PROPERTIES = new PropertiesCollector<>();
 
     public static final YdbClientProperty<Integer> QUERY_CACHE_SIZE =
-            new YdbClientProperty<>("queryCacheSize",
+            new YdbClientProperty<>(
+                    "queryCacheSize",
                     "Query cache size",
                     null,
                     Integer.class,
                     PropertyConverter.integerValue(),
                     TableClient.Builder::queryCacheSize);
     public static final YdbClientProperty<Boolean> KEEP_QUERY_TEXT =
-            new YdbClientProperty<>("keepQueryText",
+            new YdbClientProperty<>(
+                    "keepQueryText",
                     "Keep Query text",
                     null,
                     Boolean.class,
@@ -58,7 +60,8 @@ public class YdbClientProperty<T> extends AbstractYdbProperty<T, TableClient.Bui
                     (builder, value) -> {
                     });
     public static final YdbClientProperty<Integer> SESSION_POOL_SIZE_MAX =
-            new YdbClientProperty<>("sessionPoolSizeMax",
+            new YdbClientProperty<>(
+                    "sessionPoolSizeMax",
                     "Session pool max size (with with sessionPoolSizeMin)",
                     null,
                     Integer.class,

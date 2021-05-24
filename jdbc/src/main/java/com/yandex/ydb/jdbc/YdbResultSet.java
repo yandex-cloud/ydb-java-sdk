@@ -42,4 +42,7 @@ public interface YdbResultSet extends ResultSet {
 
     @Override
     YdbResultSetMetaData getMetaData() throws SQLException;
+
+    @Override
+    YdbStatement getStatement() throws SQLException;
 }

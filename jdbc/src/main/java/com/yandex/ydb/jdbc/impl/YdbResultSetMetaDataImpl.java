@@ -6,10 +6,11 @@ import java.util.Objects;
 import com.google.common.base.Preconditions;
 import com.yandex.ydb.jdbc.YdbResultSetMetaData;
 import com.yandex.ydb.table.result.ResultSetReader;
+import com.yandex.ydb.table.values.Type;
 
+import static com.yandex.ydb.jdbc.YdbConst.CANNOT_UNWRAP_TO;
 import static com.yandex.ydb.jdbc.YdbConst.COLUMN_NOT_FOUND;
 import static com.yandex.ydb.jdbc.YdbConst.COLUMN_NUMBER_NOT_FOUND;
-import static com.yandex.ydb.jdbc.YdbConst.NOTHING_TO_UNWRAP;
 
 public class YdbResultSetMetaDataImpl implements YdbResultSetMetaData {
     private final ResultSetReader result;
@@ -110,7 +111,7 @@ public class YdbResultSetMetaDataImpl implements YdbResultSetMetaData {
 
     @Override
     public String getColumnTypeName(int column) throws SQLException {
-        return getDescription(column).sqlTypes.getDatabaseType();
+        return getDescription(column).type.toString();
     }
 
     @Override
@@ -134,6 +135,11 @@ public class YdbResultSetMetaDataImpl implements YdbResultSetMetaData {
     }
 
     @Override
+    public Type getYdbType(int column) throws SQLException {
+        return getDescription(column).type;
+    }
+
+    @Override
     public int getColumnIndex(String columnName) throws SQLException {
         int index = result.getColumnIndex(columnName);
         if (index >= 0) {
@@ -142,6 +148,7 @@ public class YdbResultSetMetaDataImpl implements YdbResultSetMetaData {
             throw new SQLException(COLUMN_NOT_FOUND + columnName);
         }
     }
+
 
     //
 
@@ -165,16 +172,17 @@ public class YdbResultSetMetaDataImpl implements YdbResultSetMetaData {
         return names;
     }
 
-    // UNSUPPORTED
-
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
-        throw new SQLException(NOTHING_TO_UNWRAP);
+        if (iface.isAssignableFrom(getClass())) {
+            return iface.cast(this);
+        }
+        throw new SQLException(CANNOT_UNWRAP_TO + iface);
     }
 
     @Override
     public boolean isWrapperFor(Class<?> iface) {
-        return false;
+        return iface.isAssignableFrom(getClass());
     }
 
 }

@@ -15,21 +15,24 @@ public class YdbConnectionProperty<T> extends AbstractYdbProperty<T, GrpcTranspo
     private static final PropertiesCollector<YdbConnectionProperty<?>> PROPERTIES = new PropertiesCollector<>();
 
     public static final YdbConnectionProperty<Duration> ENDPOINT_DISCOVERY_PERIOD =
-            new YdbConnectionProperty<>("endpointDiscoveryPeriod",
+            new YdbConnectionProperty<>(
+                    "endpointDiscoveryPeriod",
                     "Endpoint discovery period",
                     null,
                     Duration.class,
                     PropertyConverter.durationValue(),
                     GrpcTransport.Builder::withEndpointsDiscoveryPeriod);
     public static final YdbConnectionProperty<String> LOCAL_DATACENTER =
-            new YdbConnectionProperty<>("localDatacenter",
+            new YdbConnectionProperty<>(
+                    "localDatacenter",
                     "Local Datacenter",
                     null,
                     String.class,
                     PropertyConverter.stringValue(),
                     GrpcTransport.Builder::withLocalDataCenter);
     public static final YdbConnectionProperty<Boolean> SECURE_CONNECTION =
-            new YdbConnectionProperty<>("secureConnection",
+            new YdbConnectionProperty<>(
+                    "secureConnection",
                     "Use TLS connection",
                     null,
                     Boolean.class,
@@ -40,14 +43,16 @@ public class YdbConnectionProperty<T> extends AbstractYdbProperty<T, GrpcTranspo
                         }
                     });
     public static final YdbConnectionProperty<byte[]> SECURE_CONNECTION_CERTIFICATE =
-            new YdbConnectionProperty<>("secureConnectionCertificate",
+            new YdbConnectionProperty<>(
+                    "secureConnectionCertificate",
                     "Use TLS connection with certificate from provided path",
                     null,
                     byte[].class,
                     PropertyConverter.byteFileReference(),
                     GrpcTransport.Builder::withSecureConnection);
     public static final YdbConnectionProperty<Duration> READ_TIMEOUT =
-            new YdbConnectionProperty<>("readTimeout",
+            new YdbConnectionProperty<>(
+                    "readTimeout",
                     "Read Timeout",
                     null,
                     Duration.class,
@@ -55,7 +60,8 @@ public class YdbConnectionProperty<T> extends AbstractYdbProperty<T, GrpcTranspo
                     GrpcTransport.Builder::withReadTimeout);
 
     public static final YdbConnectionProperty<TokenAuthProvider> TOKEN =
-            new YdbConnectionProperty<>("token",
+            new YdbConnectionProperty<>(
+                    "token",
                     "Token-based authentication",
                     null,
                     TokenAuthProvider.class,
@@ -63,7 +69,8 @@ public class YdbConnectionProperty<T> extends AbstractYdbProperty<T, GrpcTranspo
                     GrpcTransport.Builder::withAuthProvider);
 
     public static final YdbConnectionProperty<AuthProvider> AUTH_PROVIDER =
-            new YdbConnectionProperty<>("authProvider",
+            new YdbConnectionProperty<>(
+                    "authProvider",
                     "Custom authentication provider (must be specified programmatically in properties as object)",
                     null,
                     AuthProvider.class,

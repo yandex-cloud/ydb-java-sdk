@@ -18,11 +18,16 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.sql.rowset.serial.SerialBlob;
@@ -32,6 +37,8 @@ import com.yandex.ydb.jdbc.YdbConnection;
 import com.yandex.ydb.jdbc.YdbConst;
 import com.yandex.ydb.jdbc.YdbParameterMetaData;
 import com.yandex.ydb.jdbc.YdbPreparedStatement;
+import com.yandex.ydb.jdbc.YdbResultSet;
+import com.yandex.ydb.jdbc.YdbTypes;
 import com.yandex.ydb.jdbc.exception.YdbConditionallyRetryableException;
 import com.yandex.ydb.jdbc.exception.YdbNonRetryableException;
 import com.yandex.ydb.jdbc.exception.YdbRetryableException;
@@ -59,24 +66,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private static final long MILLIS_IN_DAY = TimeUnit.DAYS.toMillis(1);
-    private static final long MICROS_IN_DAY = TimeUnit.DAYS.toMicros(1);
-
-    private static boolean configured;
+    static final long MILLIS_IN_DAY = TimeUnit.DAYS.toMillis(1);
+    static final long MICROS_IN_DAY = TimeUnit.DAYS.toMicros(1);
 
     @BeforeEach
-    @Override
     void beforeEach() throws SQLException {
-        super.beforeEach();
-        if (!configured) {
-            recreatePreparedTestTable();
-            configured = true;
-        }
+        configureOnce(AbstractTest::recreatePreparedTestTable);
     }
 
     @Test
@@ -284,7 +285,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
                         () -> {
                             YdbPreparedStatement statement = getTestStatement(connection, "c_Utf8", "Utf8");
                             statement.setInt("key", 1);
-                            statement.setObject("c_Utf8", PrimitiveType.string().makeOptional().emptyValue());
+                            statement.setObject("c_Utf8", PrimitiveType.utf8().makeOptional().emptyValue());
                             statement.execute();
                         },
                         "Missing required value for parameter"));
@@ -295,7 +296,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
         retry(connection ->
                 assertThrowsMsgLike(SQLException.class,
                         () -> {
-                            YdbPreparedStatement statement = getUtf8Statement(connection);
+                            YdbPreparedStatement statement = getTestStatement(connection, "c_Utf8", "Utf8");
                             statement.setInt("key", 1); // no c_Utf8 param in both simple and batched PS is an error
                             statement.execute();
                         },
@@ -444,7 +445,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
             connection.commit();
 
             PreparedStatement statementSelect =
-                    connection.prepareStatement(subst(YdbResultSetImplTest.SELECT_ALL_VALUES, "unit_2"));
+                    connection.prepareStatement(subst("unit_2", YdbResultSetImplTest.SELECT_ALL_VALUES));
             ResultSet resultSet = statementSelect.executeQuery();
             assertTrue(resultSet.next());
 
@@ -498,6 +499,10 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
                             "All parameters expect primary key defined as nullable");
 
                     String expectType = cleanParamName.substring("c_".length()).toLowerCase();
+                    if (expectType.equals("decimal")) {
+                        expectType += "(22, 9)";
+                    }
+
                     String actualType = metadata.getParameterTypeName(param);
                     assertNotNull(actualType, "All parameters have database types");
                     assertEquals(expectType, actualType.toLowerCase(),
@@ -563,7 +568,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
 
     @Test
     void setBoolean() throws SQLException {
-        checkInsert("c_Bool", "Bool?",
+        checkInsert("c_Bool", "Bool",
                 YdbPreparedStatement::setBoolean,
                 ResultSet::getBoolean,
                 Arrays.asList(
@@ -603,7 +608,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"Uint8"})
     void setByte(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setByte,
                 ResultSet::getByte,
                 Arrays.asList(
@@ -636,7 +641,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"Int32", "Uint32"})
     void setByteToInt(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setByte,
                 ResultSet::getInt,
                 Arrays.asList(
@@ -668,7 +673,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"Int64", "Uint64"})
     void setByteToLong(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setByte,
                 ResultSet::getLong,
                 Arrays.asList(
@@ -683,7 +688,8 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
                         pair(6, 6L),
                         pair(7L, 7L),
                         pair(true, 1L),
-                        pair(false, 0L)
+                        pair(false, 0L),
+                        pair(new BigInteger("10"), 10L)
                 ),
                 Arrays.asList(
                         "",
@@ -692,7 +698,8 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
                         9d,
                         PrimitiveValue.bool(true),
                         PrimitiveValue.bool(true).makeOptional(),
-                        PrimitiveValue.uint8((byte) 1)
+                        PrimitiveValue.uint8((byte) 1),
+                        new BigDecimal("10")
                 )
         );
     }
@@ -700,7 +707,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"Int32", "Uint32"})
     void setShortToInt(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setShort,
                 ResultSet::getInt,
                 Arrays.asList(
@@ -732,7 +739,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"Int64", "Uint64"})
     void setShortToLong(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setShort,
                 ResultSet::getLong,
                 Arrays.asList(
@@ -764,7 +771,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"Int32", "Uint32"})
     void setInt(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setInt,
                 ResultSet::getInt,
                 Arrays.asList(
@@ -796,7 +803,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"Int64", "Uint64"})
     void setIntToLong(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setInt,
                 ResultSet::getLong,
                 Arrays.asList(
@@ -828,7 +835,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"Int64", "Uint64"})
     void setLong(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setLong,
                 ResultSet::getLong,
                 Arrays.asList(
@@ -843,7 +850,8 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
                         pair((short) 5, 5L),
                         pair(6, 6L),
                         pair(true, 1L),
-                        pair(false, 0L)
+                        pair(false, 0L),
+                        pair(new BigInteger("1234567890123"), 1234567890123L)
                 ),
                 Arrays.asList(
                         "",
@@ -852,14 +860,15 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
                         9d,
                         PrimitiveValue.bool(true),
                         PrimitiveValue.bool(true).makeOptional(),
-                        PrimitiveValue.int32(1)
+                        PrimitiveValue.int32(1),
+                        new BigDecimal("123")
                 )
         );
     }
 
     @Test
     void setFloat() throws SQLException {
-        checkInsert("c_Float", "Float?",
+        checkInsert("c_Float", "Float",
                 YdbPreparedStatement::setFloat,
                 ResultSet::getFloat,
                 Arrays.asList(
@@ -891,7 +900,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
 
     @Test
     void setFloatToDouble() throws SQLException {
-        checkInsert("c_Double", "Double?",
+        checkInsert("c_Double", "Double",
                 YdbPreparedStatement::setFloat,
                 ResultSet::getDouble,
                 Arrays.asList(
@@ -923,7 +932,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
 
     @Test
     void setDouble() throws SQLException {
-        checkInsert("c_Double", "Double?",
+        checkInsert("c_Double", "Double",
                 YdbPreparedStatement::setDouble,
                 ResultSet::getDouble,
                 Arrays.asList(
@@ -954,17 +963,27 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     }
 
     @Test
+    void setBigDecimalDirect() throws SQLException {
+        retry(connection -> {
+            YdbPreparedStatement insert = getTestStatement(connection, "c_Decimal", "Decimal(22,9)?");
+            insert.setInt("key", 1);
+            insert.setObject("c_Decimal", new BigDecimal(0)); // Make sure this type is converted to Decimal(22,9) type
+            insert.executeUpdate();
+        });
+    }
+
+    @Test
     void setBigDecimal() throws SQLException {
-        checkInsert("c_Decimal", "Decimal(22,9)?",
+        checkInsert("c_Decimal", "Decimal(22,9)",
                 YdbPreparedStatement::setBigDecimal,
                 ResultSet::getBigDecimal,
                 Arrays.asList(
-                        pair(new BigDecimal("0.0"), new BigDecimal("0")),
+                        pair(new BigDecimal("0.0"), new BigDecimal("0E-9")),
                         pair(new BigDecimal("1.3"), new BigDecimal("1.3E-8"))
                 ),
                 Arrays.asList(
                         pair(1, new BigDecimal("1E-9")),
-                        pair(0, new BigDecimal(0)),
+                        pair(0, new BigDecimal("0E-9")),
                         pair(-1, new BigDecimal("-1E-9")),
                         pair(127, new BigDecimal("1.27E-7")),
                         pair((byte) 4, new BigDecimal("4E-9")),
@@ -992,7 +1011,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @MethodSource("stringAndUtf8")
     void setString(String type, List<Pair<Object, String>> callSetObject, List<Object> unsupported) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setString,
                 ResultSet::getString,
                 Arrays.asList(
@@ -1032,7 +1051,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @MethodSource("jsonAndJsonDocumentAndYson")
     void setStringJson(String type, List<Pair<Object, String>> callSetObject, List<Object> unsupported)
             throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setString,
                 ResultSet::getString,
                 Arrays.asList(
@@ -1064,7 +1083,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8"})
     void setBytes(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setBytes,
                 ResultSet::getBytes,
                 Arrays.asList(
@@ -1101,7 +1120,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"Json", "JsonDocument", "Yson"})
     void setBytesJson(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setBytes,
                 ResultSet::getBytes,
                 Arrays.asList(
@@ -1130,7 +1149,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
 
     @Test
     void setDateToDate() throws SQLException {
-        checkInsert("c_Date", "Date?",
+        checkInsert("c_Date", "Date",
                 YdbPreparedStatement::setDate,
                 ResultSet::getDate,
                 Arrays.asList(
@@ -1147,7 +1166,10 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
                         pair(MILLIS_IN_DAY * 3, new Date(MILLIS_IN_DAY * 3)),
                         pair(LocalDate.of(1970, 1, 2), new Date(MILLIS_IN_DAY)),
                         pair(new Timestamp(4), new Date(0)),
-                        pair(new Timestamp(MILLIS_IN_DAY * 3), new Date(MILLIS_IN_DAY * 3))
+                        pair(new Timestamp(MILLIS_IN_DAY * 3), new Date(MILLIS_IN_DAY * 3)),
+                        pair(new java.util.Date(5), new Date(0)),
+                        pair(new java.util.Date(6999), new Date(0)),
+                        pair(new java.util.Date(MILLIS_IN_DAY * 7), new Date(MILLIS_IN_DAY * 7))
                 ),
                 Arrays.asList(
                         6,
@@ -1158,8 +1180,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
                         PrimitiveValue.bool(true),
                         PrimitiveValue.bool(true).makeOptional(),
                         PrimitiveValue.float64(1.1d),
-                        PrimitiveValue.utf8("test"),
-                        new Time(10)
+                        PrimitiveValue.utf8("test")
                 )
         );
     }
@@ -1167,7 +1188,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @Test
     void setDateToDatetime() throws SQLException {
         // precision - seconds
-        checkInsert("c_Datetime", "Datetime?",
+        checkInsert("c_Datetime", "Datetime",
                 YdbPreparedStatement::setDate,
                 ResultSet::getDate,
                 Arrays.asList(
@@ -1193,7 +1214,10 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
                         pair(new Time(10), new Date(0)),
                         pair(new Time(5000), new Date(5000)),
                         pair(new Time(5999), new Date(5000)),
-                        pair(new Time(MILLIS_IN_DAY * 4), new Date(MILLIS_IN_DAY * 4))
+                        pair(new Time(MILLIS_IN_DAY * 4), new Date(MILLIS_IN_DAY * 4)),
+                        pair(new java.util.Date(5), new Date(0)),
+                        pair(new java.util.Date(6999), new Date(6000)),
+                        pair(new java.util.Date(MILLIS_IN_DAY * 7), new Date(MILLIS_IN_DAY * 7))
                 ),
                 Arrays.asList(
                         6,
@@ -1213,7 +1237,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @Test
     void setDateToTimestamp() throws SQLException {
         // precision - microseconds
-        checkInsert("c_Timestamp", "Timestamp?",
+        checkInsert("c_Timestamp", "Timestamp",
                 YdbPreparedStatement::setDate,
                 ResultSet::getDate,
                 Arrays.asList(
@@ -1239,7 +1263,10 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
                         pair(new Time(10), new Date(10)),
                         pair(new Time(5000), new Date(5000)),
                         pair(new Time(5999), new Date(5999)),
-                        pair(new Time(MILLIS_IN_DAY * 4), new Date(MILLIS_IN_DAY * 4))
+                        pair(new Time(MILLIS_IN_DAY * 4), new Date(MILLIS_IN_DAY * 4)),
+                        pair(new java.util.Date(5), new Date(5)),
+                        pair(new java.util.Date(6999), new Date(6999)),
+                        pair(new java.util.Date(MILLIS_IN_DAY * 7), new Date(MILLIS_IN_DAY * 7))
                 ),
                 Arrays.asList(
                         6,
@@ -1257,21 +1284,8 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     }
 
     @Test
-    void setTimeToDate() throws SQLException {
-        checkInsert("c_Date", "Date?",
-                (ps, param, x) -> ps.setTime(param, (Time) x),
-                ResultSet::getTime,
-                Arrays.asList(),
-                Arrays.asList(),
-                Arrays.asList(
-                        new Time(10)
-                )
-        );
-    }
-
-    @Test
     void setTimeToDatetime() throws SQLException {
-        checkInsert("c_Datetime", "Datetime?",
+        checkInsert("c_Datetime", "Datetime",
                 YdbPreparedStatement::setTime,
                 ResultSet::getTime,
                 Arrays.asList(
@@ -1316,7 +1330,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
 
     @Test
     void setTimeToTimestamp() throws SQLException {
-        checkInsert("c_Timestamp", "Timestamp?",
+        checkInsert("c_Timestamp", "Timestamp",
                 YdbPreparedStatement::setTime,
                 ResultSet::getTime,
                 Arrays.asList(
@@ -1361,7 +1375,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
 
     @Test
     void setTimestampToDate() throws SQLException {
-        checkInsert("c_Date", "Date?",
+        checkInsert("c_Date", "Date",
                 YdbPreparedStatement::setTimestamp,
                 ResultSet::getTimestamp,
                 Arrays.asList(
@@ -1389,15 +1403,14 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
                         PrimitiveValue.bool(true),
                         PrimitiveValue.bool(true).makeOptional(),
                         PrimitiveValue.float64(1.1d),
-                        PrimitiveValue.utf8("test"),
-                        new Time(10)
+                        PrimitiveValue.utf8("test")
                 )
         );
     }
 
     @Test
     void setTimestampToDatetime() throws SQLException {
-        checkInsert("c_Datetime", "Datetime?",
+        checkInsert("c_Datetime", "Datetime",
                 YdbPreparedStatement::setTimestamp,
                 ResultSet::getTimestamp,
                 Arrays.asList(
@@ -1446,7 +1459,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
 
     @Test
     void setTimestampToTimestamp() throws SQLException {
-        checkInsert("c_Timestamp", "Timestamp?",
+        checkInsert("c_Timestamp", "Timestamp",
                 YdbPreparedStatement::setTimestamp,
                 ResultSet::getTimestamp,
                 Arrays.asList(
@@ -1495,7 +1508,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
 
     @Test
     void setTimestampToInterval() throws SQLException {
-        checkInsert("c_Interval", "Interval?",
+        checkInsert("c_Interval", "Interval",
                 YdbPreparedStatement::setLong,
                 ResultSet::getLong,
                 Arrays.asList(
@@ -1549,7 +1562,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8", "Json", "JsonDocument", "Yson"})
     void setUnicodeStream(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 (ps, name, value) -> ps.setUnicodeStream(name, value, 3),
                 ResultSet::getUnicodeStream,
                 Arrays.asList(
@@ -1571,7 +1584,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8", "Json", "JsonDocument", "Yson"})
     void setBinaryStream(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setBinaryStream,
                 ResultSet::getBinaryStream,
                 Arrays.asList(
@@ -1593,7 +1606,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8", "Json", "JsonDocument", "Yson"})
     void setBinaryStreamInt(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 (ps, name, value) -> ps.setBinaryStream(name, value, 3),
                 ResultSet::getBinaryStream,
                 Arrays.asList(
@@ -1615,7 +1628,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8", "Json", "JsonDocument", "Yson"})
     void setBinaryStreamLong(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 (ps, name, value) -> ps.setBinaryStream(name, value, 3L),
                 ResultSet::getBinaryStream,
                 Arrays.asList(
@@ -1637,7 +1650,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8", "Json", "JsonDocument", "Yson"})
     void setCharacterStream(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setCharacterStream,
                 ResultSet::getCharacterStream,
                 Arrays.asList(
@@ -1659,7 +1672,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8", "Json", "JsonDocument", "Yson"})
     void setCharacterStreamInt(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 (ps, name, value) -> ps.setCharacterStream(name, value, 3),
                 ResultSet::getCharacterStream,
                 Arrays.asList(
@@ -1673,7 +1686,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8"})
     void setCharacterStreamIntEmpty(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 (ps, name, value) -> ps.setCharacterStream(name, value, 0),
                 ResultSet::getCharacterStream,
                 Arrays.asList(
@@ -1687,7 +1700,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8", "Json", "JsonDocument", "Yson"})
     void setCharacterStreamLong(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 (ps, name, value) -> ps.setCharacterStream(name, value, 3L),
                 ResultSet::getCharacterStream,
                 Arrays.asList(
@@ -1710,7 +1723,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8", "Json", "JsonDocument", "Yson"})
     void asBlob(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setBlob,
                 ResultSet::getBinaryStream,
                 Arrays.asList(
@@ -1732,7 +1745,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8", "Json", "JsonDocument", "Yson"})
     void asBlobLong(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 (ps, name, value) -> ps.setBlob(name, value, 3L),
                 ResultSet::getBinaryStream,
                 Arrays.asList(
@@ -1754,7 +1767,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8", "Json", "JsonDocument", "Yson"})
     void asClob(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setClob,
                 ResultSet::getCharacterStream,
                 Arrays.asList(
@@ -1776,7 +1789,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8", "Json", "JsonDocument", "Yson"})
     void asClobLong(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 (ps, name, value) -> ps.setClob(name, value, 3L),
                 ResultSet::getCharacterStream,
                 Arrays.asList(
@@ -1814,7 +1827,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8"})
     void setURL(String type) throws SQLException, MalformedURLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setURL,
                 ResultSet::getURL,
                 Arrays.asList(
@@ -1846,7 +1859,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8"})
     void setNString(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setNString,
                 ResultSet::getNString,
                 Arrays.asList(
@@ -1883,7 +1896,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8", "Json", "JsonDocument", "Yson"})
     void setNCharacterStream(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setNCharacterStream,
                 ResultSet::getNCharacterStream,
                 Arrays.asList(
@@ -1905,7 +1918,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8", "Json", "JsonDocument", "Yson"})
     void setNCharacterStreamLong(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 (ps, name, value) -> ps.setNCharacterStream(name, value, 3L),
                 ResultSet::getNCharacterStream,
                 Arrays.asList(
@@ -1919,7 +1932,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8", "Json", "JsonDocument", "Yson"})
     void asNClob(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setNClob,
                 ResultSet::getCharacterStream,
                 Arrays.asList(
@@ -1941,7 +1954,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @ValueSource(strings = {"String", "Utf8", "Json", "JsonDocument", "Yson"})
     void asNClobLong(String type) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 (ps, name, reader) -> ps.setNClob(name, reader, 3L),
                 ResultSet::getCharacterStream,
                 Arrays.asList(
@@ -1971,7 +1984,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     @ParameterizedTest
     @MethodSource("stringAndUtf8")
     void setObject(String type, List<Pair<Object, Object>> callSetObject, List<Object> unsupported) throws SQLException {
-        checkInsert("c_" + type, type + "?",
+        checkInsert("c_" + type, type,
                 YdbPreparedStatement::setObject,
                 ResultSet::getObject,
                 Arrays.asList(
@@ -2007,10 +2020,125 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
 
     @Test
     void unknownColumns() throws SQLException {
+        retry(connection ->
+                assertThrowsMsg(SQLException.class,
+                        () -> {
+                            YdbPreparedStatement statement = getUtf8Statement(connection);
+                            statement.setObject("column0", "value");
+                            statement.execute();
+                        },
+                        "Parameter not found: " + (expectParameterPrefixed() ? "$column0" : "column0")));
+    }
+
+    @Test
+    void queryInList() throws SQLException {
+        DecimalType defaultType = YdbTypes.DEFAULT_DECIMAL_TYPE;
+
+        Set<String> skip = set("c_Bool", "c_Json", "c_JsonDocument", "c_Yson");
+        List<Map<String, Object>> values = new ArrayList<>();
+        for (int i = 1; i <= 3; i++) {
+            Map<String, Object> params = new LinkedHashMap<>();
+            int prefix = 100 * i;
+            params.put("c_Bool", i % 2 == 0);
+            params.put("c_Int32", prefix++);
+            params.put("c_Int64", prefix++);
+            params.put("c_Uint8", (byte) prefix++);
+            params.put("c_Uint32", prefix++);
+            params.put("c_Uint64", prefix++);
+            params.put("c_Float", prefix++);
+            params.put("c_Double", prefix++);
+            params.put("c_String", String.valueOf(prefix++));
+            params.put("c_Utf8", String.valueOf(prefix++));
+            params.put("c_Json", "[" + (prefix++) + "]");
+            params.put("c_JsonDocument", "[" + (prefix++) + "]");
+            params.put("c_Yson", "[" + (prefix++) + "]");
+            params.put("c_Date", new Date(MILLIS_IN_DAY * (prefix++)));
+            params.put("c_Datetime", new Date(MILLIS_IN_DAY * (prefix++) + 111000));
+            params.put("c_Timestamp", new Date(MILLIS_IN_DAY * (prefix++) + 112112));
+            params.put("c_Interval", Duration.of(prefix++, ChronoUnit.MICROS));
+            params.put("c_Decimal", defaultType.newValue((prefix) + ".1"));
+            values.add(params);
+        }
+
         retry(connection -> {
-            assertThrowsMsg(SQLException.class,
-                    () -> getUtf8Statement(connection).setObject("column0", "value"),
-                    "Parameter not found: " + (expectParameterPrefixed() ? "$column0" : "column0"));
+            YdbPreparedStatement statement = getTestAllValuesStatement(connection);
+            int key = 0;
+            for (Map<String, Object> params : values) {
+                for (Map.Entry<String, Object> entry : params.entrySet()) {
+                    statement.setObject(entry.getKey(), entry.getValue());
+                }
+                statement.setInt("key", ++key);
+                statement.executeUpdate();
+            }
+            connection.commit();
+        });
+
+        for (String key : values.get(0).keySet()) {
+            if (skip.contains(key)) {
+                continue;
+            }
+            retry(false, connection -> {
+                String type = key.substring("c_".length());
+                if (type.equals("Decimal")) {
+                    type = defaultType.toString();
+                }
+                YdbPreparedStatement ps = connection.prepareStatement(String.format(
+                        "declare $keys as List<%s?>;\n" +
+                                "select count(1) as rows from unit_2 where %s in $keys",
+                        type, key));
+
+                ps.setObject("keys", Arrays.asList());
+                checkRows(0, ps.executeQuery());
+
+                ps.setObject("keys", Arrays.asList((Object) null));
+                checkRows(0, ps.executeQuery());
+
+                ps.setObject("keys", Arrays.asList(
+                        values.get(0).get(key)));
+                checkRows(1, ps.executeQuery());
+
+                ps.setObject("keys", Arrays.asList(
+                        values.get(0).get(key),
+                        values.get(1).get(key)));
+                checkRows(2, ps.executeQuery());
+
+                ps.setObject("keys", Arrays.asList(
+                        values.get(0).get(key),
+                        null,
+                        values.get(1).get(key)));
+                checkRows(2, ps.executeQuery());
+
+                ps.setObject("keys", Arrays.asList(
+                        values.get(0).get(key),
+                        values.get(1).get(key),
+                        values.get(2).get(key)));
+                checkRows(3, ps.executeQuery());
+            });
+        }
+
+        retry(false, connection -> {
+            YdbPreparedStatement ps = connection.prepareStatement(String.format(
+                    "declare $keys as List<%s?>;\n" +
+                            "select count(1) as rows from unit_2 where %s in $keys",
+                    "Bool", "c_Bool"));
+
+            ps.setObject("keys", Arrays.asList());
+            checkRows(0, ps.executeQuery());
+
+            ps.setObject("keys", Arrays.asList((Object) null));
+            checkRows(0, ps.executeQuery());
+
+            ps.setObject("keys", Arrays.asList(true));
+            checkRows(1, ps.executeQuery());
+
+            ps.setObject("keys", Arrays.asList(false));
+            checkRows(2, ps.executeQuery());
+
+            ps.setObject("keys", Arrays.asList(true, false));
+            checkRows(3, ps.executeQuery());
+
+            ps.setObject("keys", Arrays.asList(true, null, false));
+            checkRows(3, ps.executeQuery());
         });
     }
 
@@ -2018,10 +2146,13 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     void unwrap() throws SQLException {
         retry(connection -> {
             YdbPreparedStatement statement = getUtf8Statement(connection);
-            assertFalse(statement.isWrapperFor(YdbPreparedStatement.class));
+            assertTrue(statement.isWrapperFor(YdbPreparedStatement.class));
+            assertSame(statement, statement.unwrap(YdbPreparedStatement.class));
+
+            assertFalse(statement.isWrapperFor(YdbConnection.class));
             assertThrowsMsg(SQLException.class,
-                    () -> statement.unwrap(YdbPreparedStatement.class),
-                    "Nothing to unwrap");
+                    () -> statement.unwrap(YdbConnection.class),
+                    "Cannot unwrap to " + YdbConnection.class);
         });
     }
 
@@ -2091,7 +2222,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     }
 
     protected YdbPreparedStatement getUtf8Statement(YdbConnection connection) throws SQLException {
-        return getTestStatement(connection, "c_Utf8", "Utf8");
+        return getTestStatement(connection, "c_Utf8", "Utf8?");
     }
 
     protected abstract YdbPreparedStatement getTestStatement(YdbConnection connection,
@@ -2101,6 +2232,8 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     protected abstract YdbPreparedStatement getTestAllValuesStatement(YdbConnection connection) throws SQLException;
 
     protected abstract boolean expectParameterPrefixed();
+
+    protected abstract boolean sqlTypeRequired();
 
     private void testIndexedAccess(Executable executable) {
         TestHelper.assertThrowsMsg(SQLFeatureNotSupportedException.class,
@@ -2123,18 +2256,33 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
 
             connection.setAutoCommit(true); // AUTO-COMMIT
 
-            YdbPreparedStatement insert = getTestStatement(connection, param, type);
-            PreparedStatement select = connection.prepareStatement("select " + param + " from unit_2");
+            YdbPreparedStatement insert = getTestStatement(connection, param, type + "?");
+            YdbPreparedStatement select = connection.prepareStatement("select " + param + " from unit_2");
 
             List<Executable> asserts = new ArrayList<>(1 + callSetObject.size() + callSetter.size() +
                     unsupportedValues.size());
 
+            boolean sqlTypeRequired = sqlTypeRequired();
+            int sqlType;
+            if (sqlTypeRequired) {
+                YdbResultSet rsNull = select.executeQuery();
+                assertFalse(rsNull.next());
+                sqlType = connection.getYdbTypes().wrapYdbJdbcType(rsNull.getMetaData().getYdbType(1));
+            } else {
+                sqlType = YdbConst.UNKNOWN_SQL_TYPE;
+            }
+
+
             insert.clearParameters();
             insert.setInt("key", 1);
-            insert.setNull(param);
+            if (sqlTypeRequired) {
+                insert.setNull(param, sqlType);
+            } else {
+                insert.setNull(param);
+            }
             insert.executeUpdate();
 
-            ResultSet rsNull = select.executeQuery();
+            YdbResultSet rsNull = select.executeQuery();
             assertTrue(rsNull.next());
             assertNull(rsNull.getObject(param), "Null value must be stored as null");
             assertFalse(rsNull.next());
@@ -2144,7 +2292,11 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
                 asserts.add(() -> {
                     insert.clearParameters();
                     insert.setInt("key", 1);
-                    insert.setObject(param, callSetObject.get(index).key);
+                    if (sqlTypeRequired) {
+                        insert.setObject(param, callSetObject.get(index).key, sqlType);
+                    } else {
+                        insert.setObject(param, callSetObject.get(index).key);
+                    }
                     insert.executeUpdate();
 
                     ResultSet rs = select.executeQuery();
@@ -2222,6 +2374,12 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
         assertFalse(rs.next());
     }
 
+    private void checkRows(int rowCount, ResultSet rs) throws SQLException {
+        assertTrue(rs.next());
+        assertEquals(rowCount, rs.getLong("rows"));
+        assertFalse(rs.next());
+    }
+
     //
 
 
@@ -2230,15 +2388,22 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
         connection.commit();
     }
 
-    protected void retry(SQLRun run) throws SQLException {
+    protected void retry(TestHelper.SQLRun run) throws SQLException {
+        retry(true, run);
+    }
+
+    protected void retry(boolean cleanup, TestHelper.SQLRun run) throws SQLException {
         // TODO: must be external retry framework (but have to implement it first)
 
         int maxRetry = 10;
         int retry = 0;
         while (true) {
+            YdbConnection connection = null;
             try {
-                YdbConnection connection = getTestConnection();
-                deleteRows(connection);
+                connection = getTestConnection();
+                if (cleanup) {
+                    deleteRows(connection);
+                }
                 run.run(connection);
                 return; // ---
             } catch (Throwable e) {
@@ -2248,8 +2413,9 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
                         throw e;
                     }
                     logger.error("Retry #{}", retry, e);
-                    connection.close();
-                    connection = null;
+                    if (connection != null) {
+                        connection.close();
+                    }
                 } else {
                     throw e;
                 }
@@ -2260,9 +2426,9 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
     private static boolean shouldRetry(Throwable e) {
         if (e instanceof MultipleFailuresError) {
             return ((MultipleFailuresError) e).getFailures().stream()
-                    .anyMatch(t -> t instanceof YdbRetryableException);
+                    .anyMatch(t -> t instanceof YdbRetryableException || t.getCause() instanceof YdbRetryableException);
         } else {
-            return e instanceof YdbRetryableException;
+            return e instanceof YdbRetryableException || e.getCause() instanceof YdbRetryableException;
         }
     }
 
@@ -2272,10 +2438,6 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
                 YdbConst.PREFIX_SYNTAX_V1 + "\n" + mode);
     }
 
-
-    interface SQLRun {
-        void run(YdbConnection connection) throws SQLException;
-    }
 
     interface SQLSetter<T> {
         void set(YdbPreparedStatement ps, String paramName, T value) throws SQLException;
@@ -2293,6 +2455,30 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
             this.key = key;
             this.value = value;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof Pair)) {
+                return false;
+            }
+            Pair<?, ?> pair = (Pair<?, ?>) o;
+            return Objects.equals(key, pair.key) &&
+                    Objects.equals(value, pair.value);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(key, value);
+        }
+
+        @Override
+        public String toString() {
+            return key + " -> " + value;
+        }
+
 
         static <K, V> Pair<K, V> pair(K key, V value) {
             return new Pair<>(key, value);

@@ -7,7 +7,6 @@ import java.io.StringReader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -29,7 +28,6 @@ import com.yandex.ydb.table.values.Value;
 
 import static com.yandex.ydb.jdbc.YdbConst.UNABLE_TO_CAST;
 import static com.yandex.ydb.jdbc.YdbConst.UNABLE_TO_CONVERT;
-import static com.yandex.ydb.jdbc.impl.MappingSetters.DEFAULT_CHARSET;
 
 public class MappingGetters {
 
@@ -60,7 +58,7 @@ public class MappingGetters {
             Preconditions.checkState(id != null, "Primitive type must not be null when kind is %s", kind);
             switch (id) {
                 case String:
-                    return value -> new String(value.getString(), DEFAULT_CHARSET);
+                    return value -> new String(value.getString());
                 case Utf8:
                     return PrimitiveReader::getUtf8;
                 case Json:
@@ -68,7 +66,7 @@ public class MappingGetters {
                 case JsonDocument:
                     return PrimitiveReader::getJsonDocument;
                 case Yson:
-                    return value -> new String(value.getYson(), DEFAULT_CHARSET);
+                    return value -> new String(value.getYson());
                 case Uuid:
                     return value -> String.valueOf(value.getUuid());
                 case Bool:
@@ -155,7 +153,7 @@ public class MappingGetters {
                                 return true;
                             }
                         }
-                        throw cannotConvert(id, javaType, new String(stringValue, DEFAULT_CHARSET));
+                        throw cannotConvert(id, javaType, new String(stringValue));
                     };
                 case Utf8:
                     return value -> {
@@ -456,7 +454,7 @@ public class MappingGetters {
             Preconditions.checkState(id != null, "Primitive type must not be null when kind is %s", kind);
             switch (id) {
                 case String:
-                    return value -> new String(value.getString(), DEFAULT_CHARSET);
+                    return value -> new String(value.getString());
                 case Utf8:
                     return PrimitiveReader::getUtf8;
                 case Json:
@@ -464,7 +462,7 @@ public class MappingGetters {
                 case JsonDocument:
                     return PrimitiveReader::getJsonDocument;
                 case Yson:
-                    return value -> new String(value.getYson(), DEFAULT_CHARSET);
+                    return value -> new String(value.getYson());
                 case Uuid:
                     return value -> String.valueOf(value.getUuid());
                 default:
@@ -485,7 +483,7 @@ public class MappingGetters {
             Preconditions.checkState(id != null, "Primitive type must not be null when kind is %s", kind);
             switch (id) {
                 case String:
-                    return value -> new String(value.getString(), DEFAULT_CHARSET);
+                    return value -> new String(value.getString());
                 case Utf8:
                     return PrimitiveReader::getUtf8;
                 default:
@@ -574,56 +572,72 @@ public class MappingGetters {
     static SqlTypes buildDataType(Type type) {
         Type.Kind kind = type.getKind();
         // All types must be the same as for #valueToObject
+        int sqlType = YdbTypesImpl.getInstance().toSqlType(type);
+
         if (kind == Type.Kind.PRIMITIVE) {
             PrimitiveType.Id id = ((PrimitiveType) type).getId();
-            String dbType = id.name();
+            final Class<?> javaType;
             switch (id) {
                 case String:
                 case Utf8:
                 case Json:
                 case JsonDocument:
                 case Uuid:
-                    return new SqlTypes(dbType, Types.VARCHAR, String.class);
+                    javaType = String.class;
+                    break;
                 case Yson:
-                    return new SqlTypes(dbType, Types.BINARY, byte[].class);
+                    javaType = byte[].class;
+                    break;
                 case Bool:
-                    return new SqlTypes(dbType, Types.BOOLEAN, Boolean.class);
+                    javaType = Boolean.class;
+                    break;
                 case Int8:
-                    return new SqlTypes(dbType, Types.SMALLINT, Byte.class);
+                    javaType = Byte.class;
+                    break;
                 case Uint8:
                 case Int32:
                 case Uint16:
-                    return new SqlTypes(dbType, Types.INTEGER, Integer.class);
+                    javaType = Integer.class;
+                    break;
                 case Int16:
-                    return new SqlTypes(dbType, Types.SMALLINT, Short.class);
+                    javaType = Short.class;
+                    break;
                 case Uint32:
                 case Int64:
                 case Uint64:
-                    return new SqlTypes(dbType, Types.BIGINT, Long.class);
+                    javaType = Long.class;
+                    break;
                 case Float32:
-                    return new SqlTypes("Float", Types.FLOAT, Float.class);
+                    javaType = Float.class;
+                    break;
                 case Float64:
-                    return new SqlTypes("Double", Types.DOUBLE, Double.class);
+                    javaType = Double.class;
+                    break;
                 case Date:
-                    return new SqlTypes(dbType, Types.DATE, LocalDate.class);
+                    javaType = LocalDate.class;
+                    break;
                 case Datetime:
-                    return new SqlTypes(dbType, Types.TIMESTAMP, LocalDateTime.class);
+                    javaType = LocalDateTime.class;
+                    break;
                 case Timestamp:
-                    return new SqlTypes(dbType, Types.TIMESTAMP, Instant.class);
+                    javaType = Instant.class;
+                    break;
                 case Interval:
-                    return new SqlTypes(dbType, Types.TIMESTAMP, Duration.class);
+                    javaType = Duration.class;
+                    break;
                 case TzDate:
                 case TzDatetime:
                 case TzTimestamp:
-                    return new SqlTypes(dbType, Types.TIMESTAMP_WITH_TIMEZONE, ZonedDateTime.class);
+                    javaType = ZonedDateTime.class;
+                    break;
                 default:
-                    return new SqlTypes(dbType, Types.JAVA_OBJECT, Value.class);
+                    javaType = Value.class;
             }
+            return new SqlTypes(sqlType, javaType);
         } else if (kind == Type.Kind.DECIMAL) {
-            // Maybe different type?
-            return new SqlTypes(kind.name(), Types.DECIMAL, DecimalValue.class);
+            return new SqlTypes(sqlType, DecimalValue.class);
         } else {
-            return new SqlTypes(kind.name(), Types.JAVA_OBJECT, Value.class);
+            return new SqlTypes(sqlType, Value.class);
         }
     }
 
@@ -633,7 +647,7 @@ public class MappingGetters {
             Preconditions.checkState(id != null, "Primitive type must not be null when kind is %s", kind);
             switch (id) {
                 case String:
-                    return valueReader -> new String(valueReader.getString(), DEFAULT_CHARSET);
+                    return valueReader -> new String(valueReader.getString());
                 case Utf8:
                     return PrimitiveReader::getUtf8;
                 case Json:
@@ -819,18 +833,12 @@ public class MappingGetters {
     //
 
     static class SqlTypes {
-        private final String databaseType;
         private final int sqlType;
         private final Class<?> javaType;
 
-        SqlTypes(String databaseType, int sqlType, Class<?> javaType) {
-            this.databaseType = Objects.requireNonNull(databaseType);
+        SqlTypes(int sqlType, Class<?> javaType) {
             this.sqlType = sqlType;
             this.javaType = Objects.requireNonNull(javaType);
-        }
-
-        public String getDatabaseType() {
-            return databaseType;
         }
 
         public int getSqlType() {

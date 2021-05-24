@@ -91,10 +91,10 @@ class YdbDriverTest {
             YdbConnection ydbConnection = (YdbConnection) connection;
             LOGGER.info("Session opened: {}", ydbConnection.getYdbSession());
 
-            SchemeClient schemeClient = ydbConnection.getYdbScheme().get();
+            SchemeClient schemeClient = ydbConnection.getYdbScheme();
             LOGGER.info("Scheme client: {}", schemeClient);
 
-            assertSame(schemeClient, ydbConnection.getYdbScheme().get());
+            assertSame(schemeClient, ydbConnection.getYdbScheme());
         }
     }
 
@@ -136,8 +136,9 @@ class YdbDriverTest {
 
     @ParameterizedTest
     @MethodSource("urlsToCheck")
-    void acceptsURL(String url, boolean accept) {
+    void acceptsURL(String url, boolean accept) throws SQLException {
         assertEquals(accept, driver.acceptsURL(url));
+        assertNotNull(driver.getPropertyInfo(url, new Properties()));
     }
 
     @SuppressWarnings("UnstableApiUsage")
@@ -260,9 +261,13 @@ class YdbDriverTest {
     }
 
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "[{index}] {1}")
     @MethodSource("tokensToCheck")
     void getTokenAs(String token, String expectValue) throws SQLException {
+        if ("file:".equals(token)) {
+            token += TOKEN_FILE.getAbsolutePath();
+        }
+
         String url = "jdbc:ydb:ydb-ru-prestable.yandex.net:2135/ru-prestable/ci/testing/ci?token=" + token;
         Properties properties = new Properties();
         YdbProperties ydbProperties = YdbProperties.from(url, properties);
@@ -282,9 +287,12 @@ class YdbDriverTest {
                 expectException);
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "[{index}] {1}")
     @MethodSource("certificatesToCheck")
     void getCaCertificateAs(String certificate, String expectValue) throws SQLException {
+        if ("file:".equals(certificate)) {
+            certificate += CERTIFICATE_FILE.getAbsolutePath();
+        }
         String url = "jdbc:ydb:ydb-ru-prestable.yandex.net:2135/ru-prestable/ci/testing/ci" +
                 "?secureConnectionCertificate=" + certificate;
         Properties properties = new Properties();
@@ -341,7 +349,7 @@ class YdbDriverTest {
 
     @Test
     void getMinorVersion() {
-        assertEquals(0, driver.getMinorVersion());
+        assertTrue(driver.getMinorVersion() >= 0);
     }
 
     @Test
@@ -539,13 +547,13 @@ class YdbDriverTest {
     static Collection<Arguments> tokensToCheck() {
         return Arrays.asList(
                 Arguments.of("classpath:data/token.txt", "token-from-classpath"),
-                Arguments.of("file:" + TOKEN_FILE.getAbsolutePath(), TOKEN_FROM_FILE));
+                Arguments.of("file:", TOKEN_FROM_FILE));
     }
 
     static Collection<Arguments> certificatesToCheck() {
         return Arrays.asList(
                 Arguments.of("classpath:data/certificate.txt", "certificate-from-classpath"),
-                Arguments.of("file:" + CERTIFICATE_FILE.getAbsolutePath(), CERTIFICATE_FROM_FILE));
+                Arguments.of("file:", CERTIFICATE_FROM_FILE));
     }
 
     static Collection<Arguments> unknownFiles() {

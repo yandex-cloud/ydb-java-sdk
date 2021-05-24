@@ -2,7 +2,6 @@ package com.yandex.ydb.jdbc;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
@@ -13,11 +12,18 @@ import com.yandex.ydb.table.Session;
 public interface YdbConnection extends Connection {
 
     /**
-     * Returns scheme client when required
+     * Returns class with some type conversion capabilities
+     *
+     * @return ydb types converter
+     */
+    YdbTypes getYdbTypes();
+
+    /**
+     * Returns scheme client, initialized during a first access
      *
      * @return scheme client in memoized mode
      */
-    Supplier<SchemeClient> getYdbScheme();
+    SchemeClient getYdbScheme();
 
     /**
      * Returns current YDB session for this connection
@@ -44,11 +50,25 @@ public interface YdbConnection extends Connection {
 
     //
 
+
+    @Override
+    YdbDatabaseMetaData getMetaData() throws SQLException;
+
     @Override
     YdbStatement createStatement() throws SQLException;
 
     @Override
     YdbPreparedStatement prepareStatement(String sql) throws SQLException;
+
+    /**
+     * Prepares statement without server-side YDB calls, i.e. in-memory only.
+     * This method disables types validation, batched prepared statements and so on.
+     *
+     * @param sql sql to prepare
+     * @return prepared statement
+     * @throws SQLException in case of any internal error
+     */
+    YdbPreparedStatement prepareStatementInMemory(String sql) throws SQLException;
 
     @Override
     YdbStatement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException;

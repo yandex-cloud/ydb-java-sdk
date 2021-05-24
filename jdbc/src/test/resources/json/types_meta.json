@@ -1,0 +1,92 @@
+[
+  {
+    "COLUMN_NAME": "TYPE_NAME",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "DATA_TYPE",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "PRECISION",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "LITERAL_PREFIX",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "LITERAL_SUFFIX",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "CREATE_PARAMS",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "NULLABLE",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "CASE_SENSITIVE",
+    "COLUMN_TYPE": 16,
+    "COLUMN_TYPE_NAME": "Bool"
+  },
+  {
+    "COLUMN_NAME": "SEARCHABLE",
+    "COLUMN_TYPE": 5,
+    "COLUMN_TYPE_NAME": "Int16"
+  },
+  {
+    "COLUMN_NAME": "UNSIGNED_ATTRIBUTE",
+    "COLUMN_TYPE": 16,
+    "COLUMN_TYPE_NAME": "Bool"
+  },
+  {
+    "COLUMN_NAME": "FIXED_PREC_SCALE",
+    "COLUMN_TYPE": 16,
+    "COLUMN_TYPE_NAME": "Bool"
+  },
+  {
+    "COLUMN_NAME": "AUTO_INCREMENT",
+    "COLUMN_TYPE": 16,
+    "COLUMN_TYPE_NAME": "Bool"
+  },
+  {
+    "COLUMN_NAME": "LOCAL_TYPE_NAME",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "MINIMUM_SCALE",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "MAXIMUM_SCALE",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "SQL_DATA_TYPE",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "SQL_DATETIME_SUB",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "NUM_PREC_RADIX",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  }
+]

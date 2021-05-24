@@ -13,7 +13,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -35,10 +34,11 @@ import javax.sql.rowset.serial.SerialBlob;
 import javax.sql.rowset.serial.SerialClob;
 
 import com.google.common.base.Preconditions;
+import com.yandex.ydb.jdbc.YdbConnection;
 import com.yandex.ydb.jdbc.YdbResultSet;
 import com.yandex.ydb.jdbc.YdbResultSetMetaData;
-import com.yandex.ydb.table.values.DecimalType;
-import com.yandex.ydb.table.values.DecimalValue;
+import com.yandex.ydb.jdbc.YdbStatement;
+import com.yandex.ydb.jdbc.YdbTypes;
 import com.yandex.ydb.table.values.PrimitiveValue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -68,22 +68,21 @@ class YdbResultSetImplTest extends AbstractTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YdbResultSetImplTest.class);
 
-    private static Statement statement;
+    private static boolean configured;
     private YdbResultSet resultSet;
 
     @BeforeEach
-    @Override
     void beforeEach() throws SQLException {
-        super.beforeEach();
-        if (statement == null) {
+        configureOnce(() -> {
             recreateSimpleTestTable();
-            statement = connection.createStatement();
-            statement.execute("delete from unit_1");
-            statement.execute(subst(UPSERT_ALL_VALUES, "unit_1"));
-            connection.commit();
-        }
 
-        resultSet = (YdbResultSet) statement.executeQuery(subst(SELECT_ALL_VALUES, "unit_1"));
+            YdbConnection connection = getTestConnection();
+            YdbStatement statement = connection.createStatement();
+            statement.execute("delete from unit_1");
+            statement.execute(subst("unit_1", UPSERT_ALL_VALUES));
+            connection.commit();
+        });
+        resultSet = getTestConnection().createStatement().executeQuery(subst("unit_1", SELECT_ALL_VALUES));
     }
 
     // TODO: check reading other database types, not supported by table storage itself?
@@ -221,7 +220,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Datetime", "1970-01-01T00:00",
                         "c_Timestamp", "1970-01-01T00:00:00Z",
                         "c_Interval", "PT0S",
-                        "c_Decimal", "0"
+                        "c_Decimal", "0.000000000"
                 ),
                 map(
                         "key", "4",
@@ -660,7 +659,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Uint64", new BigDecimal(0),
                         "c_Float", new BigDecimal("0.0"),
                         "c_Double", new BigDecimal("0.0"),
-                        "c_Decimal", new BigDecimal("0")
+                        "c_Decimal", new BigDecimal("0E-9")
                 ),
                 map(
                         "key", new BigDecimal(4),
@@ -970,10 +969,13 @@ class YdbResultSetImplTest extends AbstractTest {
         YdbResultSetMetaData metadata = resultSet.getMetaData();
         assertSame(metadata, resultSet.getMetaData(), "Metadata is cached");
 
-        assertFalse(metadata.isWrapperFor(YdbResultSetMetaData.class));
+        assertTrue(metadata.isWrapperFor(YdbResultSetMetaData.class));
+        assertSame(metadata, metadata.unwrap(YdbResultSetMetaData.class));
+
+        assertFalse(metadata.isWrapperFor(YdbStatement.class));
         assertThrowsMsg(SQLException.class,
-                () -> metadata.unwrap(YdbResultSetMetaData.class),
-                "Nothing to unwrap");
+                () -> metadata.unwrap(YdbStatement.class),
+                "Cannot unwrap to " + YdbStatement.class);
 
         assertThrowsMsg(SQLException.class,
                 () -> metadata.getColumnName(995),
@@ -1011,6 +1013,10 @@ class YdbResultSetImplTest extends AbstractTest {
 
             if (name.startsWith("c_")) {
                 String expectType = name.substring("c_".length()).toLowerCase();
+                if (expectType.equals("decimal")) {
+                    expectType += "(22, 9)";
+                }
+
                 String actualType = metadata.getColumnTypeName(column);
                 assertNotNull(actualType, "All columns have database types");
                 assertEquals(expectType, actualType.toLowerCase(),
@@ -1048,7 +1054,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Datetime", LocalDateTime.parse("1970-02-06T00:11:51"),
                         "c_Timestamp", Instant.parse("1970-01-01T00:00:03.111112Z"),
                         "c_Interval", Duration.parse("PT3.111113S"),
-                        "c_Decimal", DecimalType.of(22, 9).newValue("3.335000000")
+                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.newValue("3.335000000")
                 ),
                 map(
                         "key", 2,
@@ -1069,7 +1075,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Datetime", LocalDateTime.parse("1970-02-06T00:28:31"),
                         "c_Timestamp", Instant.parse("1970-01-01T00:00:03.112112Z"),
                         "c_Interval", Duration.parse("PT3.112113S"),
-                        "c_Decimal", DecimalType.of(22, 9).newValue("-3.335000000")
+                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.newValue("-3.335000000")
                 ),
                 map(
                         "key", 3,
@@ -1090,7 +1096,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Datetime", LocalDateTime.parse("1970-01-01T00:00"),
                         "c_Timestamp", Instant.parse("1970-01-01T00:00:00Z"),
                         "c_Interval", Duration.parse("PT0S"),
-                        "c_Decimal", DecimalValue.ZERO
+                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.newValue(0)
                 ),
                 map(
                         "key", 4,
@@ -1111,7 +1117,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Datetime", LocalDateTime.parse("1970-01-01T00:00:01"),
                         "c_Timestamp", Instant.parse("1970-01-01T00:00:00.000001Z"),
                         "c_Interval", Duration.parse("PT0.000001S"),
-                        "c_Decimal", DecimalType.of(22, 9).newValue("1.000000000")
+                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.newValue("1.000000000")
                 ),
                 map(
                         "key", 5,
@@ -1180,7 +1186,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Datetime", PrimitiveValue.datetime(Instant.parse("1970-02-06T00:11:51Z")),
                         "c_Timestamp", PrimitiveValue.timestamp(Instant.parse("1970-01-01T00:00:03.111112Z")),
                         "c_Interval", PrimitiveValue.interval(Duration.parse("PT3.111113S")),
-                        "c_Decimal", DecimalType.of(22, 9).newValue("3.335000000")
+                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.newValue("3.335000000")
                 ),
                 map(
                         "key", PrimitiveValue.int32(2),
@@ -1201,7 +1207,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Datetime", PrimitiveValue.datetime(Instant.parse("1970-02-06T00:28:31Z")),
                         "c_Timestamp", PrimitiveValue.timestamp(Instant.parse("1970-01-01T00:00:03.112112Z")),
                         "c_Interval", PrimitiveValue.interval(Duration.parse("PT3.112113S")),
-                        "c_Decimal", DecimalType.of(22, 9).newValue("-3.335000000")
+                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.newValue("-3.335000000")
                 ),
                 map(
                         "key", PrimitiveValue.int32(3),
@@ -1222,7 +1228,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Datetime", PrimitiveValue.datetime(Instant.parse("1970-01-01T00:00:00Z")),
                         "c_Timestamp", PrimitiveValue.timestamp(Instant.parse("1970-01-01T00:00:00Z")),
                         "c_Interval", PrimitiveValue.interval(Duration.parse("PT0S")),
-                        "c_Decimal", DecimalValue.ZERO
+                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.newValue(0)
                 ),
                 map(
                         "key", PrimitiveValue.int32(4),
@@ -1243,7 +1249,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Datetime", PrimitiveValue.datetime(Instant.parse("1970-01-01T00:00:01Z")),
                         "c_Timestamp", PrimitiveValue.timestamp(Instant.parse("1970-01-01T00:00:00.000001Z")),
                         "c_Interval", PrimitiveValue.interval(Duration.parse("PT0.000001S")),
-                        "c_Decimal", DecimalType.of(22, 9).newValue("1.000000000")
+                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.newValue("1.000000000")
                 ),
                 map(
                         "key", PrimitiveValue.int32(5),
@@ -1507,7 +1513,7 @@ class YdbResultSetImplTest extends AbstractTest {
 
     @Test
     void moveOnEmptyResultSet() throws SQLException {
-        resultSet = (YdbResultSet) statement.executeQuery("select * from unit_1 where 1 = 0");
+        resultSet = resultSet.getStatement().executeQuery("select * from unit_1 where 1 = 0");
 
         SQLRunnable sql = () -> {
             assertFalse(resultSet.isBeforeFirst());
@@ -1581,7 +1587,10 @@ class YdbResultSetImplTest extends AbstractTest {
 
     @Test
     void getStatement() throws SQLException {
-        assertSame(statement, resultSet.getStatement());
+        assertNotNull(resultSet.getStatement());
+
+        YdbStatement statement = getTestConnection().createStatement();
+        assertSame(statement, statement.executeQuery("select 1 + 2").getStatement());
     }
 
     @Test
@@ -2207,10 +2216,13 @@ class YdbResultSetImplTest extends AbstractTest {
 
     @Test
     void unwrap() throws SQLException {
-        assertFalse(resultSet.isWrapperFor(YdbResultSet.class));
+        assertTrue(resultSet.isWrapperFor(YdbResultSet.class));
+        assertSame(resultSet, resultSet.unwrap(YdbResultSet.class));
+
+        assertFalse(resultSet.isWrapperFor(YdbStatement.class));
         assertThrowsMsg(SQLException.class,
-                () -> resultSet.unwrap(YdbResultSet.class),
-                "Nothing to unwrap");
+                () -> resultSet.unwrap(YdbStatement.class),
+                "Cannot unwrap to " + YdbStatement.class);
     }
 
     //

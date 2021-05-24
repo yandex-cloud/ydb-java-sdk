@@ -6,6 +6,8 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 
+import com.yandex.ydb.jdbc.YdbConnection;
+import com.yandex.ydb.jdbc.YdbPreparedStatement;
 import com.yandex.ydb.jdbc.YdbResultSet;
 import com.yandex.ydb.jdbc.YdbStatement;
 import com.yandex.ydb.jdbc.exception.YdbConditionallyRetryableException;
@@ -30,13 +32,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class YdbStatementImplTest extends AbstractTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(YdbStatementImplTest.class);
 
+    private YdbConnection connection;
     private YdbStatement statement;
 
     @BeforeEach
-    @Override
     void beforeEach() throws SQLException {
-        super.beforeEach();
+        this.connection = getTestConnection();
         this.statement = connection.createStatement();
+        this.configureOnce(AbstractTest::recreateSimpleTestTable);
     }
 
     @Test
@@ -47,7 +50,6 @@ class YdbStatementImplTest extends AbstractTest {
 
     @Test
     void executeUpdate() throws SQLException {
-        recreateSimpleTestTable();
         assertEquals(0, statement.executeUpdate("upsert into unit_1(key, c_Utf8) values (1, '2')"));
         assertEquals(0, statement.executeUpdate("upsert into unit_1(key, c_Utf8) values (2, '3')",
                 Statement.NO_GENERATED_KEYS));
@@ -75,13 +77,12 @@ class YdbStatementImplTest extends AbstractTest {
 
     @Test
     void executeSchemeQueryExplicitly() throws SQLException {
-        recreateSimpleTestTable();
-
+        createTestTable("unit_1_tmp", CREATE_TABLE);
         assertThrowsMsgLike(YdbNonRetryableException.class,
-                () -> connection.createStatement().execute("drop table unit_1"),
+                () -> connection.createStatement().execute("drop table unit_1_tmp"),
                 "'DROP TABLE' not supported in query prepare mode");
 
-        connection.createStatement().executeSchemeQuery("drop table unit_1");
+        connection.createStatement().executeSchemeQuery("drop table unit_1_tmp");
     }
 
     @Test
@@ -98,7 +99,6 @@ class YdbStatementImplTest extends AbstractTest {
     @Test
     void executeDataQueryInTx() throws SQLException {
         // Cannot select from table already updated in transaction
-        recreateSimpleTestTable();
         statement.executeUpdate("upsert into unit_1(key, c_Utf8) values (1, '2')");
         assertThrowsMsgLike(YdbNonRetryableException.class,
                 () -> statement.executeQuery("select * from unit_1"),
@@ -126,6 +126,12 @@ class YdbStatementImplTest extends AbstractTest {
     }
 
     @Test
+    void executeScanQueryOnSystemTable() throws SQLException {
+        YdbResultSet rs = statement.executeScanQuery("select * from `.sys/partition_stats`");
+        assertTrue(rs.next());
+    }
+
+    @Test
     void executeScanQueryMultiResult() {
         assertThrowsMsgLike(YdbConditionallyRetryableException.class,
                 () -> statement.executeUpdate("--jdbc:SCAN\n" +
@@ -135,11 +141,14 @@ class YdbStatementImplTest extends AbstractTest {
 
     @Test
     void executeScanQueryInTx() throws SQLException {
-        // Now it's OK to select from this table
-        recreateSimpleTestTable();
-
+        cleanupSimpleTestTable();
         statement.executeUpdate("upsert into unit_1(key, c_Utf8) values (1, '2')");
         ResultSet rs = statement.executeQuery("--jdbc:SCAN\n" +
+                "select * from unit_1");
+        assertFalse(rs.next());
+
+        // alternative mode
+        rs = statement.executeQuery("!--jdbc:SCAN\n" +
                 "select * from unit_1");
         assertFalse(rs.next());
 
@@ -151,10 +160,9 @@ class YdbStatementImplTest extends AbstractTest {
 
     }
 
-
     @Test
     void executeScanQueryExplicitlyInTx() throws SQLException {
-        recreateSimpleTestTable();
+        cleanupSimpleTestTable();
 
         statement.executeUpdate("upsert into unit_1(key, c_Utf8) values (1, '2')");
         ResultSet rs = statement.executeScanQuery("select * from unit_1");
@@ -168,9 +176,8 @@ class YdbStatementImplTest extends AbstractTest {
     }
 
     @Test
-    void executeScanQueryAsUpdate() throws SQLException {
+    void executeScanQueryAsUpdate() {
         // Looks weird
-        recreateSimpleTestTable();
         assertThrowsMsgLike(YdbConditionallyRetryableException.class,
                 () -> statement.executeUpdate("--jdbc:SCAN\n" +
                         "upsert into unit_1(key, c_Utf8) values (1, '2')"),
@@ -192,8 +199,6 @@ class YdbStatementImplTest extends AbstractTest {
         LOGGER.info("AST: {}", rs.getString(ast));
         LOGGER.info("PLAN: {}", rs.getString(plan));
         assertFalse(rs.next());
-
-        recreateSimpleTestTable();
 
         rs = statement.executeQuery("--jdbc:EXPLAIN\n" +
                 "upsert into unit_1(key, c_Utf8) values (1, '2')");
@@ -268,10 +273,8 @@ class YdbStatementImplTest extends AbstractTest {
 
     @Test
     void execute() throws SQLException {
-        recreateSimpleTestTable();
-
         assertTrue(statement.execute("select 2 + 2"));
-        assertFalse(statement.execute("insert into unit_1(key, c_Utf8) values (1, '2')"));
+        assertFalse(statement.execute("upsert into unit_1(key, c_Utf8) values (1, '2')"));
 
         assertTrue(statement.execute("select 2 + 2", Statement.NO_GENERATED_KEYS));
     }
@@ -293,25 +296,23 @@ class YdbStatementImplTest extends AbstractTest {
 
     @Test
     void getResultSet() throws SQLException {
-        recreateSimpleTestTable();
         assertNull(statement.getResultSet());
 
         statement.execute("select 2 + 2");
         assertNotNull(statement.getResultSet());
 
-        statement.execute("insert into unit_1(key, c_Utf8) values (1, '2')");
+        statement.execute("upsert into unit_1(key, c_Utf8) values (1, '2')");
         assertNull(statement.getResultSet());
     }
 
     @Test
     void getUpdateCount() throws SQLException {
-        recreateSimpleTestTable();
         assertEquals(-1, statement.getUpdateCount());
 
         statement.execute("select 2 + 2");
         assertEquals(-1, statement.getUpdateCount());
 
-        statement.execute("insert into unit_1(key, c_Utf8) values (1, '2')");
+        statement.execute("upsert into unit_1(key, c_Utf8) values (1, '2')");
         assertEquals(0, statement.getUpdateCount());
 
         statement.execute("select 2 + 2");
@@ -402,14 +403,17 @@ class YdbStatementImplTest extends AbstractTest {
 
     @Test
     void executeBatch() throws SQLException {
-        recreateSimpleTestTable();
+        cleanupSimpleTestTable();
 
         statement.addBatch("upsert into unit_1(key, c_Utf8) values (1, '2')");
         statement.addBatch("upsert into unit_1(key, c_Utf8) values (2, '3')");
         statement.addBatch("upsert into unit_1(key, c_Utf8) values (3, '4')");
 
-        assertArrayEquals(new int[]{0, 0, 0}, statement.executeBatch());
+        int NI = Statement.SUCCESS_NO_INFO;
+        assertArrayEquals(new int[]{NI, NI, NI}, statement.executeBatch());
         assertNull(statement.getResultSet());
+
+        assertArrayEquals(new int[0], statement.executeBatch()); // Second run does nothing - batch is cleared
 
         connection.commit();
 
@@ -420,9 +424,9 @@ class YdbStatementImplTest extends AbstractTest {
     @Test
     void clearBatch() throws SQLException {
 
-        statement.addBatch("insert into unit_1(key, c_Utf8) values (1, '2')");
-        statement.addBatch("insert into unit_1(key, c_Utf8) values (2, '3')");
-        statement.addBatch("insert into unit_1(key, c_Utf8) values (3, '4')");
+        statement.addBatch("upsert into unit_1(key, c_Utf8) values (1, '2')");
+        statement.addBatch("upsert into unit_1(key, c_Utf8) values (2, '3')");
+        statement.addBatch("upsert into unit_1(key, c_Utf8) values (3, '4')");
         statement.clearBatch();
 
         assertArrayEquals(new int[0], statement.executeBatch()); // no actions were executed
@@ -435,10 +439,8 @@ class YdbStatementImplTest extends AbstractTest {
 
 
     @Test
-    void getGeneratedKeys() {
-        assertThrowsMsg(SQLFeatureNotSupportedException.class,
-                () -> statement.getGeneratedKeys(),
-                "Auto-generated keys are not supported");
+    void getGeneratedKeys() throws SQLException {
+        assertNull(statement.getGeneratedKeys());
     }
 
     @Test
@@ -472,9 +474,12 @@ class YdbStatementImplTest extends AbstractTest {
 
     @Test
     void unwrap() throws SQLException {
-        assertFalse(statement.isWrapperFor(YdbStatement.class));
+        assertTrue(statement.isWrapperFor(YdbStatement.class));
+        assertSame(statement, statement.unwrap(YdbStatement.class));
+
+        assertFalse(statement.isWrapperFor(YdbPreparedStatement.class));
         assertThrowsMsg(SQLException.class,
-                () -> statement.unwrap(YdbStatement.class),
-                "Nothing to unwrap");
+                () -> statement.unwrap(YdbPreparedStatement.class),
+                "Cannot unwrap to " + YdbPreparedStatement.class);
     }
 }

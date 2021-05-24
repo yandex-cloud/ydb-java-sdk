@@ -1,0 +1,12 @@
+[
+  {
+    "SCOPE": 2,
+    "COLUMN_NAME": "key",
+    "DATA_TYPE": 4,
+    "TYPE_NAME": "Int32?",
+    "COLUMN_SIZE": 0,
+    "BUFFER_LENGTH": 0,
+    "DECIMAL_DIGITS": 0,
+    "PSEUDO_COLUMN": 1
+  }
+]

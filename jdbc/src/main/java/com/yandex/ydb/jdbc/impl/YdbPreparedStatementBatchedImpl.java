@@ -3,6 +3,7 @@ package com.yandex.ydb.jdbc.impl;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -11,6 +12,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import javax.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
 import com.yandex.ydb.jdbc.YdbResultSet;
@@ -22,12 +25,15 @@ import com.yandex.ydb.table.values.ListValue;
 import com.yandex.ydb.table.values.StructType;
 import com.yandex.ydb.table.values.Type;
 import com.yandex.ydb.table.values.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.yandex.ydb.jdbc.YdbConst.INDEXED_PARAMETERS_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.MISSING_VALUE_FOR_PARAMETER;
 import static com.yandex.ydb.jdbc.YdbConst.PARAMETER_NOT_FOUND;
 
-public class YdbPreparedStatementBatchedImpl extends AbstractYdbPreparedStatementImpl {
+public class YdbPreparedStatementBatchedImpl extends AbstractYdbDataQueryPreparedStatementImpl {
+    private static final Logger LOGGER = LoggerFactory.getLogger(YdbPreparedStatementBatchedImpl.class);
 
     private final StructBatchConfiguration cfg;
     private final StructMutableState state;
@@ -92,10 +98,18 @@ public class YdbPreparedStatementBatchedImpl extends AbstractYdbPreparedStatemen
     public int[] executeBatch() throws SQLException {
         int batchSize = state.batch.size();
         if (batchSize == 0) {
+            LOGGER.debug("Batch is empty, nothing to execute");
             return new int[0];
         }
-        super.execute();
-        return new int[batchSize]; // TODO: not actual batches, no update count
+        try {
+            LOGGER.debug("Executing batch of {} item(s)", batchSize);
+            super.execute();
+            int[] ret = new int[batchSize];
+            Arrays.fill(ret, SUCCESS_NO_INFO);
+            return ret;
+        } finally {
+            clearBatch();
+        }
     }
 
     @Override
@@ -107,12 +121,12 @@ public class YdbPreparedStatementBatchedImpl extends AbstractYdbPreparedStatemen
     }
 
     @Override
-    protected Map<String, Type> getParameterTypes() {
+    protected Map<String, TypeDescription> getParameterTypes() {
         return cfg.types;
     }
 
     @Override
-    protected void setImpl(String parameterName, Object x) throws SQLException {
+    protected void setImpl(String parameterName, @Nullable Object x, int sqlType) throws SQLException {
         int index = cfg.getIndex(parameterName);
         TypeDescription description = cfg.descriptions[index];
         Value<?> value = getValue(parameterName, description, x);
@@ -120,7 +134,7 @@ public class YdbPreparedStatementBatchedImpl extends AbstractYdbPreparedStatemen
     }
 
     @Override
-    protected void setImpl(int parameterIndex, Object x) throws SQLException {
+    protected void setImpl(int parameterIndex, @Nullable Object x, int sqlType) throws SQLException {
         throw new SQLFeatureNotSupportedException(INDEXED_PARAMETERS_UNSUPPORTED);
     }
 
@@ -175,7 +189,7 @@ public class YdbPreparedStatementBatchedImpl extends AbstractYdbPreparedStatemen
     private static StructBatchConfiguration fromStruct(String paramName, ListType listType, StructType structType) {
         int membersCount = structType.getMembersCount();
 
-        Map<String, Type> types = new LinkedHashMap<>(membersCount);
+        Map<String, TypeDescription> types = new LinkedHashMap<>(membersCount);
         Map<String, Integer> indexes = new HashMap<>(membersCount);
         String[] names = new String[membersCount];
         TypeDescription[] descriptions = new TypeDescription[membersCount];
@@ -187,7 +201,7 @@ public class YdbPreparedStatementBatchedImpl extends AbstractYdbPreparedStatemen
                 throw new IllegalStateException("Internal error. YDB must not bypass this struct " +
                         "with duplicate member " + paramName);
             }
-            types.put(name, type);
+            types.put(name, description);
             names[i] = name;
             descriptions[i] = description;
         }
@@ -198,7 +212,7 @@ public class YdbPreparedStatementBatchedImpl extends AbstractYdbPreparedStatemen
         private final String paramName;
         private final ListType listType;
         private final StructType structType;
-        private final Map<String, Type> types;
+        private final Map<String, TypeDescription> types;
         private final Map<String, Integer> indexes;
         private final String[] names;
         private final TypeDescription[] descriptions;
@@ -206,7 +220,7 @@ public class YdbPreparedStatementBatchedImpl extends AbstractYdbPreparedStatemen
         private StructBatchConfiguration(String paramName,
                                          ListType listType,
                                          StructType structType,
-                                         Map<String, Type> types,
+                                         Map<String, TypeDescription> types,
                                          Map<String, Integer> indexes,
                                          String[] names,
                                          TypeDescription[] descriptions) {

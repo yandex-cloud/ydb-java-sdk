@@ -1,0 +1,52 @@
+[
+  {
+    "COLUMN_NAME": "TABLE_CAT",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "TABLE_SCHEM",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "TABLE_NAME",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "TABLE_TYPE",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "REMARKS",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "TYPE_CAT",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "TYPE_SCHEM",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "TYPE_NAME",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "SELF_REFERENCING_COL_NAME",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "REF_GENERATION",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  }
+]

@@ -2,6 +2,7 @@ package com.yandex.ydb.jdbc.impl;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import static com.yandex.ydb.jdbc.TestHelper.assertThrowsMsg;
 import static com.yandex.ydb.jdbc.TestHelper.stringFileReference;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class YdbPreparedStatementBatchedImplTest extends AbstractYdbPreparedStatementImplTest {
@@ -77,7 +79,12 @@ class YdbPreparedStatementBatchedImplTest extends AbstractYdbPreparedStatementIm
             statement.setInt("key", 3);
             statement.setString("c_Utf8", "value-3");
 
-            statement.executeBatch();
+            assertArrayEquals(new int[]{Statement.SUCCESS_NO_INFO, Statement.SUCCESS_NO_INFO},
+                    statement.executeBatch());
+
+            // does nothing
+            assertArrayEquals(new int[0], statement.executeBatch());
+
             connection.commit();
 
             checkSimpleResultSet(connection);
@@ -194,11 +201,16 @@ class YdbPreparedStatementBatchedImplTest extends AbstractYdbPreparedStatementIm
 
     @Override
     protected YdbPreparedStatement getTestAllValuesStatement(YdbConnection connection) throws SQLException {
-        return connection.prepareStatement(subst(PREPARE_ALL, "unit_2"));
+        return connection.prepareStatement(subst("unit_2", PREPARE_ALL));
     }
 
     @Override
     protected boolean expectParameterPrefixed() {
+        return false;
+    }
+
+    @Override
+    protected boolean sqlTypeRequired() {
         return false;
     }
 }

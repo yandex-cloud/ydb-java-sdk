@@ -1,0 +1,122 @@
+[
+  {
+    "COLUMN_NAME": "TABLE_CAT",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "TABLE_SCHEM",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "TABLE_NAME",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "COLUMN_NAME",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "DATA_TYPE",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "TYPE_NAME",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "COLUMN_SIZE",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "BUFFER_LENGTH",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "DECIMAL_DIGITS",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "NUM_PREC_RADIX",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "NULLABLE",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "REMARKS",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "COLUMN_DEF",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "SQL_DATA_TYPE",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "SQL_DATETIME_SUB",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "CHAR_OCTET_LENGTH",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "ORDINAL_POSITION",
+    "COLUMN_TYPE": 5,
+    "COLUMN_TYPE_NAME": "Int16"
+  },
+  {
+    "COLUMN_NAME": "IS_NULLABLE",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "SCOPE_CATALOG",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "SCOPE_SCHEMA",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "SCOPE_TABLE",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "SOURCE_DATA_TYPE",
+    "COLUMN_TYPE": 5,
+    "COLUMN_TYPE_NAME": "Int16"
+  },
+  {
+    "COLUMN_NAME": "IS_AUTOINCREMENT",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "IS_GENERATEDCOLUMN",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  }
+]

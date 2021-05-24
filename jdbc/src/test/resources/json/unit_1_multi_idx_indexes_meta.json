@@ -1,0 +1,67 @@
+[
+  {
+    "COLUMN_NAME": "TABLE_CAT",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "TABLE_SCHEM",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "TABLE_NAME",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "NON_UNIQUE",
+    "COLUMN_TYPE": 16,
+    "COLUMN_TYPE_NAME": "Bool"
+  },
+  {
+    "COLUMN_NAME": "INDEX_QUALIFIER",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "INDEX_NAME",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "TYPE",
+    "COLUMN_TYPE": 5,
+    "COLUMN_TYPE_NAME": "Int16"
+  },
+  {
+    "COLUMN_NAME": "ORDINAL_POSITION",
+    "COLUMN_TYPE": 5,
+    "COLUMN_TYPE_NAME": "Int16"
+  },
+  {
+    "COLUMN_NAME": "COLUMN_NAME",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "ASC_OR_DESC",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  },
+  {
+    "COLUMN_NAME": "CARDINALITY",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "PAGES",
+    "COLUMN_TYPE": 4,
+    "COLUMN_TYPE_NAME": "Int32"
+  },
+  {
+    "COLUMN_NAME": "FILTER_CONDITION",
+    "COLUMN_TYPE": 12,
+    "COLUMN_TYPE_NAME": "Utf8"
+  }
+]

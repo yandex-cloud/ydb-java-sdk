@@ -12,63 +12,72 @@ public class YdbOperationProperty<T> extends AbstractYdbProperty<T, Void> {
     private static final PropertiesCollector<YdbOperationProperty<?>> PROPERTIES = new PropertiesCollector<>();
 
     public static final YdbOperationProperty<Duration> JOIN_DURATION =
-            new YdbOperationProperty<>("joinDuration",
+            new YdbOperationProperty<>(
+                    "joinDuration",
                     "Default timeout for all YDB operations",
                     "5m",
                     Duration.class,
                     PropertyConverter.durationValue());
 
     public static final YdbOperationProperty<Boolean> KEEP_IN_QUERY_CACHE =
-            new YdbOperationProperty<>("keepInQueryCache",
+            new YdbOperationProperty<>(
+                    "keepInQueryCache",
                     "Keep all queries in cache",
                     "false",
                     Boolean.class,
                     PropertyConverter.booleanValue());
 
     public static final YdbOperationProperty<Duration> QUERY_TIMEOUT =
-            new YdbOperationProperty<>("queryTimeout",
+            new YdbOperationProperty<>(
+                    "queryTimeout",
                     "Default timeout for all YDB data queries, scheme and explain operations",
                     "0s",
                     Duration.class,
                     PropertyConverter.durationValue());
 
     public static final YdbOperationProperty<Duration> SCAN_QUERY_TIMEOUT =
-            new YdbOperationProperty<>("scanQueryTimeout",
+            new YdbOperationProperty<>(
+                    "scanQueryTimeout",
                     "Default timeout for all YDB scan queries",
                     "1m",
                     Duration.class,
                     PropertyConverter.durationValue());
 
     public static final YdbOperationProperty<Boolean> FAIL_ON_TRUNCATED_RESULT =
-            new YdbOperationProperty<>("failOnTruncatedResult",
+            new YdbOperationProperty<>(
+                    "failOnTruncatedResult",
                     "Throw an exception when received truncated result",
                     "true",
                     Boolean.class,
                     PropertyConverter.booleanValue());
 
     public static final YdbOperationProperty<Duration> SESSION_TIMEOUT =
-            new YdbOperationProperty<>("sessionTimeout",
+            new YdbOperationProperty<>(
+                    "sessionTimeout",
                     "Default timeout to create a session",
                     "5s",
                     Duration.class,
                     PropertyConverter.durationValue());
 
     public static final YdbOperationProperty<Duration> DEADLINE_TIMEOUT =
-            new YdbOperationProperty<>("deadlineTimeout",
+            new YdbOperationProperty<>(
+                    "deadlineTimeout",
                     "Deadline timeout for all operations",
                     "0s",
                     Duration.class,
                     PropertyConverter.durationValue());
 
     public static final YdbOperationProperty<Boolean> AUTOCOMMIT =
-            new YdbOperationProperty<>("autoCommit",
+            new YdbOperationProperty<>(
+                    "autoCommit",
                     "Auto commit all operations",
                     "false",
                     Boolean.class,
                     PropertyConverter.booleanValue());
 
     public static final YdbOperationProperty<Integer> TRANSACTION_LEVEL =
-            new YdbOperationProperty<>("transactionLevel",
+            new YdbOperationProperty<>(
+                    "transactionLevel",
                     "Default transaction isolation level",
                     String.valueOf(Connection.TRANSACTION_SERIALIZABLE),
                     Integer.class,

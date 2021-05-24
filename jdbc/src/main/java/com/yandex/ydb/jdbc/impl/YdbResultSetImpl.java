@@ -19,7 +19,6 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 import java.sql.SQLXML;
-import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -41,6 +40,7 @@ import com.yandex.ydb.table.values.Value;
 import static com.yandex.ydb.jdbc.YdbConst.ARRAYS_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.ASCII_STREAM_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.BLOB_UNSUPPORTED;
+import static com.yandex.ydb.jdbc.YdbConst.CANNOT_UNWRAP_TO;
 import static com.yandex.ydb.jdbc.YdbConst.CLOB_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.COLUMN_NOT_FOUND;
 import static com.yandex.ydb.jdbc.YdbConst.CURSOR_UPDATING_UNSUPPORTED;
@@ -49,7 +49,6 @@ import static com.yandex.ydb.jdbc.YdbConst.INVALID_FETCH_DIRECTION;
 import static com.yandex.ydb.jdbc.YdbConst.INVALID_ROW;
 import static com.yandex.ydb.jdbc.YdbConst.NAMED_CURSORS_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.NCLOB_UNSUPPORTED;
-import static com.yandex.ydb.jdbc.YdbConst.NOTHING_TO_UNWRAP;
 import static com.yandex.ydb.jdbc.YdbConst.OBJECT_TYPED_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.REF_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.ROWID_UNSUPPORTED;
@@ -87,69 +86,60 @@ public class YdbResultSetImpl implements YdbResultSet {
     }
 
     @Override
-    public boolean wasNull() throws SQLException {
-        ValueReader column = getValueReader(state.colIndex);
-        return !column.isOptionalItemPresent(); // TODO: check if this is enough
+    public boolean wasNull() {
+        return state.nullValue;
     }
 
     //
     @Override
     public String getString(int columnIndex) throws SQLException {
-        ValueReader value = getValueReader(columnIndex);
-        TypeDescription description = getDescription(columnIndex);
-        if (noOptionalValue(description, value)) {
+        initValueReader(columnIndex);
+        if (state.nullValue) {
             return null; // getString supports all types, it's safe to check nullability here
         }
-        return description.fromValue.toString.fromValue(value);
+        return state.description.fromValue.toString.fromValue(state.value);
     }
 
     @Override
     public boolean getBoolean(int columnIndex) throws SQLException {
-        ValueReader value = getValueReader(columnIndex);
-        TypeDescription description = getDescription(columnIndex);
-        return description.fromValue.toBoolean.fromValue(value);
+        initValueReader(columnIndex);
+        return state.description.fromValue.toBoolean.fromValue(state.value);
     }
 
     @Override
     public byte getByte(int columnIndex) throws SQLException {
-        ValueReader value = getValueReader(columnIndex);
-        TypeDescription description = getDescription(columnIndex);
-        return description.fromValue.toByte.fromValue(value);
+        initValueReader(columnIndex);
+        return state.description.fromValue.toByte.fromValue(state.value);
     }
 
     @Override
     public short getShort(int columnIndex) throws SQLException {
-        ValueReader value = getValueReader(columnIndex);
-        TypeDescription description = getDescription(columnIndex);
-        return description.fromValue.toShort.fromValue(value);
+        initValueReader(columnIndex);
+        return state.description.fromValue.toShort.fromValue(state.value);
     }
 
     @Override
     public int getInt(int columnIndex) throws SQLException {
-        ValueReader value = getValueReader(columnIndex);
-        TypeDescription description = getDescription(columnIndex);
-        return description.fromValue.toInt.fromValue(value);
+        initValueReader(columnIndex);
+        return state.description.fromValue.toInt.fromValue(state.value);
     }
 
     @Override
     public long getLong(int columnIndex) throws SQLException {
-        ValueReader value = getValueReader(columnIndex);
-        TypeDescription description = getDescription(columnIndex);
-        return description.fromValue.toLong.fromValue(value);
+        initValueReader(columnIndex);
+        return state.description.fromValue.toLong.fromValue(state.value);
     }
 
     @Override
     public float getFloat(int columnIndex) throws SQLException {
-        ValueReader value = getValueReader(columnIndex);
-        TypeDescription description = getDescription(columnIndex);
-        return description.fromValue.toFloat.fromValue(value);
+        initValueReader(columnIndex);
+        return state.description.fromValue.toFloat.fromValue(state.value);
     }
 
     @Override
     public double getDouble(int columnIndex) throws SQLException {
-        ValueReader value = getValueReader(columnIndex);
-        TypeDescription description = getDescription(columnIndex);
-        return description.fromValue.toDouble.fromValue(value);
+        initValueReader(columnIndex);
+        return state.description.fromValue.toDouble.fromValue(state.value);
     }
 
     @Deprecated
@@ -165,10 +155,9 @@ public class YdbResultSetImpl implements YdbResultSet {
 
     @Override
     public byte[] getBytes(int columnIndex) throws SQLException {
-        ValueReader value = getValueReader(columnIndex);
-        TypeDescription description = getDescription(columnIndex);
-        byte[] result = description.fromValue.toBytes.fromValue(value);
-        if (noOptionalValue(description, value)) { // TODO: do not parse empty value when optional and no value present
+        initValueReader(columnIndex);
+        byte[] result = state.description.fromValue.toBytes.fromValue(state.value);
+        if (state.nullValue) { // TODO: do not parse empty value when optional and no value present
             return null;
         }
         return result;
@@ -299,12 +288,11 @@ public class YdbResultSetImpl implements YdbResultSet {
 
     @Override
     public Object getObject(int columnIndex) throws SQLException {
-        ValueReader value = getValueReader(columnIndex);
-        TypeDescription description = getDescription(columnIndex);
-        if (noOptionalValue(description, value)) {
+        initValueReader(columnIndex);
+        if (state.nullValue) {
             return null; // getObject supports all types, it's safe to check nullability here
         }
-        return description.fromValue.toObject.fromValue(value);
+        return state.description.fromValue.toObject.fromValue(state.value);
     }
 
     @Override
@@ -319,10 +307,9 @@ public class YdbResultSetImpl implements YdbResultSet {
 
     @Override
     public Reader getCharacterStream(int columnIndex) throws SQLException {
-        ValueReader value = getValueReader(columnIndex);
-        TypeDescription description = getDescription(columnIndex);
-        Reader result = description.fromValue.toReader.fromValue(value);
-        if (noOptionalValue(description, value)) {
+        initValueReader(columnIndex);
+        Reader result = state.description.fromValue.toReader.fromValue(state.value);
+        if (state.nullValue) {
             return null;
         }
         return result;
@@ -335,10 +322,9 @@ public class YdbResultSetImpl implements YdbResultSet {
 
     @Override
     public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
-        ValueReader value = getValueReader(columnIndex);
-        TypeDescription description = getDescription(columnIndex);
-        BigDecimal result = description.fromValue.toBigDecimal.fromValue(value);
-        if (noOptionalValue(description, value)) {
+        initValueReader(columnIndex);
+        BigDecimal result = state.description.fromValue.toBigDecimal.fromValue(state.value);
+        if (state.nullValue) {
             return null;
         }
         return result;
@@ -462,7 +448,7 @@ public class YdbResultSetImpl implements YdbResultSet {
     }
 
     @Override
-    public Statement getStatement() {
+    public YdbStatement getStatement() {
         return statement;
     }
 
@@ -500,10 +486,9 @@ public class YdbResultSetImpl implements YdbResultSet {
 
     @Override
     public URL getURL(int columnIndex) throws SQLException {
-        ValueReader value = getValueReader(columnIndex);
-        TypeDescription description = getDescription(columnIndex);
-        String result = description.fromValue.toURL.fromValue(value);
-        if (noOptionalValue(description, value)) {
+        initValueReader(columnIndex);
+        String result = state.description.fromValue.toURL.fromValue(state.value);
+        if (state.nullValue) {
             return null;
         }
         try {
@@ -530,10 +515,9 @@ public class YdbResultSetImpl implements YdbResultSet {
 
     @Override
     public String getNString(int columnIndex) throws SQLException {
-        ValueReader value = getValueReader(columnIndex);
-        TypeDescription description = getDescription(columnIndex);
-        String result = description.fromValue.toNString.fromValue(value);
-        if (noOptionalValue(description, value)) {
+        initValueReader(columnIndex);
+        String result = state.description.fromValue.toNString.fromValue(state.value);
+        if (state.nullValue) {
             return null;
         }
         return result;
@@ -556,14 +540,13 @@ public class YdbResultSetImpl implements YdbResultSet {
 
     @Override
     public Optional<Value<?>> getNativeColumn(int columnIndex) throws SQLException {
-        ValueReader value = getValueReader(columnIndex);
-        TypeDescription description = getDescription(columnIndex);
-        if (noOptionalValue(description, value)) {
+        initValueReader(columnIndex);
+        if (state.nullValue) {
             return Optional.empty();
         }
         // It's just a bug in implementation - actualValue could be optional, but without flag
         // I.e. the optional object looks like empty, not null
-        Value<?> actualValue = value.getValue();
+        Value<?> actualValue = state.value.getValue();
         if (actualValue instanceof OptionalValue) {
             return Optional.of((Value<?>) ((OptionalValue) actualValue).get());
         }
@@ -585,10 +568,9 @@ public class YdbResultSetImpl implements YdbResultSet {
     //
 
     private <T> T getDateImpl(int columnIndex, LongFunction<T> fromMillis) throws SQLException {
-        ValueReader value = getValueReader(columnIndex);
-        TypeDescription description = getDescription(columnIndex);
-        long longValue = description.fromValue.toDateMillis.fromValue(value);
-        if (noOptionalValue(description, value)) {
+        initValueReader(columnIndex);
+        long longValue = state.description.fromValue.toDateMillis.fromValue(state.value);
+        if (state.nullValue) {
             return null;
         }
         return fromMillis.apply(longValue);
@@ -599,15 +581,17 @@ public class YdbResultSetImpl implements YdbResultSet {
         return types[columnIndex - 1];
     }
 
-    private boolean noOptionalValue(TypeDescription description, ValueReader value) {
+    private boolean isNullValue(TypeDescription description, ValueReader value) {
         return description.optional && !value.isOptionalItemPresent();
     }
 
-    private ValueReader getValueReader(int columnIndex) throws SQLException {
+    private void initValueReader(int columnIndex) throws SQLException {
         try {
             ValueReader value = result.getColumn(columnIndex - 1);
-            state.colIndex = columnIndex;
-            return value;
+            TypeDescription description = getDescription(columnIndex);
+            state.value = value;
+            state.description = description;
+            state.nullValue = isNullValue(description, value);
         } catch (IllegalStateException e) {
             throw new SQLException(INVALID_ROW + state.rowIndex);
         }
@@ -650,7 +634,12 @@ public class YdbResultSetImpl implements YdbResultSet {
 
     private static class MutableState {
         private int rowIndex; // 1..rowCount, inclusive (first row is 1, second is 2 and so on)
-        private int colIndex; // 1..colCount, inclusive (first column is 1, second is 2 ...)
+
+        // last column reader
+        private ValueReader value;
+        private TypeDescription description;
+        boolean nullValue;
+
         private int direction = ResultSet.FETCH_UNKNOWN;
         private boolean closed;
     }
@@ -1231,11 +1220,14 @@ public class YdbResultSetImpl implements YdbResultSet {
 
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
-        throw new SQLException(NOTHING_TO_UNWRAP);
+        if (iface.isAssignableFrom(getClass())) {
+            return iface.cast(this);
+        }
+        throw new SQLException(CANNOT_UNWRAP_TO + iface);
     }
 
     @Override
     public boolean isWrapperFor(Class<?> iface) {
-        return false;
+        return iface.isAssignableFrom(getClass());
     }
 }
