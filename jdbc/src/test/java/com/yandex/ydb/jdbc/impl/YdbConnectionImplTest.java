@@ -517,8 +517,7 @@ class YdbConnectionImplTest extends AbstractTest {
 
     @ParameterizedTest
     @MethodSource("unsupportedTypes")
-    void testUnsupportedTableTypes(String paramName, String sqlExpression, String expectedError)
-            {
+    void testUnsupportedTableTypes(String paramName, String sqlExpression, String expectedError) {
         String tableName = "unsupported_" + paramName;
         String sql = String.format("--jdbc:SCHEME\ncreate table ${tableName} (key Int32, %s %s, primary key(key))",
                 paramName, sqlExpression);

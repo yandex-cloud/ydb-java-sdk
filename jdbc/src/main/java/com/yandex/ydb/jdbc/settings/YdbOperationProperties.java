@@ -23,6 +23,7 @@ public class YdbOperationProperties {
     private final boolean enforceVariablePrefix;
     private final boolean cacheConnectionsInDriver;
     private final boolean detectSqlOperations;
+    private final boolean alwaysPrepareDataQuery;
 
     public YdbOperationProperties(Map<YdbOperationProperty<?>, ParsedProperty> params) {
         this.params = Objects.requireNonNull(params);
@@ -42,6 +43,7 @@ public class YdbOperationProperties {
         this.enforceVariablePrefix = params.get(YdbOperationProperty.ENFORCE_VARIABLE_PREFIX).getParsedValue();
         this.cacheConnectionsInDriver = params.get(YdbOperationProperty.CACHE_CONNECTIONS_IN_DRIVER).getParsedValue();
         this.detectSqlOperations = params.get(YdbOperationProperty.DETECT_SQL_OPERATIONS).getParsedValue();
+        this.alwaysPrepareDataQuery = params.get(YdbOperationProperty.ALWAYS_PREPARE_DATAQUERY).getParsedValue();
     }
 
     public Map<YdbOperationProperty<?>, ParsedProperty> getParams() {
@@ -106,5 +108,9 @@ public class YdbOperationProperties {
 
     public boolean isDetectSqlOperations() {
         return detectSqlOperations;
+    }
+
+    public boolean isAlwaysPrepareDataQuery() {
+        return alwaysPrepareDataQuery;
     }
 }

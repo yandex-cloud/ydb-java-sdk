@@ -17,9 +17,9 @@ public abstract class AbstractYdbDataQueryPreparedStatementImpl extends Abstract
     private final DataQuery dataQuery;
 
     protected AbstractYdbDataQueryPreparedStatementImpl(YdbConnectionImpl connection,
-                                               int resultSetType,
-                                               String query,
-                                               DataQuery dataQuery) throws SQLException {
+                                                        int resultSetType,
+                                                        String query,
+                                                        DataQuery dataQuery) throws SQLException {
         super(connection, resultSetType, query);
         this.dataQuery = Objects.requireNonNull(dataQuery);
         this.metaDataSupplier = Suppliers.memoize(() ->
@@ -30,7 +30,6 @@ public abstract class AbstractYdbDataQueryPreparedStatementImpl extends Abstract
     public YdbParameterMetaData getParameterMetaData() {
         return metaDataSupplier.get();
     }
-
 
     protected DataQuery getDataQuery() {
         return dataQuery;
@@ -46,13 +45,7 @@ public abstract class AbstractYdbDataQueryPreparedStatementImpl extends Abstract
                         params -> QueryType.DATA_QUERY + " [" + dataQuery.getId() + "] >>\n" +
                                 dataQuery.getText().orElse("<empty>") +
                                 "\n\nParams: " + paramsToString(params),
-                        (tx, params, execParams) -> {
-                            try {
-                                return dataQuery.execute(tx, params, execParams);
-                            } finally {
-                                afterExecute();
-                            }
-                        });
+                        dataQuery::execute);
             case SCAN_QUERY:
                 return executeScanQueryImpl();
             default:

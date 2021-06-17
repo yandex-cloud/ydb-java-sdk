@@ -1,7 +1,6 @@
 package com.yandex.ydb.jdbc.impl;
 
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import javax.annotation.Nullable;
 
@@ -21,28 +18,23 @@ import com.yandex.ydb.jdbc.exception.YdbExecutionException;
 import com.yandex.ydb.table.query.DataQuery;
 import com.yandex.ydb.table.query.Params;
 import com.yandex.ydb.table.values.ListType;
-import com.yandex.ydb.table.values.ListValue;
 import com.yandex.ydb.table.values.StructType;
 import com.yandex.ydb.table.values.Type;
 import com.yandex.ydb.table.values.Value;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.yandex.ydb.jdbc.YdbConst.INDEXED_PARAMETERS_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.MISSING_VALUE_FOR_PARAMETER;
 import static com.yandex.ydb.jdbc.YdbConst.PARAMETER_NOT_FOUND;
 
-public class YdbPreparedStatementBatchedImpl extends AbstractYdbDataQueryPreparedStatementImpl {
-    private static final Logger LOGGER = LoggerFactory.getLogger(YdbPreparedStatementBatchedImpl.class);
-
+public class YdbPreparedStatementWithDataQueryBatchedImpl extends AbstractYdbDataQueryPreparedStatementImpl {
     private final StructBatchConfiguration cfg;
     private final StructMutableState state;
 
-    protected YdbPreparedStatementBatchedImpl(YdbConnectionImpl connection,
-                                              int resultSetType,
-                                              String query,
-                                              DataQuery dataQuery,
-                                              StructBatchConfiguration cfg) throws SQLException {
+    protected YdbPreparedStatementWithDataQueryBatchedImpl(YdbConnectionImpl connection,
+                                                           int resultSetType,
+                                                           String query,
+                                                           DataQuery dataQuery,
+                                                           StructBatchConfiguration cfg) throws SQLException {
         super(connection, resultSetType, query, dataQuery);
         this.cfg = Objects.requireNonNull(cfg);
         this.state = new StructMutableState(cfg);
@@ -98,18 +90,12 @@ public class YdbPreparedStatementBatchedImpl extends AbstractYdbDataQueryPrepare
     public int[] executeBatch() throws SQLException {
         int batchSize = state.batch.size();
         if (batchSize == 0) {
-            LOGGER.debug("Batch is empty, nothing to execute");
             return new int[0];
         }
-        try {
-            LOGGER.debug("Executing batch of {} item(s)", batchSize);
-            super.execute();
-            int[] ret = new int[batchSize];
-            Arrays.fill(ret, SUCCESS_NO_INFO);
-            return ret;
-        } finally {
-            clearBatch();
-        }
+        super.execute();
+        int[] ret = new int[batchSize];
+        Arrays.fill(ret, SUCCESS_NO_INFO);
+        return ret;
     }
 
     @Override
@@ -126,7 +112,9 @@ public class YdbPreparedStatementBatchedImpl extends AbstractYdbDataQueryPrepare
     }
 
     @Override
-    protected void setImpl(String parameterName, @Nullable Object x, int sqlType) throws SQLException {
+    protected void setImpl(String parameterName, @Nullable Object x,
+                           int sqlType, @Nullable String typeName, @Nullable Type type)
+            throws SQLException {
         int index = cfg.getIndex(parameterName);
         TypeDescription description = cfg.descriptions[index];
         Value<?> value = getValue(parameterName, description, x);
@@ -134,29 +122,10 @@ public class YdbPreparedStatementBatchedImpl extends AbstractYdbDataQueryPrepare
     }
 
     @Override
-    protected void setImpl(int parameterIndex, @Nullable Object x, int sqlType) throws SQLException {
-        throw new SQLFeatureNotSupportedException(INDEXED_PARAMETERS_UNSUPPORTED);
-    }
-
-    @Override
-    protected String paramsToString(Params params) {
-        Map<String, Value<?>> values = params.values();
-        if (values.size() == 1) {
-            Map.Entry<String, Value<?>> entry = values.entrySet().iterator().next();
-            String key = entry.getKey();
-            Value<?> value = entry.getValue();
-            if (value instanceof ListValue) {
-                ListValue list = (ListValue) value;
-                if (list.size() > 10) {
-                    String first10Elements = IntStream.range(0, 10)
-                            .mapToObj(list::get)
-                            .map(String::valueOf)
-                            .collect(Collectors.joining(", "));
-                    return "{" + key + "=List[" + first10Elements + "...], and " + (list.size() - 10) + " more";
-                }
-            }
-        }
-        return super.paramsToString(params);
+    protected void setImpl(int parameterIndex, @Nullable Object x,
+                           int sqlType, @Nullable String typeName, @Nullable Type type)
+            throws SQLException {
+        throw new SQLException(INDEXED_PARAMETERS_UNSUPPORTED);
     }
 
     //
@@ -249,7 +218,7 @@ public class YdbPreparedStatementBatchedImpl extends AbstractYdbDataQueryPrepare
     private static class StructMutableState {
         private final List<Value> batch = new ArrayList<>();
         private final StructBatchConfiguration cfg;
-        private Value[] members;
+        private Value<?>[] members;
         private boolean modified;
 
         StructMutableState(StructBatchConfiguration cfg) {
@@ -275,7 +244,7 @@ public class YdbPreparedStatementBatchedImpl extends AbstractYdbDataQueryPrepare
         }
 
         void clear() {
-            members = new Value[cfg.descriptions.length];
+            members = new Value<?>[cfg.descriptions.length];
             modified = false;
         }
     }

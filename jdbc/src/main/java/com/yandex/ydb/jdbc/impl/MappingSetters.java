@@ -135,7 +135,11 @@ public class MappingSetters {
             int index = 0;
             for (Object value : values) {
                 if (value != null) {
-                    result[index++] = itemSetter.toValue(value);
+                    if (value instanceof Value<?>) {
+                        result[index++] = (Value<?>) value;
+                    } else {
+                        result[index++] = itemSetter.toValue(value);
+                    }
                 }
             }
             if (index < result.length) {

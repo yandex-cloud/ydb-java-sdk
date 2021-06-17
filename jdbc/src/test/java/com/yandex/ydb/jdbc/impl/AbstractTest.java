@@ -131,6 +131,14 @@ public abstract class AbstractTest {
         return TestHelper.withTableName(tableName, sql);
     }
 
+    protected static void closeIfPossible(Object value) throws IOException {
+        if (value instanceof Reader) {
+            ((Reader) value).close();
+        } else if (value instanceof InputStream) {
+            ((InputStream) value).close();
+        }
+    }
+
     protected static <T> Object castCompatible(T value) throws SQLException {
         if (value instanceof Date) {
             return ((Date) value).getTime();

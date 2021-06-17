@@ -11,14 +11,17 @@ import com.yandex.ydb.jdbc.YdbConnection;
 import com.yandex.ydb.jdbc.YdbPreparedStatement;
 import com.yandex.ydb.jdbc.exception.YdbNonRetryableException;
 import com.yandex.ydb.jdbc.exception.YdbResultTruncatedException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static com.yandex.ydb.jdbc.TestHelper.assertThrowsMsg;
+import static com.yandex.ydb.jdbc.TestHelper.assertThrowsMsgLike;
 import static com.yandex.ydb.jdbc.TestHelper.stringFileReference;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class YdbPreparedStatementBatchedImplTest extends AbstractYdbPreparedStatementImplTest {
+class YdbPreparedStatementWithDataQueryBatchedImplTest extends AbstractYdbPreparedStatementImplTest {
 
     static final String PREPARE_ALL = stringFileReference("classpath:sql/prepare_all_values_batched.sql");
 
@@ -122,7 +125,8 @@ class YdbPreparedStatementBatchedImplTest extends AbstractYdbPreparedStatementIm
                 TestHelper.assertThrowsMsgLike(YdbNonRetryableException.class,
                         () -> connection.prepareStatement(
                                 "declare $values as List<Struct<key:Int32,c_Utf8:Utf8,key:Int32>>; \n" +
-                                        "upsert into unit_2 select * from as_table($values)"),
+                                        "upsert into unit_2 select * from as_table($values)",
+                                YdbConnection.PreparedStatementMode.DATA_QUERY_BATCH),
                         "Duplicated member: key"));
     }
 
@@ -135,6 +139,10 @@ class YdbPreparedStatementBatchedImplTest extends AbstractYdbPreparedStatementIm
             checkNoResultSet(connection);
 
             statement.executeUpdate();
+            connection.commit();
+            checkNoResultSet(connection);
+
+            statement.executeBatch();
             connection.commit();
             checkNoResultSet(connection);
         });
@@ -189,6 +197,34 @@ class YdbPreparedStatementBatchedImplTest extends AbstractYdbPreparedStatementIm
         });
     }
 
+    @Test
+    void testPrepareWithAutoBatch() throws SQLException {
+        retry(connection -> {
+            YdbPreparedStatement statement = connection.prepareStatement(
+                    "declare $values as List<Struct<key:Int32,c_Utf8:Utf8>>; \n" +
+                            "upsert into unit_2 select * from as_table($values)");
+            assertTrue(statement instanceof YdbPreparedStatementWithDataQueryBatchedImpl);
+        });
+    }
+
+    @Test
+    void testPrepareBatchInvalid() throws SQLException {
+        retry(connection ->
+                assertThrowsMsgLike(SQLException.class,
+                        () -> connection.prepareStatement(
+                                "declare $key as Int32; \n" +
+                                        "declare $value as Utf8; \n" +
+                                        "upsert into unit_2 (key, c_Utf8) values ($key, $value)",
+                                YdbConnection.PreparedStatementMode.DATA_QUERY_BATCH),
+                        "Statement cannot be executed as batch statement"));
+    }
+
+    @Test
+    void testStatement() throws SQLException {
+        retry(connection -> Assertions.assertTrue(
+                getUtf8Statement(connection) instanceof YdbPreparedStatementWithDataQueryBatchedImpl));
+    }
+
     @Override
     protected YdbPreparedStatement getTestStatement(YdbConnection connection,
                                                     String column,
@@ -196,12 +232,21 @@ class YdbPreparedStatementBatchedImplTest extends AbstractYdbPreparedStatementIm
         return connection.prepareStatement(
                 String.format("declare $values as List<Struct<key:Int32,%s:%s>>; \n" +
                                 "upsert into unit_2 select * from as_table($values)",
-                        column, type));
+                        column, type),
+                YdbConnection.PreparedStatementMode.DATA_QUERY_BATCH);
+    }
+
+    @Override
+    protected YdbPreparedStatement getTestStatementIndexed(YdbConnection connection,
+                                                           String column,
+                                                           String type) throws SQLException {
+        return getTestStatement(connection, column, type);
     }
 
     @Override
     protected YdbPreparedStatement getTestAllValuesStatement(YdbConnection connection) throws SQLException {
-        return connection.prepareStatement(subst("unit_2", PREPARE_ALL));
+        return connection.prepareStatement(subst("unit_2", PREPARE_ALL),
+                YdbConnection.PreparedStatementMode.DATA_QUERY_BATCH);
     }
 
     @Override
@@ -211,6 +256,11 @@ class YdbPreparedStatementBatchedImplTest extends AbstractYdbPreparedStatementIm
 
     @Override
     protected boolean sqlTypeRequired() {
+        return false;
+    }
+
+    @Override
+    protected boolean supportIndexedParameters() {
         return false;
     }
 }

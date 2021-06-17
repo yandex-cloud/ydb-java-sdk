@@ -36,8 +36,9 @@ import com.yandex.ydb.jdbc.YdbDatabaseMetaData;
 import com.yandex.ydb.jdbc.YdbPreparedStatement;
 import com.yandex.ydb.jdbc.YdbStatement;
 import com.yandex.ydb.jdbc.YdbTypes;
+import com.yandex.ydb.jdbc.exception.YdbExecutionException;
 import com.yandex.ydb.jdbc.exception.YdbRetryableException;
-import com.yandex.ydb.jdbc.impl.YdbPreparedStatementBatchedImpl.StructBatchConfiguration;
+import com.yandex.ydb.jdbc.impl.YdbPreparedStatementWithDataQueryBatchedImpl.StructBatchConfiguration;
 import com.yandex.ydb.jdbc.settings.YdbOperationProperties;
 import com.yandex.ydb.table.SchemeClient;
 import com.yandex.ydb.table.Session;
@@ -71,6 +72,7 @@ import static com.yandex.ydb.jdbc.YdbConst.SAVEPOINTS_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.SET_NETWORK_TIMEOUT_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.SQLXML_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.STALE_CONSISTENT_READ_ONLY;
+import static com.yandex.ydb.jdbc.YdbConst.STATEMENT_IS_NOT_A_BATCH;
 import static com.yandex.ydb.jdbc.YdbConst.STRUCTS_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.TRANSACTION_SERIALIZABLE_READ_WRITE;
 import static com.yandex.ydb.jdbc.YdbConst.UNSUPPORTED_TRANSACTION_LEVEL;
@@ -338,7 +340,6 @@ public class YdbConnectionImpl implements YdbConnection {
     public YdbStatement createStatement(int resultSetType, int resultSetConcurrency,
                                         int resultSetHoldability) throws SQLException {
         ensureOpened();
-
         checkStatementParams(resultSetType, resultSetConcurrency, resultSetHoldability);
         return new YdbStatementImpl(this, resultSetType);
     }
@@ -347,37 +348,15 @@ public class YdbConnectionImpl implements YdbConnection {
     public YdbPreparedStatement prepareStatement(String origSql, int resultSetType, int resultSetConcurrency,
                                                  int resultSetHoldability) throws SQLException {
         ensureOpened();
-
         checkStatementParams(resultSetType, resultSetConcurrency, resultSetHoldability);
         this.clearWarnings();
 
-        PrepareDataQuerySettings cfg = new PrepareDataQuerySettings();
-        cfg.keepInQueryCache();
-
-        String sql = this.prepareYdbSql(origSql);
-        Result<DataQuery> dataQuery = joinResultImpl(
-                () -> "Preparing Query >>\n" + sql,
-                () -> session.prepareDataQuery(sql, validator.init(cfg)));
-        DataQuery prepared = dataQuery.expect("Prepare statement");
-
-        if (properties.isAutoPreparedBatches()) {
-            Optional<StructBatchConfiguration> batchCfgOpt =
-                    YdbPreparedStatementBatchedImpl.asColumns(prepared.types());
-            if (batchCfgOpt.isPresent()) {
-                return new YdbPreparedStatementBatchedImpl(this, resultSetType, sql, prepared, batchCfgOpt.get());
-            }
-        }
-
-        return new YdbPreparedStatementImpl(this, resultSetType, sql, prepared);
+        return prepareStatementImpl(origSql, resultSetType, PreparedStatementMode.DEFAULT);
     }
 
-
     @Override
-    public YdbPreparedStatement prepareStatementInMemory(String origSql) throws SQLException {
-        ensureOpened();
-        this.clearWarnings();
-        String sql = this.prepareYdbSql(origSql);
-        return new YdbPreparedStatementInMemoryImpl(this, ResultSet.TYPE_SCROLL_INSENSITIVE, sql);
+    public YdbPreparedStatement prepareStatement(String sql, PreparedStatementMode mode) throws SQLException {
+        return prepareStatementImpl(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, mode);
     }
 
     @Override
@@ -389,6 +368,42 @@ public class YdbConnectionImpl implements YdbConnection {
                 ResultSet.HOLD_CURSORS_OVER_COMMIT);
     }
 
+    private YdbPreparedStatement prepareStatementImpl(String origSql,
+                                                      int resultSetType,
+                                                      PreparedStatementMode mode) throws SQLException {
+        ensureOpened();
+        this.clearWarnings();
+
+        String sql = this.prepareYdbSql(origSql);
+
+        if (mode == PreparedStatementMode.IN_MEMORY ||
+                (mode == PreparedStatementMode.DEFAULT && !properties.isAlwaysPrepareDataQuery())) {
+            return new YdbPreparedStatementImpl(this, resultSetType, sql);
+        }
+
+        PrepareDataQuerySettings cfg = new PrepareDataQuerySettings();
+        cfg.keepInQueryCache();
+
+        Result<DataQuery> dataQuery = joinResultImpl(
+                () -> "Preparing Query >>\n" + sql,
+                () -> session.prepareDataQuery(sql, validator.init(cfg)));
+        DataQuery prepared = dataQuery.expect("Prepare statement");
+
+        boolean requireBatch = mode == PreparedStatementMode.DATA_QUERY_BATCH;
+        if (properties.isAutoPreparedBatches() || requireBatch) {
+            Optional<StructBatchConfiguration> batchCfgOpt =
+                    YdbPreparedStatementWithDataQueryBatchedImpl.asColumns(prepared.types());
+            if (batchCfgOpt.isPresent()) {
+                return new YdbPreparedStatementWithDataQueryBatchedImpl(this, resultSetType, sql, prepared,
+                        batchCfgOpt.get());
+            } else if (requireBatch) {
+                throw new YdbExecutionException(STATEMENT_IS_NOT_A_BATCH + sql);
+            }
+        }
+
+        return new YdbPreparedStatementWithDataQueryImpl(this, resultSetType, sql, prepared);
+
+    }
 
     @Override
     public boolean isValid(int timeout) throws SQLException {

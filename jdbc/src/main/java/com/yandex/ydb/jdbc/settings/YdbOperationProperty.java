@@ -123,6 +123,13 @@ public class YdbOperationProperty<T> extends AbstractYdbProperty<T, Void> {
                     Boolean.class,
                     PropertyConverter.booleanValue());
 
+    public static final YdbOperationProperty<Boolean> ALWAYS_PREPARE_DATAQUERY =
+            new YdbOperationProperty<>("alwaysPrepareDataQuery",
+                    "Always execute #prepareDataQuery when creating PreparedStatements",
+                    "true",
+                    Boolean.class,
+                    PropertyConverter.booleanValue());
+
 
     protected YdbOperationProperty(String title,
                                    String description,

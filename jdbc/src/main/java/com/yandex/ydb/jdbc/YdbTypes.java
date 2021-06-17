@@ -12,12 +12,14 @@ public interface YdbTypes {
             DecimalType.of(YdbConst.SQL_DECIMAL_DEFAULT_PRECISION, YdbConst.SQL_DECIMAL_DEFAULT_SCALE);
 
     /**
-     * Converts given Java class to sqlType
+     * Converts given Java class to sqlType.
+     * <p>
+     * WARNING - this conversion does not support all YDB types and may lost actual type
      *
      * @param type java class to convert
      * @return sqlType
      */
-    int toSqlType(Class<?> type);
+    int toWrappedSqlType(Class<?> type);
 
     /**
      * Converts given Java class to YDB type
@@ -28,7 +30,7 @@ public interface YdbTypes {
     Type toYdbType(Class<?> type);
 
     /**
-     * Converts given YDB type to custom (YDB-driver specific) sqlType
+     * Converts given YDB type to custom (YDB-driver specific) sqlType, preserve original type if possible
      *
      * @param type complete YDB type to convert
      * @return sqlType
@@ -36,7 +38,7 @@ public interface YdbTypes {
     int wrapYdbJdbcType(Type type);
 
     /**
-     * Converts given sqlType to standard JDBC type
+     * Converts given sqlType to standard JDBC type, pair operation for #wrapYdbJdbcType but still may lost actual type
      *
      * @param sqlType probably customized sql type
      * @return standard JDBC type
@@ -51,6 +53,15 @@ public interface YdbTypes {
      */
     @Nullable
     Type toYdbType(int sqlType);
+
+    /**
+     * Converts given YDB type name to YDB type
+     *
+     * @param typeName type name to convert
+     * @return YDB type or null, of YDB type cannot be converted
+     */
+    @Nullable
+    Type toYdbType(String typeName);
 
     /**
      * Converts given YDB type to standard SQL type

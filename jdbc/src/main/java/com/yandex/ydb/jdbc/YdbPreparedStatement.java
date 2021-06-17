@@ -17,6 +17,8 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
+import com.yandex.ydb.table.values.Type;
+
 public interface YdbPreparedStatement extends YdbStatement, PreparedStatement {
 
     // TODO: add future calls
@@ -46,9 +48,13 @@ public interface YdbPreparedStatement extends YdbStatement, PreparedStatement {
 
     //
 
-    void setObject(String parameterName, Object x) throws SQLException;
+    void setObject(String parameterName, Object value, Type type) throws SQLException;
 
-    void setNull(String parameterName) throws SQLException;
+    void setObject(int parameterIndex, Object value, Type type) throws SQLException;
+
+    //
+
+    void setObject(String parameterName, Object x) throws SQLException;
 
     void setNull(String parameterName, int sqlType) throws SQLException;
 

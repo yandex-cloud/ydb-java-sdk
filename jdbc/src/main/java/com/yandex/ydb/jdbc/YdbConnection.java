@@ -58,19 +58,6 @@ public interface YdbConnection extends Connection {
     YdbStatement createStatement() throws SQLException;
 
     @Override
-    YdbPreparedStatement prepareStatement(String sql) throws SQLException;
-
-    /**
-     * Prepares statement without server-side YDB calls, i.e. in-memory only.
-     * This method disables types validation, batched prepared statements and so on.
-     *
-     * @param sql sql to prepare
-     * @return prepared statement
-     * @throws SQLException in case of any internal error
-     */
-    YdbPreparedStatement prepareStatementInMemory(String sql) throws SQLException;
-
-    @Override
     YdbStatement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException;
 
     @Override
@@ -93,4 +80,32 @@ public interface YdbConnection extends Connection {
 
     @Override
     YdbPreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException;
+
+
+    /**
+     * Prepares statement depending on driver settings
+     *
+     * @param sql sql to execute
+     * @return statement
+     * @throws SQLException in case of any internal error
+     */
+    @Override
+    YdbPreparedStatement prepareStatement(String sql) throws SQLException;
+
+    /**
+     * Prepares statement with explicit configuration
+     *
+     * @param sql  sql to prepare
+     * @param mode prepare mode
+     * @return prepared statement
+     * @throws SQLException in case of any internal error
+     */
+    YdbPreparedStatement prepareStatement(String sql, PreparedStatementMode mode) throws SQLException;
+
+    enum PreparedStatementMode {
+        DEFAULT,
+        IN_MEMORY,
+        DATA_QUERY,
+        DATA_QUERY_BATCH
+    }
 }

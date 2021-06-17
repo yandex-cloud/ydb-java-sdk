@@ -59,7 +59,7 @@ public class YdbBasicJdbcConverter extends BasicJdbcConverter {
         if (primitiveType != null) {
             return TYPES.wrapYdbJdbcType(PrimitiveType.of(primitiveType.type()));
         }
-        int sqlType = TYPES.toSqlType(property.getType());
+        int sqlType = TYPES.toWrappedSqlType(property.getType());
         if (sqlType != YdbConst.UNKNOWN_SQL_TYPE) {
             return sqlType;
         }

@@ -5,13 +5,15 @@ import java.sql.SQLFeatureNotSupportedException;
 
 import com.yandex.ydb.jdbc.YdbConnection;
 import com.yandex.ydb.jdbc.YdbPreparedStatement;
-import com.yandex.ydb.table.values.PrimitiveType;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static com.yandex.ydb.jdbc.TestHelper.assertThrowsMsg;
-import static com.yandex.ydb.jdbc.TestHelper.assertThrowsMsgLike;
+import static com.yandex.ydb.jdbc.TestHelper.stringFileReference;
 
-class YdbPreparedStatementInMemoryImplTest extends AbstractYdbPreparedStatementImplTest {
+class YdbPreparedStatementWithDataQueryImplTest extends AbstractYdbPreparedStatementImplTest {
+
+    static final String PREPARE_ALL = stringFileReference("classpath:sql/prepare_all_values.sql");
 
     @Test
     void addBatch() throws SQLException {
@@ -32,37 +34,19 @@ class YdbPreparedStatementInMemoryImplTest extends AbstractYdbPreparedStatementI
         });
     }
 
-
     @Test
-    void executeRequired() throws SQLException {
-        retry(connection ->
-                assertThrowsMsgLike(SQLException.class,
-                        () -> {
-                            YdbPreparedStatement statement = getTestStatement(connection, "c_Utf8", "Utf8");
-                            statement.setInt("key", 1);
-                            statement.setObject("c_Utf8", PrimitiveType.utf8().makeOptional().emptyValue());
-                            statement.execute();
-                        },
-                        "Parameter $c_Utf8 type mismatch, expected: Utf8, actual: Utf8?"));
-    }
-
-    @Test
-    @Override
-    void unknownColumns() throws SQLException {
-        retry(connection -> {
-            YdbPreparedStatement statement = getUtf8Statement(connection);
-            statement.setObject("column0", "value");
-            statement.execute();
-        }); // Not an error - we don't know if this column is known or not
+    void testStatement() throws SQLException {
+        retry(connection -> Assertions.assertTrue(
+                getUtf8Statement(connection) instanceof YdbPreparedStatementWithDataQueryImpl));
     }
 
     @Override
     protected YdbPreparedStatement getTestStatement(YdbConnection connection,
                                                     String column,
                                                     String type) throws SQLException {
-        return connection.prepareStatementInMemory(
+        return connection.prepareStatement(
                 String.format(
-                        "declare $key as Int32?; \n" +
+                        "declare $key as Int32; \n" +
                                 "declare $%s as %s; \n" +
                                 "upsert into unit_2(key, %s) values ($key, $%s)",
                         column, type,
@@ -70,8 +54,20 @@ class YdbPreparedStatementInMemoryImplTest extends AbstractYdbPreparedStatementI
     }
 
     @Override
+    protected YdbPreparedStatement getTestStatementIndexed(YdbConnection connection,
+                                                           String column,
+                                                           String type) throws SQLException {
+        return connection.prepareStatement(
+                String.format(
+                        "declare $p1 as Int32?; \n" +
+                                "declare $p2 as %s; \n" +
+                                "upsert into unit_2(key, %s) values ($p1, $p2)",
+                        type, column));
+    }
+
+    @Override
     protected YdbPreparedStatement getTestAllValuesStatement(YdbConnection connection) throws SQLException {
-        return connection.prepareStatement(subst("unit_2", YdbPreparedStatementImplTest.PREPARE_ALL));
+        return connection.prepareStatement(subst("unit_2", PREPARE_ALL));
     }
 
     @Override
@@ -81,6 +77,11 @@ class YdbPreparedStatementInMemoryImplTest extends AbstractYdbPreparedStatementI
 
     @Override
     protected boolean sqlTypeRequired() {
+        return false;
+    }
+
+    @Override
+    protected boolean supportIndexedParameters() {
         return true;
     }
 }

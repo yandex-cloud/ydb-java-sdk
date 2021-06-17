@@ -61,12 +61,13 @@ public final class YdbConst {
     public static final String COLUMN_NUMBER_NOT_FOUND = "Column is out of range: ";
     public static final String PARAMETER_NUMBER_NOT_FOUND = "Parameter is out of range: ";
     public static final String PARAMETER_NOT_FOUND = "Parameter not found: ";
-    public static final String PARAMETER_TYPE_UNKNOWN = "Unable to convert sqlType %s to YDB type for parameter: %s";
+    public static final String PARAMETER_TYPE_UNKNOWN = "Unable to convert sqlType %s (name %s) to " +
+            "YDB type for parameter: %s";
     public static final String INVALID_ROW = "Current row index is out of bounds: ";
     public static final String BATCH_UNSUPPORTED = "Batches are not supported in simple prepared statements";
+    public static final String BATCH_INVALID = "Batches are not supported for query type: ";
     public static final String METADATA_RS_UNSUPPORTED_IN_PS = "ResultSet metadata is not supported " +
             "in prepared statements";
-    public static final String INDEXED_PARAMETERS_UNSUPPORTED = "Indexed parameters are not supported in YDB";
     public static final String CANNOT_UNWRAP_TO = "Cannot unwrap to ";
     public static final String RESULT_SET_TYPE_UNSUPPORTED =
             "resultSetType must be ResultSet.TYPE_FORWARD_ONLY or ResultSet.TYPE_SCROLL_INSENSITIVE";
@@ -85,6 +86,11 @@ public final class YdbConst {
     public static final String CANNOT_LOAD_DATA_FROM_IS = "Unable to load data from input stream: ";
     public static final String CANNOT_LOAD_DATA_FROM_READER = "Unable to load data from reader: ";
     public static final String UNSUPPORTED_QUERY_TYPE_IN_PS = "Query type in prepared statement not supported: ";
+    public static final String UNKNOWN_PARAMETER_IN_BATCH = "New parameter when batch already added: ";
+    public static final String STATEMENT_IS_NOT_A_BATCH = "Statement cannot be executed as batch statement: ";
+    public static final String TRY_EXECUTE_ON_BATCH_STATEMENT = "Cannot call #execute method after #addBatch, " +
+            "must use #executeBatch";
+    public static final String INDEXED_PARAMETERS_UNSUPPORTED = "Indexed parameters are not supported here";
 
     // Cast errors
 
@@ -96,9 +102,6 @@ public final class YdbConst {
     public static final String MISSING_VALUE_FOR_PARAMETER = "Missing value for parameter: ";
     public static final String MISSING_REQUIRED_VALUE = "Missing required value for parameter: ";
     public static final String INVALID_PARAMETER_TYPE = "Cannot cast parameter [%s] from [%s] to [%s]";
-
-    public static final String UNABLE_TO_CONVERT_TO_SQL_TYPE = "Unable to convert YDB type to SQL Type: ";
-
 
     // Transaction levels
     // See details in https://cloud.yandex.ru/docs/ydb/concepts/transactions
@@ -135,9 +138,14 @@ public final class YdbConst {
     public static final String EXPLAIN_COLUMN_AST = "AST";
     public static final String EXPLAIN_COLUMN_PLAN = "PLAN";
 
-
     public static final String JDBC_PREFIX = "jdbc:";
     public static final String JDBC_YDB_PREFIX = JDBC_PREFIX + "ydb:";
+
+    // All indexed parameters will have this 'p' as a prefix, setInteger(1, "test") -> setInteger("p1", "test")
+    public static final String INDEXED_PARAMETER_PREFIX = "p";
+    public static final String VARIABLE_PARAMETER_PREFIX = "$";
+    public static final String DEFAULT_BATCH_PARAMETER = "$values";
+    public static final String OPTIONAL_TYPE_SUFFIX = "?";
 
     private YdbConst() {
         //

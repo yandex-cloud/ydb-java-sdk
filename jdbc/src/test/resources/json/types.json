@@ -80,6 +80,26 @@
     "NUM_PREC_RADIX": 10
   },
   {
+    "TYPE_NAME": "String",
+    "DATA_TYPE": -2,
+    "PRECISION": 4194304,
+    "LITERAL_PREFIX": "\u0027",
+    "LITERAL_SUFFIX": "\u0027",
+    "CREATE_PARAMS": null,
+    "NULLABLE": 1,
+    "CASE_SENSITIVE": true,
+    "SEARCHABLE": 3,
+    "UNSIGNED_ATTRIBUTE": false,
+    "FIXED_PREC_SCALE": false,
+    "AUTO_INCREMENT": false,
+    "LOCAL_TYPE_NAME": null,
+    "MINIMUM_SCALE": 0,
+    "MAXIMUM_SCALE": 0,
+    "SQL_DATA_TYPE": 0,
+    "SQL_DATETIME_SUB": 0,
+    "NUM_PREC_RADIX": 10
+  },
+  {
     "TYPE_NAME": "Yson",
     "DATA_TYPE": -2,
     "PRECISION": 4194304,
@@ -200,26 +220,6 @@
     "NUM_PREC_RADIX": 10
   },
   {
-    "TYPE_NAME": "String",
-    "DATA_TYPE": 12,
-    "PRECISION": 4194304,
-    "LITERAL_PREFIX": "\u0027",
-    "LITERAL_SUFFIX": "\u0027",
-    "CREATE_PARAMS": null,
-    "NULLABLE": 1,
-    "CASE_SENSITIVE": true,
-    "SEARCHABLE": 3,
-    "UNSIGNED_ATTRIBUTE": false,
-    "FIXED_PREC_SCALE": false,
-    "AUTO_INCREMENT": false,
-    "LOCAL_TYPE_NAME": null,
-    "MINIMUM_SCALE": 0,
-    "MAXIMUM_SCALE": 0,
-    "SQL_DATA_TYPE": 0,
-    "SQL_DATETIME_SUB": 0,
-    "NUM_PREC_RADIX": 10
-  },
-  {
     "TYPE_NAME": "Utf8",
     "DATA_TYPE": 12,
     "PRECISION": 4194304,
@@ -321,7 +321,7 @@
   },
   {
     "TYPE_NAME": "Datetime",
-    "DATA_TYPE": 93,
+    "DATA_TYPE": 92,
     "PRECISION": 19,
     "LITERAL_PREFIX": null,
     "LITERAL_SUFFIX": null,

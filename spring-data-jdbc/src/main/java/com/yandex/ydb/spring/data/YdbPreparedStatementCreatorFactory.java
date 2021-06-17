@@ -26,8 +26,9 @@ import java.util.List;
 import com.google.common.base.Preconditions;
 import com.yandex.ydb.jdbc.YdbConnection;
 import com.yandex.ydb.jdbc.YdbPreparedStatement;
+import com.yandex.ydb.jdbc.YdbTypes;
 import com.yandex.ydb.jdbc.exception.YdbExecutionException;
-import com.yandex.ydb.jdbc.impl.YdbPreparedStatementInMemoryImpl;
+import com.yandex.ydb.jdbc.impl.YdbPreparedStatementImpl;
 import com.yandex.ydb.table.values.ListType;
 import com.yandex.ydb.table.values.Type;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -108,7 +109,8 @@ public class YdbPreparedStatementCreatorFactory extends PreparedStatementCreator
 
         @Override
         public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
-            PreparedStatement ps = ((YdbConnection) con).prepareStatementInMemory(getSql());
+            PreparedStatement ps = ((YdbConnection) con).prepareStatement(getSql(),
+                    YdbConnection.PreparedStatementMode.IN_MEMORY);
             setValues(ps);
             return ps;
         }
@@ -117,6 +119,7 @@ public class YdbPreparedStatementCreatorFactory extends PreparedStatementCreator
         public void setValues(PreparedStatement ps) throws SQLException {
             Preconditions.checkArgument(ps instanceof YdbPreparedStatement, "Accept only YdbPreparedStatements");
             YdbPreparedStatement ydbPs = (YdbPreparedStatement) ps;
+            YdbTypes ydbTypes = ydbPs.getConnection().getYdbTypes();
 
             int len = this.parameters.size();
             for (int i = 0; i < len; i++) {
@@ -145,19 +148,19 @@ public class YdbPreparedStatementCreatorFactory extends PreparedStatementCreator
                 }
 
                 // TODO: make better - find a way to pass Type through ORM
-                if (ydbPs instanceof YdbPreparedStatementInMemoryImpl) {
-                    YdbPreparedStatementInMemoryImpl ydbPsInMem = (YdbPreparedStatementInMemoryImpl) ydbPs;
-                    Type type = ydbPsInMem.getConnection().getYdbTypes().toYdbType(sqlType);
+                if (ydbPs instanceof YdbPreparedStatementImpl) {
+                    Type type = ydbTypes.toYdbType(sqlType);
                     if (type == null) {
-                        throw new YdbExecutionException(String.format(PARAMETER_TYPE_UNKNOWN, sqlType, paramName));
+                        throw new YdbExecutionException(String.format(PARAMETER_TYPE_UNKNOWN,
+                                sqlType, null, paramName));
                     }
                     if (in instanceof Iterable) {
-                        ydbPsInMem.setObject(paramName, in, ListType.of(type.makeOptional()));
+                        ydbPs.setObject(paramName, in, ListType.of(type.makeOptional()));
                     } else {
                         if (in == null) {
-                            ydbPsInMem.setObject(paramName, in, type.makeOptional());
+                            ydbPs.setObject(paramName, in, type.makeOptional());
                         } else {
-                            ydbPsInMem.setObject(paramName, in, type);
+                            ydbPs.setObject(paramName, in, type);
                         }
                     }
                 } else {
