@@ -35,6 +35,7 @@ import com.yandex.ydb.table.SchemeClient;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -98,8 +99,33 @@ class YdbDriverTest {
         }
     }
 
+    @Disabled("Only for local tests")
+    @Test
+    void connectToPublicDatabase() throws SQLException {
+        String testUrl = String.format("jdbc:ydb:ydb-ru-prestable.yandex.net:2135%s?token=%s",
+                "/ru-prestable/home/miroslav2/mydb", "~/.arc/token");
+        try (Connection connection = driver.connect(testUrl, new Properties())) {
+            YdbConnection ydbConnection = (YdbConnection) connection;
+            assertEquals("/ru-prestable/home/miroslav2/mydb", ydbConnection.getDatabase());
+            LOGGER.info("Session to public database opened: {}", ydbConnection.getYdbSession());
+        }
+    }
+
+    @Disabled("Only for local tests")
+    @Test
+    void connectToPublicDatabaseMoreConvenient() throws SQLException {
+        String testUrl = String.format("jdbc:ydb:ydb-ru-prestable.yandex.net:2135?database=%s&token=%s",
+                "/ru-prestable/home/miroslav2/mydb", "~/.arc/token");
+        try (Connection connection = driver.connect(testUrl, new Properties())) {
+            YdbConnection ydbConnection = (YdbConnection) connection;
+            assertEquals("/ru-prestable/home/miroslav2/mydb", ydbConnection.getDatabase());
+            LOGGER.info("Session to public database opened: {}", ydbConnection.getYdbSession());
+        }
+    }
+
     @Test
     void connectMultipleTimes() throws SQLException {
+        YdbDriver.getConnectionsCache().close();
         try (YdbConnection connection1 = (YdbConnection) driver.connect(TEST_URL, new Properties())) {
             LOGGER.info("Session 1 opened: {}", connection1.getYdbSession());
             try (YdbConnection connection2 = (YdbConnection) driver.connect(TEST_URL, new Properties())) {
@@ -136,9 +162,16 @@ class YdbDriverTest {
 
     @ParameterizedTest
     @MethodSource("urlsToCheck")
-    void acceptsURL(String url, boolean accept) throws SQLException {
+    void acceptsURL(String url, boolean accept, String expectDatabase) throws SQLException {
         assertEquals(accept, driver.acceptsURL(url));
-        assertNotNull(driver.getPropertyInfo(url, new Properties()));
+        DriverPropertyInfo[] properties = driver.getPropertyInfo(url, new Properties());
+        assertNotNull(properties);
+
+        if (accept) {
+            YdbProperties ydbProperties = YdbProperties.from(url, new Properties());
+            assertNotNull(ydbProperties);
+            assertEquals(expectDatabase, ydbProperties.getConnectionProperties().getDatabase());
+        }
     }
 
     @SuppressWarnings("UnstableApiUsage")
@@ -376,6 +409,7 @@ class YdbDriverTest {
 
     static DriverPropertyInfo[] defaultPropertyInfo(@Nullable String localDatacenter) {
         return new DriverPropertyInfo[]{
+                YdbConnectionProperty.DATABASE.toDriverPropertyInfo("/ru-prestable/ci/testing/ci"),
                 YdbConnectionProperty.ENDPOINT_DISCOVERY_PERIOD.toDriverPropertyInfo(null),
                 YdbConnectionProperty.LOCAL_DATACENTER.toDriverPropertyInfo(localDatacenter),
                 YdbConnectionProperty.SECURE_CONNECTION.toDriverPropertyInfo(null),
@@ -452,6 +486,7 @@ class YdbDriverTest {
 
     static DriverPropertyInfo[] customizedPropertyInfo() {
         return new DriverPropertyInfo[]{
+                YdbConnectionProperty.DATABASE.toDriverPropertyInfo("/ru-prestable/ci/testing/ci"),
                 YdbConnectionProperty.ENDPOINT_DISCOVERY_PERIOD.toDriverPropertyInfo("1m"),
                 YdbConnectionProperty.LOCAL_DATACENTER.toDriverPropertyInfo("sas"),
                 YdbConnectionProperty.SECURE_CONNECTION.toDriverPropertyInfo("true"),
@@ -542,14 +577,28 @@ class YdbDriverTest {
 
     static Collection<Arguments> urlsToCheck() {
         return Arrays.asList(
-                Arguments.of("jdbc:ydb:", true),
-                Arguments.of("jdbc:ydb:ydb-ru-prestable.yandex.net:2135", true),
-                Arguments.of("jdbc:ydb:ydb-ru-prestable.yandex.net:2135/ru-prestable/ci/testing/ci", true),
-                Arguments.of("jdbc:ydb:ydb-ru-prestable.yandex.net:2135" +
-                        "/ru-prestable/ci/testing/ci?localDatacenter=man", true),
-                Arguments.of("ydb:", false),
-                Arguments.of("jdbc:ydb", false),
-                Arguments.of("jdbc:clickhouse://man", false)
+                Arguments.of("jdbc:ydb:",
+                        true, null),
+                Arguments.of("jdbc:ydb:ydb-ru-prestable.yandex.net:2135",
+                        true, null),
+                Arguments.of("jdbc:ydb:ydb-ru-prestable.yandex.net:2135/ru-prestable/ci/testing/ci",
+                        true, "/ru-prestable/ci/testing/ci"),
+                Arguments.of("jdbc:ydb:ydb-ru-prestable.yandex.net:2135?database=ru-prestable/ci/testing/ci",
+                        true, "/ru-prestable/ci/testing/ci"),
+                Arguments.of("jdbc:ydb:ydb-ru-prestable.yandex.net:2135?database=/ru-prestable/ci/testing/ci",
+                        true, "/ru-prestable/ci/testing/ci"),
+                Arguments.of("jdbc:ydb:ydb-ru-prestable.yandex.net:2135/ru-prestable/ci/testing/ci?dc=man",
+                        true, "/ru-prestable/ci/testing/ci"),
+                Arguments.of("jdbc:ydb:ydb-ru-prestable.yandex.net:2135?database=ru-prestable/ci/testing/ci&dc=man",
+                        true, "/ru-prestable/ci/testing/ci"),
+                Arguments.of("jdbc:ydb:ydb-ru-prestable.yandex.net:2135?dc=man&database=ru-prestable/ci/testing/ci",
+                        true, "/ru-prestable/ci/testing/ci"),
+                Arguments.of("ydb:",
+                        false, null),
+                Arguments.of("jdbc:ydb",
+                        false, null),
+                Arguments.of("jdbc:clickhouse://man",
+                        false, null)
         );
     }
 

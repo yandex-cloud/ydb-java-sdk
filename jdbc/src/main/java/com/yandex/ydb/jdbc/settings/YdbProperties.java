@@ -34,6 +34,11 @@ import static com.yandex.ydb.jdbc.YdbConst.JDBC_YDB_PREFIX;
 public class YdbProperties {
     private static final Logger LOGGER = LoggerFactory.getLogger(YdbProperties.class);
 
+    private static final String FILE_REF = "file:";
+    private static final String CLASSPATH_REF = "classpath:";
+    private static final String HOME_REF = "~";
+    private static final String FILE_HOME_REF = FILE_REF + HOME_REF;
+
     private final YdbConnectionProperties connectionProperties;
     private final YdbClientProperties clientProperties;
     private final YdbOperationProperties operationProperties;
@@ -86,27 +91,37 @@ public class YdbProperties {
         url = url.substring(addressesUrl.length());
 
         List<HostAndPort> addresses = getAddresses(addressesUrl);
-        String database = getDatabase(url);
-        Properties props = withQuery(url, origProperties);
-        YdbConnectionProperties connectionProperties = new YdbConnectionProperties(addresses, database,
-                parseProperties(props, YdbConnectionProperty.properties()));
+        Properties properties = withQuery(url, origProperties, getDatabase(url));
+        YdbConnectionProperties connectionProperties = new YdbConnectionProperties(addresses,
+                parseProperties(properties, YdbConnectionProperty.properties()));
 
         YdbClientProperties ydbClientProperties = new YdbClientProperties(
-                parseProperties(props, YdbClientProperty.properties()));
+                parseProperties(properties, YdbClientProperty.properties()));
         YdbOperationProperties ydbOperationProperties = new YdbOperationProperties(
-                parseProperties(props, YdbOperationProperty.properties()));
+                parseProperties(properties, YdbOperationProperty.properties()));
         return new YdbProperties(connectionProperties, ydbClientProperties, ydbOperationProperties);
     }
 
     private static String getAddressesUrl(String url) {
-        int databaseSeparator = url.indexOf('/');
-        if (databaseSeparator < 0) {
-            databaseSeparator = url.indexOf('?');
-            if (databaseSeparator < 0) {
-                return url;
+        int databaseSep = url.indexOf('/');
+        int paramsSep = url.indexOf('?');
+
+        boolean nextDatabase = databaseSep >= 0;
+        boolean nextParams = paramsSep >= 0;
+
+        if (nextDatabase || nextParams) {
+            int pos;
+            if (nextDatabase && nextParams) {
+                pos = Math.min(databaseSep, paramsSep);
+            } else if (nextDatabase) {
+                pos = databaseSep;
+            } else {
+                pos = paramsSep;
             }
+            return url.substring(0, pos);
+        } else {
+            return url;
         }
-        return url.substring(0, databaseSeparator);
     }
 
     @SuppressWarnings("UnstableApiUsage")
@@ -131,30 +146,37 @@ public class YdbProperties {
         } else {
             database = url;
         }
-        return database.isEmpty() || database.equals("/") ? null : database;
+        if (database.isEmpty() || database.equals("/")) {
+            return null;
+        }
+        return database;
     }
 
-    private static Properties withQuery(String url, Properties defaults) {
+    private static Properties withQuery(String url, Properties defaults, String database) {
+        Properties properties = new Properties();
+        properties.putAll(defaults);
+        if (database != null) {
+            properties.setProperty(YdbConnectionProperty.DATABASE.getName(), database);
+        }
         int paramsSeparator = url.indexOf('?');
         if (paramsSeparator < 0) {
-            return defaults;
+            return properties;
         }
 
         String params = url.substring(paramsSeparator + 1);
         if (params.isEmpty()) {
-            return defaults;
+            return properties;
         }
-        Properties urlProps = new Properties(defaults);
         String[] kv = params.split("&");
         for (String keyValue : kv) {
             String[] tokens = keyValue.split("=", 2);
             if (tokens.length == 2) {
-                urlProps.put(tokens[0], tokens[1]);
+                properties.put(tokens[0], tokens[1]);
             } else {
                 LOGGER.error("Invalid property: {}", keyValue);
             }
         }
-        return urlProps;
+        return properties;
     }
 
     private static <T extends AbstractYdbProperty<?, ?>> Map<T, ParsedProperty> parseProperties(
@@ -239,14 +261,24 @@ public class YdbProperties {
     }
 
     static Optional<URL> resolvePath(String ref) throws YdbConfigurationException {
-        if (ref.startsWith("file:")) {
+        if (ref.startsWith(HOME_REF) || ref.startsWith(FILE_HOME_REF)) {
+            try {
+                String home = System.getProperty("user.home");
+                String fixedRef = ref.startsWith(HOME_REF)
+                        ? ref.substring(HOME_REF.length())
+                        : ref.substring(FILE_HOME_REF.length());
+                return Optional.of(new URL(FILE_REF + home + fixedRef));
+            } catch (MalformedURLException e) {
+                throw new YdbConfigurationException("Unable to parse ref from home: " + ref, e);
+            }
+        } else if (ref.startsWith(FILE_REF)) {
             try {
                 return Optional.of(new URL(ref));
             } catch (MalformedURLException e) {
                 throw new YdbConfigurationException("Unable to parse ref as file: " + ref, e);
             }
-        } else if (ref.startsWith("classpath:")) {
-            URL systemResource = ClassLoader.getSystemResource(ref.substring("classpath:".length()));
+        } else if (ref.startsWith(CLASSPATH_REF)) {
+            URL systemResource = ClassLoader.getSystemResource(ref.substring(CLASSPATH_REF.length()));
             if (systemResource == null) {
                 throw new YdbConfigurationException("Unable to find classpath resource: " + ref);
             }

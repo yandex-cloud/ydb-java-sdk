@@ -48,6 +48,15 @@ public interface YdbConnection extends Connection {
      */
     YdbOperationProperties getYdbProperties();
 
+
+    /**
+     * Returns current database
+     *
+     * @return database if configured
+     */
+    @Nullable
+    String getDatabase();
+
     //
 
 

@@ -14,6 +14,15 @@ import com.yandex.ydb.jdbc.exception.YdbConfigurationException;
 public class YdbConnectionProperty<T> extends AbstractYdbProperty<T, GrpcTransport.Builder> {
     private static final PropertiesCollector<YdbConnectionProperty<?>> PROPERTIES = new PropertiesCollector<>();
 
+    public static final YdbConnectionProperty<String> DATABASE =
+            new YdbConnectionProperty<>(
+                    "database",
+                    "Database to connect",
+                    null,
+                    String.class,
+                    database -> !database.startsWith("/") ? ("/" + database) : database,
+                    GrpcTransport.Builder::withDataBase);
+
     public static final YdbConnectionProperty<Duration> ENDPOINT_DISCOVERY_PERIOD =
             new YdbConnectionProperty<>(
                     "endpointDiscoveryPeriod",
@@ -75,8 +84,8 @@ public class YdbConnectionProperty<T> extends AbstractYdbProperty<T, GrpcTranspo
                     null,
                     AuthProvider.class,
                     value -> {
-                        throw new YdbConfigurationException("Property authProvider must be configured with object, " +
-                                "not a string");
+                        throw new YdbConfigurationException("Property authProvider " +
+                                "must be configured with object, not a string");
                     },
                     GrpcTransport.Builder::withAuthProvider);
 

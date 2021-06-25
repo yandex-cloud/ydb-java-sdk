@@ -457,16 +457,17 @@ public class YdbConnectionImpl implements YdbConnection {
         return (int) properties.getDeadlineTimeout().toMillis();
     }
 
+    @Nullable
+    @Override
+    public String getDatabase() {
+        return database;
+    }
+
     //
 
 
     protected String getUrl() {
         return url;
-    }
-
-    @Nullable
-    protected String getDatabase() {
-        return database;
     }
 
     @Override
