@@ -19,7 +19,9 @@ package com.yandex.ydb.spring.data;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -123,6 +125,7 @@ public class YdbPreparedStatementCreatorFactory extends PreparedStatementCreator
 
             int len = this.parameters.size();
             for (int i = 0; i < len; i++) {
+                Type type = null;
                 Object in = this.parameters.get(i);
                 if (declaredParameters.size() <= i) {
                     throw new InvalidDataAccessApiUsageException(
@@ -141,21 +144,43 @@ public class YdbPreparedStatementCreatorFactory extends PreparedStatementCreator
                     throw new YdbDaoRuntimeException("Unable to detect parameter type: [" + paramName + "]");
                 }
 
-                // TODO: Use type from SqlParameterValue?
                 if (in instanceof SqlParameterValue) {
                     SqlParameterValue paramValue = (SqlParameterValue) in;
                     in = paramValue.getValue();
                 }
+                if (in instanceof YdbWrappedValue) {
+                    YdbWrappedValue paramValue = (YdbWrappedValue) in;
+                    in = paramValue.getValue();
+                    type = paramValue.getType();
+                }
 
                 // TODO: make better - find a way to pass Type through ORM
                 if (ydbPs instanceof YdbPreparedStatementImpl) {
-                    Type type = ydbTypes.toYdbType(sqlType);
+                    if (type == null) {
+                        type = ydbTypes.toYdbType(sqlType);
+                    }
                     if (type == null) {
                         throw new YdbExecutionException(String.format(PARAMETER_TYPE_UNKNOWN,
                                 sqlType, null, paramName));
                     }
-                    if (in instanceof Iterable) {
-                        ydbPs.setObject(paramName, in, ListType.of(type.makeOptional()));
+                    if (in instanceof Collection) {
+                        Collection<?> collectionIn = (Collection<?>) in;
+                        List<Object> unwrappedIn = new ArrayList<>(collectionIn.size());
+
+                        boolean typeFixed = false;
+                        for (Object value : collectionIn) {
+                            if (value instanceof YdbWrappedValue) {
+                                YdbWrappedValue wrappedValue = (YdbWrappedValue) value;
+                                unwrappedIn.add(wrappedValue.getValue());
+                                if (!typeFixed) {
+                                    type = wrappedValue.getType();
+                                    typeFixed = true;
+                                }
+                            } else {
+                                unwrappedIn.add(value);
+                            }
+                        }
+                        ydbPs.setObject(paramName, unwrappedIn, ListType.of(type.makeOptional()));
                     } else {
                         if (in == null) {
                             ydbPs.setObject(paramName, in, type.makeOptional());

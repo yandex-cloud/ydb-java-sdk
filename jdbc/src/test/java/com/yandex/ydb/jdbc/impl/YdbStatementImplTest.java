@@ -50,8 +50,8 @@ class YdbStatementImplTest extends AbstractTest {
 
     @Test
     void executeUpdate() throws SQLException {
-        assertEquals(0, statement.executeUpdate("upsert into unit_1(key, c_Utf8) values (1, '2')"));
-        assertEquals(0, statement.executeUpdate("upsert into unit_1(key, c_Utf8) values (2, '3')",
+        assertEquals(1, statement.executeUpdate("upsert into unit_1(key, c_Utf8) values (1, '2')"));
+        assertEquals(1, statement.executeUpdate("upsert into unit_1(key, c_Utf8) values (2, '3')",
                 Statement.NO_GENERATED_KEYS));
     }
 
@@ -313,7 +313,11 @@ class YdbStatementImplTest extends AbstractTest {
         assertEquals(-1, statement.getUpdateCount());
 
         statement.execute("upsert into unit_1(key, c_Utf8) values (1, '2')");
-        assertEquals(0, statement.getUpdateCount());
+        assertEquals(1, statement.getUpdateCount());
+
+        statement.execute("upsert into unit_1(key, c_Utf8) values (1, '2');\n" +
+                "upsert into unit_1(key, c_Utf8) values (2, '3');");
+        assertEquals(1, statement.getUpdateCount()); // just a single statement
 
         statement.execute("select 2 + 2");
         assertEquals(-1, statement.getUpdateCount());

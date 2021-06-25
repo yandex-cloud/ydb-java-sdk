@@ -65,16 +65,25 @@ public class YdbNamedParametersJdbcTemplate extends NamedParameterJdbcTemplate {
             if (sqlType == SqlParameterSource.TYPE_UNKNOWN) {
                 throw new YdbDaoRuntimeException("Unable to detect parameter type: [" + paramName + "]");
             }
-            Type type = TYPES.toYdbType(sqlType);
-            if (type == null) {
-                throw new YdbDaoRuntimeException("Unable to convert parameter type: [" + paramName +
-                        "] from sqlType " + sqlType + " to YDB type");
-            }
+            Type type = null;
             declaration.append("declare $").append(paramName).append(" as ");
 
             Object value = paramSource.getValue(paramName);
             if (value instanceof SqlParameterValue) {
                 value = ((SqlParameterValue) value).getValue();
+            }
+            if (value instanceof YdbWrappedValue) {
+                YdbWrappedValue wrappedValue = (YdbWrappedValue) value;
+                value = wrappedValue.getValue();
+                type = wrappedValue.getType();
+            }
+
+            if (type == null) {
+                type = TYPES.toYdbType(sqlType);
+            }
+            if (type == null) {
+                throw new YdbDaoRuntimeException("Unable to convert parameter type: [" + paramName +
+                        "] from sqlType " + sqlType + " to YDB type");
             }
 
             // TODO: Find a way to build query without knowing actual parameters (must be defined in paramSource)

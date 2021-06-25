@@ -1,5 +1,6 @@
 package com.yandex.ydb.jdbc;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -80,10 +81,17 @@ public interface YdbTypes {
     int getSqlPrecision(Type type);
 
     /**
+     * Returns list of directly mapped sql types to YDB types
+     *
+     * @return list of supporter sql types
+     */
+    Collection<Integer> getSqlTypes();
+
+    /**
      * Returns all types supported by database
      *
      * @return list of YDB types that supported by database (could be stored in columns)
      */
-    List<Type> getDatabaseTypes();
+    List<Type> getAllDatabaseTypes();
 
 }

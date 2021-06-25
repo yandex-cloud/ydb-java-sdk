@@ -6,12 +6,18 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.yandex.ydb.jdbc.YdbParameterMetaData;
 import com.yandex.ydb.jdbc.YdbTypes;
 import com.yandex.ydb.jdbc.exception.YdbExecutionException;
+import com.yandex.ydb.jdbc.settings.YdbOperationProperties;
 import com.yandex.ydb.table.Session;
 import com.yandex.ydb.table.query.Params;
 import com.yandex.ydb.table.values.ListType;
@@ -33,14 +39,28 @@ import static com.yandex.ydb.jdbc.YdbConst.VARIABLE_PARAMETER_PREFIX;
 // It's a default configuration for all queries
 public class YdbPreparedStatementImpl extends AbstractYdbPreparedStatementImpl {
 
+    private final YdbStandardSqlTranslator sqlTranslator = new YdbStandardSqlTranslator();
     private final MutableState state = new MutableState();
     private final boolean enforceVariablePrefix;
+    private final boolean transformStandardJdbcQueries;
+    private final Cache<Key, String> queryCache;
 
     public YdbPreparedStatementImpl(YdbConnectionImpl connection,
                                     int resultSetType,
                                     String query) throws SQLException {
         super(connection, resultSetType, query);
-        this.enforceVariablePrefix = connection.getYdbProperties().isEnforceVariablePrefix();
+
+        YdbOperationProperties properties = connection.getYdbProperties();
+        this.enforceVariablePrefix = properties.isEnforceVariablePrefix();
+        this.transformStandardJdbcQueries = properties.isTransformStandardJdbcQueries();
+        int cacheSize = properties.getTransformedJdbcQueriesCache();
+        if (transformStandardJdbcQueries && cacheSize > 0) {
+            this.queryCache = CacheBuilder.newBuilder()
+                    .maximumSize(cacheSize)
+                    .build();
+        } else {
+            this.queryCache = null;
+        }
         this.clearParameters();
     }
 
@@ -163,10 +183,11 @@ public class YdbPreparedStatementImpl extends AbstractYdbPreparedStatementImpl {
         QueryType queryType = getQueryType();
         switch (queryType) {
             case DATA_QUERY:
-                String sql = getQuery();
+                Params sqlParams = getParams();
+                String sql = transformStandardJdbcStatement(getQuery(), sqlParams);
                 Session session = getConnection().getYdbSession();
                 return executeDataQueryImpl(
-                        getParams(),
+                        sqlParams,
                         params -> QueryType.DATA_QUERY + " >>\n" + sql +
                                 "\n\nParams: " + paramsToString(params),
                         (tx, params, execParams) -> session.executeDataQuery(sql, tx, params, execParams));
@@ -174,6 +195,26 @@ public class YdbPreparedStatementImpl extends AbstractYdbPreparedStatementImpl {
                 return executeScanQueryImpl();
             default:
                 throw new SQLException(UNSUPPORTED_QUERY_TYPE_IN_PS + queryType);
+        }
+    }
+
+    //
+
+    private String transformStandardJdbcStatement(String sql, Params params) throws SQLException {
+        // Make an automatic transformation of given prepared statement, replacing all '?' symbols with parameters
+        // Supports both standard and batched queries
+        if (!transformStandardJdbcQueries) {
+            return sql;
+        }
+        if (queryCache != null) {
+            try {
+                return queryCache.get(new Key(sql, params), () -> sqlTranslator.translate(sql, params));
+            } catch (ExecutionException e) {
+                throw new SQLException("Unexpected exception when building standard JDBC statement: " +
+                        e.getMessage(), e);
+            }
+        } else {
+            return sqlTranslator.translate(sql, params);
         }
     }
 
@@ -255,7 +296,34 @@ public class YdbPreparedStatementImpl extends AbstractYdbPreparedStatementImpl {
         private Map<String, Value<?>> params;
     }
 
-    private interface TypeSource {
-        Type getType() throws YdbExecutionException;
+
+    private static class Key {
+        private final String query;
+        private final List<Type> types;
+
+        private Key(String query, Params params) {
+            this.query = query;
+            this.types = params.values().values().stream()
+                    .map(Value::getType)
+                    .collect(Collectors.toList());
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof Key)) {
+                return false;
+            }
+            Key key = (Key) o;
+            return Objects.equals(query, key.query) &&
+                    Objects.equals(types, key.types);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(query, types);
+        }
     }
 }

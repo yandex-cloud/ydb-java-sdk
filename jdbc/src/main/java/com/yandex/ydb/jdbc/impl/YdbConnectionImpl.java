@@ -569,7 +569,6 @@ public class YdbConnectionImpl implements YdbConnection {
                 sql = sql.replace(type.getAlternativePrefix(), type.getPrefix()); // Support alternative mode
             }
         }
-
         if (properties.isEnforceSqlV1()) {
             if (!sql.contains(YdbConst.PREFIX_SYNTAX_V1)) {
                 sql = YdbConst.PREFIX_SYNTAX_V1 + "\n" + sql;

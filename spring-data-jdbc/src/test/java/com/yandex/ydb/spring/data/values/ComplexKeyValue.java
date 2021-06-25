@@ -1,5 +1,6 @@
 package com.yandex.ydb.spring.data.values;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import com.yandex.ydb.spring.data.YdbPersistable;
@@ -48,9 +49,13 @@ public class ComplexKeyValue implements YdbPersistable<ComplexKeyValue.Key> {
         return Objects.hash(key, value);
     }
 
-    public static class Key {
-        final int intKey;
-        final String stringKey;
+    public static class Key implements Serializable {
+        int intKey;
+        String stringKey;
+
+        public Key() {
+            //
+        }
 
         public Key(int intKey, String stringKey) {
             this.intKey = intKey;

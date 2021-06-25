@@ -8,6 +8,7 @@ import com.yandex.ydb.jdbc.YdbConst;
 import com.yandex.ydb.jdbc.YdbTypes;
 import com.yandex.ydb.jdbc.impl.YdbTypesImpl;
 import com.yandex.ydb.table.values.PrimitiveType;
+import com.yandex.ydb.table.values.Type;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.jdbc.core.convert.BasicJdbcConverter;
 import org.springframework.data.jdbc.core.convert.JdbcTypeFactory;
@@ -46,7 +47,16 @@ public class YdbBasicJdbcConverter extends BasicJdbcConverter {
             return JdbcValue.of(value, JDBCType.TIME);
         }
 
-        return super.writeJdbcValue(value, columnType, TYPES.unwrapYdbJdbcType(sqlType));
+        int unwrappedSqlType = TYPES.unwrapYdbJdbcType(sqlType);
+        JdbcValue jdbcValue = super.writeJdbcValue(value, columnType, unwrappedSqlType);
+
+        if (unwrappedSqlType != sqlType) { // Custom SQL type, wrap value
+            Type ydbType = TYPES.toYdbType(sqlType);
+            if (ydbType != null) {
+                return JdbcValue.of(new YdbWrappedValue(jdbcValue.getValue(), ydbType), jdbcValue.getJdbcType());
+            }
+        }
+        return jdbcValue;
     }
 
     @Override

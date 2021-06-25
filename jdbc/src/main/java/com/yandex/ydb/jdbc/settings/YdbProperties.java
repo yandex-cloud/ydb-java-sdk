@@ -162,7 +162,7 @@ public class YdbProperties {
             Collection<T> knownProperties) throws SQLException {
         Map<T, ParsedProperty> result = new LinkedHashMap<>(knownProperties.size());
         for (T property : knownProperties) {
-            String title = property.getTitle();
+            String title = property.getName();
             Object value = properties.get(title);
 
             PropertyConverter<?> converter = property.getConverter();

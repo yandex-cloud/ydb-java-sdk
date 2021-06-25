@@ -11,6 +11,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -60,21 +62,23 @@ public class YdbTypesImpl implements YdbTypes {
         typeBySqlType.put(Types.BIT, PrimitiveType.bool());
         typeBySqlType.put(Types.BOOLEAN, PrimitiveType.bool());
         typeBySqlType.put(Types.BINARY, PrimitiveType.string());
+        typeBySqlType.put(Types.VARBINARY, PrimitiveType.string());
         typeBySqlType.put(Types.DATE, PrimitiveType.date());
         typeBySqlType.put(Types.TIME, PrimitiveType.datetime());
         typeBySqlType.put(Types.TIMESTAMP, PrimitiveType.timestamp());
         typeBySqlType.put(Types.TIMESTAMP_WITH_TIMEZONE, PrimitiveType.tzTimestamp());
         typeBySqlType.put(Types.DECIMAL, DEFAULT_DECIMAL_TYPE);
+        typeBySqlType.put(Types.NUMERIC, DEFAULT_DECIMAL_TYPE);
 
         typeByClass = new HashMap<>(32);
         typeByClass.put(String.class, PrimitiveType.utf8());
         typeByClass.put(long.class, PrimitiveType.int64());
         typeByClass.put(Long.class, PrimitiveType.int64());
         typeByClass.put(BigInteger.class, PrimitiveType.int64());
-        typeByClass.put(byte.class, PrimitiveType.int8());
-        typeByClass.put(Byte.class, PrimitiveType.int8());
-        typeByClass.put(short.class, PrimitiveType.int16());
-        typeByClass.put(Short.class, PrimitiveType.int16());
+        typeByClass.put(byte.class, PrimitiveType.int32());
+        typeByClass.put(Byte.class, PrimitiveType.int32());
+        typeByClass.put(short.class, PrimitiveType.int32());
+        typeByClass.put(Short.class, PrimitiveType.int32());
         typeByClass.put(int.class, PrimitiveType.int32());
         typeByClass.put(Integer.class, PrimitiveType.int32());
         typeByClass.put(float.class, PrimitiveType.float32());
@@ -267,7 +271,12 @@ public class YdbTypesImpl implements YdbTypes {
     }
 
     @Override
-    public List<Type> getDatabaseTypes() {
+    public Collection<Integer> getSqlTypes() {
+        return Collections.unmodifiableSet(typeBySqlType.keySet());
+    }
+
+    @Override
+    public List<Type> getAllDatabaseTypes() {
         return Arrays.asList(
                 PrimitiveType.bool(),
                 PrimitiveType.int32(),

@@ -54,7 +54,7 @@ import static com.yandex.ydb.jdbc.YdbConst.RESULT_SET_MODE_UNSUPPORTED;
 import static com.yandex.ydb.jdbc.YdbConst.RESULT_SET_UNAVAILABLE;
 
 public class YdbStatementImpl implements YdbStatement {
-    private static final Logger LOGGER = LoggerFactory.getLogger(YdbStatementImpl.class);
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final MutableState state = new MutableState();
 
@@ -267,12 +267,12 @@ public class YdbStatementImpl implements YdbStatement {
         ensureOpened();
 
         if (batch.isEmpty()) {
-            LOGGER.debug("Batch is empty, nothing to execute");
+            logger.debug("Batch is empty, nothing to execute");
             return new int[0];
         }
 
         try {
-            LOGGER.debug("Executing batch of {} item(s)", batch.size());
+            logger.debug("Executing batch of {} item(s)", batch.size());
 
             String sql = String.join(";\n", batch);
             execute(sql);
@@ -399,7 +399,7 @@ public class YdbStatementImpl implements YdbStatement {
         validator.init(settings);
 
         Session session = connection.getYdbSession();
-        Status status = validator.joinStatus(LOGGER,
+        Status status = validator.joinStatus(logger,
                 () -> QueryType.SCHEME_QUERY + " >>\n" + sql,
                 () -> session.executeSchemeQuery(sql, settings));
 
@@ -424,7 +424,7 @@ public class YdbStatementImpl implements YdbStatement {
         Result<DataQueryResult> result;
         try {
             result = validator.joinResult(
-                    LOGGER,
+                    logger,
                     () -> operation.apply(params),
                     () -> executor.executeDataQuery(txControl, params, settings));
         } catch (YdbNonRetryableException e) {
@@ -443,7 +443,7 @@ public class YdbStatementImpl implements YdbStatement {
         int resultSetCount = dataQueryResult.getResultSetCount();
         state.lastResultSets = new YdbResultSetImpl[resultSetCount];
         if (resultSetCount == 0) {
-            state.updateCount = 0;
+            state.updateCount = 1;
         } else {
             for (int i = 0; i < resultSetCount; i++) {
                 state.lastResultSets[i] = new YdbResultSetImpl(this, dataQueryResult.getResultSet(i));
@@ -471,7 +471,7 @@ public class YdbStatementImpl implements YdbStatement {
         Session session = connection.getYdbSession();
         Collection<ResultSetReader> resultSets = new LinkedBlockingQueue<>();
         Status status = validator.joinStatus(
-                LOGGER,
+                logger,
                 () -> operation.apply(params),
                 () -> session.executeScanQuery(sql, params, settings, resultSets::add));
 
@@ -494,7 +494,7 @@ public class YdbStatementImpl implements YdbStatement {
         validator.init(settings);
 
         Session session = connection.getYdbSession();
-        Result<ExplainDataQueryResult> result = validator.joinResult(LOGGER,
+        Result<ExplainDataQueryResult> result = validator.joinResult(logger,
                 () -> QueryType.EXPLAIN_QUERY + " >>\n" + sql,
                 () -> session.explainDataQuery(sql, settings));
         state.lastIssues = result.getIssues();
@@ -548,11 +548,11 @@ public class YdbStatementImpl implements YdbStatement {
             }
         }
 
-        LOGGER.debug("OK, {} results ({})", resultSetCount, buffer);
+        logger.debug("OK, {} results ({})", resultSetCount, buffer);
     }
 
     private void printResultSetDetails(ResultSetReader resultSetReader) {
-        LOGGER.debug("OK, {} rows{}", resultSetReader.getRowCount(),
+        logger.debug("OK, {} rows{}", resultSetReader.getRowCount(),
                 resultSetReader.isTruncated() ? " - truncated" : "");
     }
 

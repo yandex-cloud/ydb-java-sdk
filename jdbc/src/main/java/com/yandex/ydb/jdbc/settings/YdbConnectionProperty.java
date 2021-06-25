@@ -80,13 +80,13 @@ public class YdbConnectionProperty<T> extends AbstractYdbProperty<T, GrpcTranspo
                     },
                     GrpcTransport.Builder::withAuthProvider);
 
-    protected YdbConnectionProperty(String title,
+    protected YdbConnectionProperty(String name,
                                     String description,
                                     @Nullable String defaultValue,
                                     Class<T> type,
                                     PropertyConverter<T> converter,
                                     BiConsumer<GrpcTransport.Builder, T> setter) {
-        super(title, description, defaultValue, type, converter, setter);
+        super(name, description, defaultValue, type, converter, setter);
         PROPERTIES.register(this);
     }
 

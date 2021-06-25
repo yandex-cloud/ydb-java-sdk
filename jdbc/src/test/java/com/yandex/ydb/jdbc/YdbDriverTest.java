@@ -237,7 +237,7 @@ class YdbDriverTest {
         AuthProvider customAuthProvider = () -> "any";
 
         Properties properties = new Properties();
-        properties.put(YdbConnectionProperty.AUTH_PROVIDER.getTitle(), customAuthProvider);
+        properties.put(YdbConnectionProperty.AUTH_PROVIDER.getName(), customAuthProvider);
 
         Properties copy = new Properties();
         copy.putAll(properties);
@@ -407,7 +407,9 @@ class YdbDriverTest {
                 YdbOperationProperty.ENFORCE_VARIABLE_PREFIX.toDriverPropertyInfo("true"),
                 YdbOperationProperty.CACHE_CONNECTIONS_IN_DRIVER.toDriverPropertyInfo("true"),
                 YdbOperationProperty.DETECT_SQL_OPERATIONS.toDriverPropertyInfo("true"),
-                YdbOperationProperty.ALWAYS_PREPARE_DATAQUERY.toDriverPropertyInfo("true")
+                YdbOperationProperty.ALWAYS_PREPARE_DATAQUERY.toDriverPropertyInfo("true"),
+                YdbOperationProperty.TRANSFORM_STANDARD_JDBC_QUERIES.toDriverPropertyInfo("false"),
+                YdbOperationProperty.TRANSFORMED_JDBC_QUERIES_CACHE.toDriverPropertyInfo("0")
         };
     }
 
@@ -443,6 +445,8 @@ class YdbDriverTest {
         properties.setProperty("cacheConnectionsInDriver", "false");
         properties.setProperty("detectSqlOperations", "false");
         properties.setProperty("alwaysPrepareDataQuery", "false");
+        properties.setProperty("transformStandardJdbcQueries", "true");
+        properties.setProperty("transformedJdbcQueriesCache", "1000");
         return properties;
     }
 
@@ -479,7 +483,9 @@ class YdbDriverTest {
                 YdbOperationProperty.ENFORCE_VARIABLE_PREFIX.toDriverPropertyInfo("false"),
                 YdbOperationProperty.CACHE_CONNECTIONS_IN_DRIVER.toDriverPropertyInfo("false"),
                 YdbOperationProperty.DETECT_SQL_OPERATIONS.toDriverPropertyInfo("false"),
-                YdbOperationProperty.ALWAYS_PREPARE_DATAQUERY.toDriverPropertyInfo("false")
+                YdbOperationProperty.ALWAYS_PREPARE_DATAQUERY.toDriverPropertyInfo("false"),
+                YdbOperationProperty.TRANSFORM_STANDARD_JDBC_QUERIES.toDriverPropertyInfo("true"),
+                YdbOperationProperty.TRANSFORMED_JDBC_QUERIES_CACHE.toDriverPropertyInfo("1000")
         };
     }
 

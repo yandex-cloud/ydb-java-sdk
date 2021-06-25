@@ -89,7 +89,8 @@ public class YdbOperationProperty<T> extends AbstractYdbProperty<T, Void> {
 
     public static final YdbOperationProperty<Boolean> AUTO_PREPARED_BATCHES =
             new YdbOperationProperty<>("autoPreparedBatches",
-                    "Automatically detect list of tuples or structs in prepared statement and support #addBatch",
+                    "Automatically detect list of tuples or structs in prepared statement and support #addBatch, " +
+                            "only when alwaysPrepareDataQuery is true",
                     "true",
                     Boolean.class,
                     PropertyConverter.booleanValue());
@@ -130,13 +131,27 @@ public class YdbOperationProperty<T> extends AbstractYdbProperty<T, Void> {
                     Boolean.class,
                     PropertyConverter.booleanValue());
 
+    public static final YdbOperationProperty<Boolean> TRANSFORM_STANDARD_JDBC_QUERIES =
+            new YdbOperationProperty<>("transformStandardJdbcQueries",
+                    "Make a transformation of standard JDBC queries with '?' symbols into standard YQL with declare",
+                    "false",
+                    Boolean.class,
+                    PropertyConverter.booleanValue());
 
-    protected YdbOperationProperty(String title,
+    public static final YdbOperationProperty<Integer> TRANSFORMED_JDBC_QUERIES_CACHE =
+            new YdbOperationProperty<>("transformedJdbcQueriesCache",
+                    "Cache size for transformed JDBC queries, only when transformStandardJdbcQueries is true",
+                    "0",
+                    Integer.class,
+                    PropertyConverter.integerValue());
+
+
+    protected YdbOperationProperty(String name,
                                    String description,
                                    @Nullable String defaultValue,
                                    Class<T> type,
                                    PropertyConverter<T> converter) {
-        super(title, description, defaultValue, type, converter, (op, value) -> {
+        super(name, description, defaultValue, type, converter, (op, value) -> {
         });
         PROPERTIES.register(this);
     }

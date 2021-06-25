@@ -963,7 +963,7 @@ public class YdbDatabaseMetaDataImpl implements YdbDatabaseMetaData {
 
     @Override
     public ResultSet getTypeInfo() {
-        List<Map<String, Object>> rows = types.getDatabaseTypes().stream()
+        List<Map<String, Object>> rows = types.getAllDatabaseTypes().stream()
                 .map(type -> {
                     String literal = getLiteral(type);
                     int scale = type.getKind() == Type.Kind.DECIMAL ? YdbConst.SQL_DECIMAL_DEFAULT_SCALE : 0;

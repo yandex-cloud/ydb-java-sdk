@@ -68,7 +68,7 @@ public class AllColumnsValue implements YdbPersistable<Integer> {
     // Custom mapping, available by default
     Date dateValue; // Types.TIMESTAMP -> Timestamp
     LocalDate localDateValue; // Types.DATE -> Date
-    LocalDateTime localDateTimeValue; // Types.TIMESTAMP -> Timestamp
+    LocalDateTime localDateTimeValue; // Types.TIME -> DateTime
 
     Instant instantValue; // Types.TIMESTAMP -> Timestamp
 

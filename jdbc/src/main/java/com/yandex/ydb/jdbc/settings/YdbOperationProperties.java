@@ -24,6 +24,8 @@ public class YdbOperationProperties {
     private final boolean cacheConnectionsInDriver;
     private final boolean detectSqlOperations;
     private final boolean alwaysPrepareDataQuery;
+    private final boolean transformStandardJdbcQueries;
+    private final int transformedJdbcQueriesCache;
 
     public YdbOperationProperties(Map<YdbOperationProperty<?>, ParsedProperty> params) {
         this.params = Objects.requireNonNull(params);
@@ -44,6 +46,10 @@ public class YdbOperationProperties {
         this.cacheConnectionsInDriver = params.get(YdbOperationProperty.CACHE_CONNECTIONS_IN_DRIVER).getParsedValue();
         this.detectSqlOperations = params.get(YdbOperationProperty.DETECT_SQL_OPERATIONS).getParsedValue();
         this.alwaysPrepareDataQuery = params.get(YdbOperationProperty.ALWAYS_PREPARE_DATAQUERY).getParsedValue();
+        this.transformStandardJdbcQueries =
+                params.get(YdbOperationProperty.TRANSFORM_STANDARD_JDBC_QUERIES).getParsedValue();
+        this.transformedJdbcQueriesCache =
+                params.get(YdbOperationProperty.TRANSFORMED_JDBC_QUERIES_CACHE).getParsedValue();
     }
 
     public Map<YdbOperationProperty<?>, ParsedProperty> getParams() {
@@ -112,5 +118,13 @@ public class YdbOperationProperties {
 
     public boolean isAlwaysPrepareDataQuery() {
         return alwaysPrepareDataQuery;
+    }
+
+    public boolean isTransformStandardJdbcQueries() {
+        return transformStandardJdbcQueries;
+    }
+
+    public int getTransformedJdbcQueriesCache() {
+        return transformedJdbcQueriesCache;
     }
 }

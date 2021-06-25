@@ -69,13 +69,13 @@ public class YdbClientProperty<T> extends AbstractYdbProperty<T, TableClient.Bui
                     (builder, value) -> {
                     });
 
-    protected YdbClientProperty(String title,
+    protected YdbClientProperty(String name,
                                 String description,
                                 @Nullable String defaultValue,
                                 Class<T> type,
                                 PropertyConverter<T> converter,
                                 BiConsumer<TableClient.Builder, T> setter) {
-        super(title, description, defaultValue, type, converter, setter);
+        super(name, description, defaultValue, type, converter, setter);
         PROPERTIES.register(this);
     }
 

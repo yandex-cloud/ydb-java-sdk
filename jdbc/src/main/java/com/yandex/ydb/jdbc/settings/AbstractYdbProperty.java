@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 
 public abstract class AbstractYdbProperty<T, B> implements ToDriverPropertyInfo {
 
-    private final String title;
+    private final String name;
     private final String description;
     @Nullable
     private final String defaultValue;
@@ -20,13 +20,13 @@ public abstract class AbstractYdbProperty<T, B> implements ToDriverPropertyInfo 
     private final PropertyConverter<T> converter;
     private final BiConsumer<B, T> setter;
 
-    protected AbstractYdbProperty(String title,
+    protected AbstractYdbProperty(String name,
                                   String description,
                                   @Nullable String defaultValue,
                                   Class<T> type,
                                   PropertyConverter<T> converter,
                                   BiConsumer<B, T> setter) {
-        this.title = Objects.requireNonNull(title);
+        this.name = Objects.requireNonNull(name);
         this.description = Objects.requireNonNull(description);
         this.defaultValue = defaultValue;
         this.type = Objects.requireNonNull(type);
@@ -34,8 +34,8 @@ public abstract class AbstractYdbProperty<T, B> implements ToDriverPropertyInfo 
         this.setter = Objects.requireNonNull(setter);
     }
 
-    public String getTitle() {
-        return title;
+    public String getName() {
+        return name;
     }
 
     @Nullable
@@ -57,7 +57,7 @@ public abstract class AbstractYdbProperty<T, B> implements ToDriverPropertyInfo 
 
     @Override
     public DriverPropertyInfo toDriverPropertyInfo(@Nullable String value) {
-        DriverPropertyInfo info = new DriverPropertyInfo(title,
+        DriverPropertyInfo info = new DriverPropertyInfo(name,
                 value != null ? value : defaultValue != null ? defaultValue : "");
         info.description = description;
         info.required = false;
@@ -68,9 +68,9 @@ public abstract class AbstractYdbProperty<T, B> implements ToDriverPropertyInfo 
         private final Map<String, T> properties = new LinkedHashMap<>();
 
         protected void register(T property) {
-            if (properties.put(property.getTitle(), property) != null) {
+            if (properties.put(property.getName(), property) != null) {
                 throw new IllegalStateException("Internal error. Unable to register property with name " +
-                        property.getTitle() + " twice");
+                        property.getName() + " twice");
             }
         }
 
