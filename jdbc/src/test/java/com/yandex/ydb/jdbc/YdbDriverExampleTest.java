@@ -4,10 +4,15 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class YdbDriverExample {
+import org.junit.jupiter.api.Test;
 
-    public static void main(String[] args) throws SQLException {
-        String url = System.getProperty("YDB_URL", "jdbc:ydb:localhost:2135/local");
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class YdbDriverExampleTest {
+
+    @Test
+    public void testYdb() throws SQLException {
+        String url = TestHelper.getTestUrl(); // "jdbc:ydb:localhost:2135/local"
         try (YdbConnection connection = (YdbConnection) DriverManager.getConnection(url)) {
             try {
                 connection.createStatement()
@@ -40,7 +45,7 @@ public class YdbDriverExample {
                     .prepareStatement("select count(1) as cnt from table_sample");
             ResultSet rs = select.executeQuery();
             rs.next();
-            System.out.println("Rows: " + rs.getLong("cnt")); // 2
+            assertEquals(2, rs.getLong("cnt"));
 
             YdbPreparedStatement psBatch = connection
                     .prepareStatement("" +
@@ -60,7 +65,7 @@ public class YdbDriverExample {
 
             rs = select.executeQuery();
             rs.next();
-            System.out.println("Rows: " + rs.getLong("cnt")); // 4
+            assertEquals(4, rs.getLong("cnt"));
         }
     }
 }
