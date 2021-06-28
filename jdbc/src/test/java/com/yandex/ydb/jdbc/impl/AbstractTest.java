@@ -6,13 +6,13 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.sql.Date;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -96,7 +96,7 @@ public abstract class AbstractTest {
     protected static YdbConnection getTestConnection() throws SQLException {
         // TODO: must be session pool (but have to implement it first)
         if (connection == null || connection.isClosed()) {
-            connection = (YdbConnection) new YdbDriver().connect(TestHelper.getTestUrl(), new Properties());
+            connection = (YdbConnection) DriverManager.getConnection(TestHelper.getTestUrl());
         }
         return connection;
     }

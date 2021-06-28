@@ -2,7 +2,6 @@ package com.yandex.ydb.jdbc;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
@@ -85,17 +84,15 @@ class YdbDriverTest {
 
     @Test
     void connect() throws SQLException {
-        try (Connection connection = driver.connect(TEST_URL, new Properties())) {
-            assertTrue(connection instanceof YdbConnection);
+        try (YdbConnection connection = driver.connect(TEST_URL, new Properties())) {
             assertTrue(connection instanceof YdbConnectionImpl);
 
-            YdbConnection ydbConnection = (YdbConnection) connection;
-            LOGGER.info("Session opened: {}", ydbConnection.getYdbSession());
+            LOGGER.info("Session opened: {}", connection.getYdbSession());
 
-            SchemeClient schemeClient = ydbConnection.getYdbScheme();
+            SchemeClient schemeClient = connection.getYdbScheme();
             LOGGER.info("Scheme client: {}", schemeClient);
 
-            assertSame(schemeClient, ydbConnection.getYdbScheme());
+            assertSame(schemeClient, connection.getYdbScheme());
         }
     }
 
@@ -104,10 +101,9 @@ class YdbDriverTest {
     void connectToPublicDatabase() throws SQLException {
         String testUrl = String.format("jdbc:ydb:ydb-ru-prestable.yandex.net:2135%s?token=%s",
                 "/ru-prestable/home/miroslav2/mydb", "~/.arc/token");
-        try (Connection connection = driver.connect(testUrl, new Properties())) {
-            YdbConnection ydbConnection = (YdbConnection) connection;
-            assertEquals("/ru-prestable/home/miroslav2/mydb", ydbConnection.getDatabase());
-            LOGGER.info("Session to public database opened: {}", ydbConnection.getYdbSession());
+        try (YdbConnection connection = driver.connect(testUrl, new Properties())) {
+            assertEquals("/ru-prestable/home/miroslav2/mydb", connection.getDatabase());
+            LOGGER.info("Session to public database opened: {}", connection.getYdbSession());
         }
     }
 
@@ -116,19 +112,18 @@ class YdbDriverTest {
     void connectToPublicDatabaseMoreConvenient() throws SQLException {
         String testUrl = String.format("jdbc:ydb:ydb-ru-prestable.yandex.net:2135?database=%s&token=%s",
                 "/ru-prestable/home/miroslav2/mydb", "~/.arc/token");
-        try (Connection connection = driver.connect(testUrl, new Properties())) {
-            YdbConnection ydbConnection = (YdbConnection) connection;
-            assertEquals("/ru-prestable/home/miroslav2/mydb", ydbConnection.getDatabase());
-            LOGGER.info("Session to public database opened: {}", ydbConnection.getYdbSession());
+        try (YdbConnection connection = driver.connect(testUrl, new Properties())) {
+            assertEquals("/ru-prestable/home/miroslav2/mydb", connection.getDatabase());
+            LOGGER.info("Session to public database opened: {}", connection.getYdbSession());
         }
     }
 
     @Test
     void connectMultipleTimes() throws SQLException {
         YdbDriver.getConnectionsCache().close();
-        try (YdbConnection connection1 = (YdbConnection) driver.connect(TEST_URL, new Properties())) {
+        try (YdbConnection connection1 = driver.connect(TEST_URL, new Properties())) {
             LOGGER.info("Session 1 opened: {}", connection1.getYdbSession());
-            try (YdbConnection connection2 = (YdbConnection) driver.connect(TEST_URL, new Properties())) {
+            try (YdbConnection connection2 = driver.connect(TEST_URL, new Properties())) {
                 LOGGER.info("Session 2 opened: {}", connection2.getYdbSession());
 
                 // Expect only single connection

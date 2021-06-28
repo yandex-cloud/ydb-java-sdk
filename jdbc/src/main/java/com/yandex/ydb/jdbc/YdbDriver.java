@@ -1,6 +1,5 @@
 package com.yandex.ydb.jdbc;
 
-import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
@@ -57,7 +56,7 @@ public class YdbDriver implements Driver {
     }
 
     @Override
-    public Connection connect(String url, Properties info) throws SQLException {
+    public YdbConnection connect(String url, Properties info) throws SQLException {
         if (!acceptsURL(url)) {
             return null;
         }
