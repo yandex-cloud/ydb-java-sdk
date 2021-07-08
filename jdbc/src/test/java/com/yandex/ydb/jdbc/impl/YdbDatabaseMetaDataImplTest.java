@@ -26,9 +26,12 @@ import com.yandex.ydb.jdbc.exception.YdbConfigurationException;
 import com.yandex.ydb.jdbc.settings.YdbProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.yandex.ydb.jdbc.TestHelper.TEST_TYPE;
+import static com.yandex.ydb.jdbc.TestHelper.UNIVERSAL;
 import static com.yandex.ydb.jdbc.TestHelper.assertThrowsMsg;
 import static com.yandex.ydb.jdbc.impl.MappingResultSets.stableMap;
 import static com.yandex.ydb.jdbc.impl.YdbDatabaseMetaDataImpl.SYSTEM_TABLE;
@@ -50,6 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@DisabledIfSystemProperty(named = TEST_TYPE, matches = UNIVERSAL)
 class YdbDatabaseMetaDataImplTest extends AbstractTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(YdbDatabaseMetaDataImplTest.class);
 
@@ -136,9 +140,9 @@ class YdbDatabaseMetaDataImplTest extends AbstractTest {
     void getDriverVersion() throws SQLException {
         assertEquals(YdbDriverInfo.DRIVER_VERSION, metaData.getDriverVersion());
         if (YdbDriverInfo.DRIVER_MINOR_VERSION == 0) {
-            assertEquals("latest", metaData.getDriverVersion());
+            assertEquals(YdbVersionCollector.LATEST_VERSION, metaData.getDriverVersion());
         } else {
-            assertEquals("r" + YdbDriverInfo.DRIVER_MINOR_VERSION, metaData.getDriverVersion());
+            assertNotEquals(YdbVersionCollector.LATEST_VERSION, metaData.getDriverVersion());
         }
     }
 

@@ -36,12 +36,15 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.yandex.ydb.jdbc.TestHelper.TEST_TYPE;
+import static com.yandex.ydb.jdbc.TestHelper.UNIVERSAL;
 import static com.yandex.ydb.jdbc.TestHelper.assertThrowsMsg;
 import static com.yandex.ydb.jdbc.TestHelper.assertThrowsMsgLike;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -82,6 +85,7 @@ class YdbDriverTest {
         YdbDriver.getConnectionsCache().close();
     }
 
+    @DisabledIfSystemProperty(named = TEST_TYPE, matches = UNIVERSAL)
     @Test
     void connect() throws SQLException {
         try (YdbConnection connection = driver.connect(TEST_URL, new Properties())) {
@@ -118,6 +122,7 @@ class YdbDriverTest {
         }
     }
 
+    @DisabledIfSystemProperty(named = TEST_TYPE, matches = UNIVERSAL)
     @Test
     void connectMultipleTimes() throws SQLException {
         YdbDriver.getConnectionsCache().close();

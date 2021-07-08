@@ -5,13 +5,18 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
+import static com.yandex.ydb.jdbc.TestHelper.TEST_TYPE;
+import static com.yandex.ydb.jdbc.TestHelper.UNIVERSAL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class YdbDriverExampleTest {
 
     @Test
+    @DisabledIfSystemProperty(named = TEST_TYPE, matches = UNIVERSAL)
     public void testYdb() throws SQLException {
+
         String url = TestHelper.getTestUrl(); // "jdbc:ydb:localhost:2135/local"
         try (YdbConnection connection = (YdbConnection) DriverManager.getConnection(url)) {
             try {

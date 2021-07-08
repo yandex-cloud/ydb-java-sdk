@@ -42,10 +42,13 @@ import com.yandex.ydb.jdbc.YdbTypes;
 import com.yandex.ydb.table.values.PrimitiveValue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.function.Executable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.yandex.ydb.jdbc.TestHelper.TEST_TYPE;
+import static com.yandex.ydb.jdbc.TestHelper.UNIVERSAL;
 import static com.yandex.ydb.jdbc.TestHelper.assertThrowsMsg;
 import static com.yandex.ydb.jdbc.TestHelper.assertThrowsMsgLike;
 import static com.yandex.ydb.jdbc.TestHelper.stringFileReference;
@@ -57,6 +60,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@DisabledIfSystemProperty(named = TEST_TYPE, matches = UNIVERSAL)
 class YdbResultSetImplTest extends AbstractTest {
 
     static final String SELECT_ALL_VALUES = stringFileReference("classpath:sql/select_all_values.sql");

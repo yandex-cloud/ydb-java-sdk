@@ -7,10 +7,14 @@ import com.yandex.ydb.jdbc.YdbConnection;
 import com.yandex.ydb.jdbc.YdbPreparedStatement;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
+import static com.yandex.ydb.jdbc.TestHelper.TEST_TYPE;
+import static com.yandex.ydb.jdbc.TestHelper.UNIVERSAL;
 import static com.yandex.ydb.jdbc.TestHelper.assertThrowsMsg;
 import static com.yandex.ydb.jdbc.TestHelper.stringFileReference;
 
+@DisabledIfSystemProperty(named = TEST_TYPE, matches = UNIVERSAL)
 class YdbPreparedStatementWithDataQueryImplTest extends AbstractYdbPreparedStatementImplTest {
 
     static final String PREPARE_ALL = stringFileReference("classpath:sql/prepare_all_values.sql");

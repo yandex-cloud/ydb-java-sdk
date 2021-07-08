@@ -15,9 +15,12 @@ import com.yandex.ydb.jdbc.exception.YdbNonRetryableException;
 import com.yandex.ydb.table.result.ResultSetReader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.yandex.ydb.jdbc.TestHelper.TEST_TYPE;
+import static com.yandex.ydb.jdbc.TestHelper.UNIVERSAL;
 import static com.yandex.ydb.jdbc.TestHelper.assertThrowsMsg;
 import static com.yandex.ydb.jdbc.TestHelper.assertThrowsMsgLike;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -29,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@DisabledIfSystemProperty(named = TEST_TYPE, matches = UNIVERSAL)
 class YdbStatementImplTest extends AbstractTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(YdbStatementImplTest.class);
 

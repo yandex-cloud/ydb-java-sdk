@@ -3,9 +3,7 @@ package com.yandex.ydb.jdbc;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -14,7 +12,6 @@ import javax.annotation.Nullable;
 import com.yandex.ydb.jdbc.exception.YdbConfigurationException;
 import com.yandex.ydb.jdbc.exception.YdbRetryableException;
 import com.yandex.ydb.jdbc.settings.YdbProperties;
-import org.apache.logging.log4j.core.lookup.StrSubstitutor;
 import org.junit.jupiter.api.function.Executable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestHelper.class);
+
+    public static final String TEST_TYPE = "TEST_TYPE";
+    public static final String UNIVERSAL = "universal";
 
     private static final String RECIPE_DATABASE_FILE = "ydb_database.txt";
     private static final String RECIPE_ENDPOINT_FILE = "ydb_endpoint.txt";
@@ -119,9 +119,7 @@ public class TestHelper {
     }
 
     public static String withTableName(String tableName, String sql) {
-        Map<String, String> map = new HashMap<>();
-        map.put("tableName", tableName);
-        return new StrSubstitutor(map).replace(sql);
+        return sql.replace("${tableName}", tableName);
     }
 
     public static void configureOnce(Class<?> type, SQLSimpleRun run) throws SQLException {

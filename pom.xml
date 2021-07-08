@@ -20,6 +20,7 @@
     <module>examples</module>
     <module>proto-gen</module>
     <module>table</module>
+    <module>jdbc</module>
   </modules>
 
   <properties>
