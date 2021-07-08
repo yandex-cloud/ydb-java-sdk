@@ -32,22 +32,14 @@ public final class YdbScriptingV1 {
       "b.Scripting.ExecuteYqlRequest\032(.Ydb.Scri" +
       "pting.ExecuteYqlPartialResponse0\001\022Q\n\nExp" +
       "lainYql\022 .Ydb.Scripting.ExplainYqlReques" +
-      "t\032!.Ydb.Scripting.ExplainYqlResponseB\035\n\033",
+      "t\032!.Ydb.Scripting.ExplainYqlResponseB\035\n\033" +
       "com.yandex.ydb.scripting.v1b\006proto3"
     };
-    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
-          public com.google.protobuf.ExtensionRegistry assignDescriptors(
-              com.google.protobuf.Descriptors.FileDescriptor root) {
-            descriptor = root;
-            return null;
-          }
-        };
-    com.google.protobuf.Descriptors.FileDescriptor
+    descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           com.yandex.ydb.scripting.ScriptingProtos.getDescriptor(),
-        }, assigner);
+        });
     com.yandex.ydb.scripting.ScriptingProtos.getDescriptor();
   }
 
