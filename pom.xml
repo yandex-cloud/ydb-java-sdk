@@ -21,6 +21,7 @@
     <module>proto-gen</module>
     <module>table</module>
     <module>jdbc</module>
+    <module>jdbc/uberjar</module>
   </modules>
 
   <properties>
