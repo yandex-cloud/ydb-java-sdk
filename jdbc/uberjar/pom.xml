@@ -46,7 +46,9 @@
                         <configuration>
                             <filters>
                                 <filter>
-                                    <excludes>META-INF/org/apache/logging/log4j/core/config/plugins/*.dat</excludes>
+                                    <excludes>
+                                        <exclude>META-INF/org/apache/logging/log4j/core/config/plugins/*.dat</exclude>
+                                    </excludes>
                                 </filter>
                             </filters>
                         </configuration>
