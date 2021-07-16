@@ -9,6 +9,7 @@
         <groupId>com.yandex.ydb</groupId>
         <artifactId>ydb-sdk-parent</artifactId>
         <version>1.7.10</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>ydb-sdk-jdbc-uberjar</artifactId>
@@ -44,6 +45,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
                             <filters>
                                 <filter>
                                     <excludes>
