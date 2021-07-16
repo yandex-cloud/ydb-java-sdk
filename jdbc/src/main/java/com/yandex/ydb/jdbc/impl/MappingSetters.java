@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -117,6 +118,10 @@ public class MappingSetters {
 
     private static String toString(Object x) {
         return x == null ? "null" : (x.getClass() + ": " + x);
+    }
+
+    private static SQLException castNotSupported(PrimitiveType.Id type, Object x, Exception cause) {
+        return new SQLException(String.format(UNABLE_TO_CAST, toString(x), type), cause);
     }
 
     private static SQLException castNotSupported(PrimitiveType.Id type, Object x) {
@@ -339,6 +344,14 @@ public class MappingSetters {
             return PrimitiveValue.interval((Duration) x);
         } else if (x instanceof Long) {
             return PrimitiveValue.interval((Long) x);
+        } else if (x instanceof String) {
+            Duration parsed;
+            try {
+                parsed = Duration.parse((String) x);
+            } catch (DateTimeParseException e) {
+                throw castNotSupported(type, x, e);
+            }
+            return PrimitiveValue.interval(parsed);
         }
         throw castNotSupported(type, x);
     }
@@ -354,6 +367,14 @@ public class MappingSetters {
             return PrimitiveValue.date(TimeUnit.MILLISECONDS.toDays(((Date) x).getTime()));
         } else if (x instanceof Timestamp) {
             return PrimitiveValue.date(TimeUnit.MILLISECONDS.toDays(((Timestamp) x).getTime()));
+        } else if (x instanceof String) {
+            Instant parsed;
+            try {
+                parsed = Instant.parse((String) x);
+            } catch (DateTimeParseException e) {
+                throw castNotSupported(type, x, e);
+            }
+            return PrimitiveValue.date(parsed);
         }
         throw castNotSupported(type, x);
     }
@@ -369,6 +390,14 @@ public class MappingSetters {
             return PrimitiveValue.datetime(TimeUnit.MILLISECONDS.toSeconds(((Date) x).getTime()));
         } else if (x instanceof Timestamp) {
             return PrimitiveValue.datetime(TimeUnit.MILLISECONDS.toSeconds(((Timestamp) x).getTime()));
+        } else if (x instanceof String) {
+            Instant parsed;
+            try {
+                parsed = Instant.parse((String) x);
+            } catch (DateTimeParseException e) {
+                throw castNotSupported(type, x, e);
+            }
+            return PrimitiveValue.datetime(parsed);
         }
         throw castNotSupported(type, x);
     }
@@ -382,6 +411,14 @@ public class MappingSetters {
             return PrimitiveValue.timestamp(TimeUnit.MILLISECONDS.toMicros(((Date) x).getTime()));
         } else if (x instanceof Timestamp) {
             return PrimitiveValue.timestamp(TimeUnit.MILLISECONDS.toMicros(((Timestamp) x).getTime()));
+        } else if (x instanceof String) {
+            Instant parsed;
+            try {
+                parsed = Instant.parse((String) x);
+            } catch (DateTimeParseException e) {
+                throw castNotSupported(type, x, e);
+            }
+            return PrimitiveValue.timestamp(parsed);
         }
         throw castNotSupported(type, x);
     }
