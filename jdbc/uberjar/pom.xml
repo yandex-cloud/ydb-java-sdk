@@ -18,6 +18,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+        <maven.source.skip>true</maven.source.skip>
     </properties>
 
     <dependencies>
@@ -46,7 +48,6 @@
                         </goals>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <createSourcesJar>true</createSourcesJar>
                             <filters>
                                 <filter>
                                     <excludes>
