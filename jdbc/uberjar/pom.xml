@@ -13,13 +13,11 @@
     </parent>
 
     <artifactId>ydb-sdk-jdbc-uberjar</artifactId>
-    <name>JDBC client implementation over Table client</name>
-    <description>JDBC client implementation over Table client</description>
+    <name>JDBC client implementation over Table client, single jar</name>
+    <description>JDBC client implementation over Table client, single jar</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.javadoc.skip>true</maven.javadoc.skip>
-        <maven.source.skip>true</maven.source.skip>
     </properties>
 
     <dependencies>
@@ -38,6 +36,23 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>empty-javadoc-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>javadoc</classifier>
+                            <classesDirectory>${basedir}/javadoc</classesDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.2.4</version>
                 <executions>
@@ -48,6 +63,7 @@
                         </goals>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <createSourcesJar>true</createSourcesJar>
                             <filters>
                                 <filter>
                                     <excludes>
