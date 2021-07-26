@@ -788,9 +788,12 @@ class YdbDatabaseMetaDataImplTest extends AbstractTest {
         ResultSetData<Map<String, Map<String, Map<String, Object>>>> singleTableColumns =
                 collectColumns(metaData.getColumns(null, null, singleTable, null));
         assertEquals(set(singleTable), singleTableColumns.rows.keySet());
+
         Map<String, Map<String, Object>> expectColumns = singleTableColumns.rows.get(singleTable);
         // GSON cannot deserialize numbers as integer/short, so let's compare objects as string
-        checkResultSet("unit_1_columns", singleValue(singleTableColumns, singleTable));
+
+        // TODO: temporary until complete migration with docker
+        checkResultSet("unit_1_columns", singleValue(singleTableColumns, singleTable), true);
 
         ResultSetData<Map<String, Map<String, Map<String, Object>>>> allColumns =
                 collectColumns(metaData.getColumns(null, null, null, null));
@@ -1234,10 +1237,23 @@ class YdbDatabaseMetaDataImplTest extends AbstractTest {
         assertEquals(Collections.emptyList(), resultSetData.metadata);
     }
 
-
     private <T> void checkResultSet(String resource, ResultSetData<T> resultSetData) throws YdbConfigurationException {
+        checkResultSet(resource, resultSetData, false);
+    }
+
+    private <T> void checkResultSet(String resource, ResultSetData<T> resultSetData, boolean hasNewVersion)
+            throws YdbConfigurationException {
         assertEquals(readJson("classpath:json/" + resource + "_meta.json"), GSON.toJson(resultSetData.metadata));
-        assertEquals(readJson("classpath:json/" + resource + ".json"), GSON.toJson(resultSetData.rows));
+
+        String expect = readJson("classpath:json/" + resource + ".json");
+        String actual = GSON.toJson(resultSetData.rows);
+        if (hasNewVersion) {
+            if (!expect.equals(actual)) {
+                assertEquals(readJson("classpath:json/" + resource + "-new.json"), actual);
+            }
+        } else {
+            assertEquals(expect, actual);
+        }
     }
 
     private static <T> ResultSetData<T> singleValue(ResultSetData<Map<String, T>> result, String key) {
