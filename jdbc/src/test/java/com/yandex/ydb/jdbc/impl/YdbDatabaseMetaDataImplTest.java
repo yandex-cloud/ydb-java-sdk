@@ -1241,13 +1241,13 @@ class YdbDatabaseMetaDataImplTest extends AbstractTest {
         checkResultSet(resource, resultSetData, false);
     }
 
-    private <T> void checkResultSet(String resource, ResultSetData<T> resultSetData, boolean hasNewVersion)
+    private <T> void checkResultSet(String resource, ResultSetData<T> resultSetData, boolean tryNewVersion)
             throws YdbConfigurationException {
         assertEquals(readJson("classpath:json/" + resource + "_meta.json"), GSON.toJson(resultSetData.metadata));
 
         String expect = readJson("classpath:json/" + resource + ".json");
         String actual = GSON.toJson(resultSetData.rows);
-        if (hasNewVersion) {
+        if (tryNewVersion) {
             if (!expect.equals(actual)) {
                 assertEquals(readJson("classpath:json/" + resource + "-new.json"), actual);
             }
