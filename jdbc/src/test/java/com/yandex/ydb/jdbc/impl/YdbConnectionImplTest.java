@@ -35,8 +35,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import static com.yandex.ydb.jdbc.TestHelper.TEST_TYPE;
-import static com.yandex.ydb.jdbc.TestHelper.UNIVERSAL;
+import static com.yandex.ydb.jdbc.TestHelper.SKIP_DOCKER_TESTS;
+import static com.yandex.ydb.jdbc.TestHelper.TRUE;
 import static com.yandex.ydb.jdbc.TestHelper.assertThrowsMsg;
 import static com.yandex.ydb.jdbc.TestHelper.assertThrowsMsgLike;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisabledIfSystemProperty(named = TEST_TYPE, matches = UNIVERSAL)
+@DisabledIfSystemProperty(named = SKIP_DOCKER_TESTS, matches = TRUE)
 class YdbConnectionImplTest extends AbstractTest {
     private YdbConnection connection;
 

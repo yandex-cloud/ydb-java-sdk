@@ -7,14 +7,14 @@ import java.sql.SQLException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
-import static com.yandex.ydb.jdbc.TestHelper.TEST_TYPE;
-import static com.yandex.ydb.jdbc.TestHelper.UNIVERSAL;
+import static com.yandex.ydb.jdbc.TestHelper.SKIP_DOCKER_TESTS;
+import static com.yandex.ydb.jdbc.TestHelper.TRUE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class YdbDriverExampleTest {
 
     @Test
-    @DisabledIfSystemProperty(named = TEST_TYPE, matches = UNIVERSAL)
+    @DisabledIfSystemProperty(named = SKIP_DOCKER_TESTS, matches = TRUE)
     public void testYdb() throws SQLException {
 
         String url = TestHelper.getTestUrl(); // "jdbc:ydb:localhost:2135/local"

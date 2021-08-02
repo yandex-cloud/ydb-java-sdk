@@ -23,8 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class TestHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestHelper.class);
 
-    public static final String TEST_TYPE = "TEST_TYPE";
-    public static final String UNIVERSAL = "universal";
+    public static final String SKIP_DOCKER_TESTS = "SKIP_DOCKER_TESTS";
+    public static final String TRUE = "true";
 
     private static final String RECIPE_DATABASE_FILE = "ydb_database.txt";
     private static final String RECIPE_ENDPOINT_FILE = "ydb_endpoint.txt";
@@ -40,13 +40,17 @@ public class TestHelper {
     }
 
     public static String getTestUrl() throws YdbConfigurationException {
+        String customUrl = System.getProperty("YDB_URL");
+        if (customUrl != null) {
+            return customUrl;
+        }
         String defaultUrl;
         if (isRecipe()) {
             defaultUrl = String.format("jdbc:ydb:%s/%s", recipeEndpoint(), recipeDatabase());
         } else {
-            defaultUrl = "jdbc:ydb:localhost:2135/local"; // Local docker instance
+            defaultUrl = YdbDockerHelper.getContainerUrl(); // Local or machine docker instance
         }
-        return System.getProperty("YDB_URL", defaultUrl);
+        return defaultUrl;
     }
 
     public static void assertThrowsMsg(Class<? extends Throwable> type, Executable exec, String expectMessage) {
@@ -82,14 +86,6 @@ public class TestHelper {
     }
 
     //
-
-    public static String recipeEndpoint() throws YdbConfigurationException {
-        return YdbProperties.stringFileReference("file:" + RECIPE_ENDPOINT_FILE);
-    }
-
-    public static String recipeDatabase() throws YdbConfigurationException {
-        return YdbProperties.stringFileReference("file:" + RECIPE_DATABASE_FILE);
-    }
 
     public static String stringFileReference(String reference) {
         try {
@@ -132,9 +128,20 @@ public class TestHelper {
 
     //
 
+    // Yandex infrastructure
+    private static String recipeEndpoint() throws YdbConfigurationException {
+        return YdbProperties.stringFileReference("file:" + RECIPE_ENDPOINT_FILE);
+    }
+
+    private static String recipeDatabase() throws YdbConfigurationException {
+        return YdbProperties.stringFileReference("file:" + RECIPE_DATABASE_FILE);
+    }
+
     private static boolean isRecipe() {
         return Files.exists(Paths.get(RECIPE_ENDPOINT_FILE));
     }
+
+    //
 
     public interface SQLRun {
         void run(YdbConnection connection) throws SQLException;

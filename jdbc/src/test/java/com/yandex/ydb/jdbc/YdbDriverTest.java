@@ -43,8 +43,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.yandex.ydb.jdbc.TestHelper.TEST_TYPE;
-import static com.yandex.ydb.jdbc.TestHelper.UNIVERSAL;
+import static com.yandex.ydb.jdbc.TestHelper.SKIP_DOCKER_TESTS;
+import static com.yandex.ydb.jdbc.TestHelper.TRUE;
 import static com.yandex.ydb.jdbc.TestHelper.assertThrowsMsg;
 import static com.yandex.ydb.jdbc.TestHelper.assertThrowsMsgLike;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -60,7 +60,6 @@ class YdbDriverTest {
     public static final String TOKEN_FROM_FILE = "token-from-file";
     public static final String CERTIFICATE_FROM_FILE = "certificate-from-file";
 
-    private static String TEST_URL;
     private static File TOKEN_FILE;
     private static File CERTIFICATE_FILE;
 
@@ -68,7 +67,6 @@ class YdbDriverTest {
 
     @BeforeAll
     static void beforeAll() throws YdbConfigurationException, IOException {
-        TEST_URL = TestHelper.getTestUrl();
         TOKEN_FILE = safeCreateFile(TOKEN_FROM_FILE);
         CERTIFICATE_FILE = safeCreateFile(CERTIFICATE_FROM_FILE);
     }
@@ -85,10 +83,10 @@ class YdbDriverTest {
         YdbDriver.getConnectionsCache().close();
     }
 
-    @DisabledIfSystemProperty(named = TEST_TYPE, matches = UNIVERSAL)
+    @DisabledIfSystemProperty(named = SKIP_DOCKER_TESTS, matches = TRUE)
     @Test
     void connect() throws SQLException {
-        try (YdbConnection connection = driver.connect(TEST_URL, new Properties())) {
+        try (YdbConnection connection = driver.connect(TestHelper.getTestUrl(), new Properties())) {
             assertTrue(connection instanceof YdbConnectionImpl);
 
             LOGGER.info("Session opened: {}", connection.getYdbSession());
@@ -122,13 +120,14 @@ class YdbDriverTest {
         }
     }
 
-    @DisabledIfSystemProperty(named = TEST_TYPE, matches = UNIVERSAL)
+    @DisabledIfSystemProperty(named = SKIP_DOCKER_TESTS, matches = TRUE)
     @Test
     void connectMultipleTimes() throws SQLException {
         YdbDriver.getConnectionsCache().close();
-        try (YdbConnection connection1 = driver.connect(TEST_URL, new Properties())) {
+        String url = TestHelper.getTestUrl();
+        try (YdbConnection connection1 = driver.connect(url, new Properties())) {
             LOGGER.info("Session 1 opened: {}", connection1.getYdbSession());
-            try (YdbConnection connection2 = driver.connect(TEST_URL, new Properties())) {
+            try (YdbConnection connection2 = driver.connect(url, new Properties())) {
                 LOGGER.info("Session 2 opened: {}", connection2.getYdbSession());
 
                 // Expect only single connection

@@ -2,6 +2,10 @@
 ---
 This is an experimental version of JDBC driver for YDB. It is in active development and is not intended for use in production environments.
 
+## Building
+All tests are run without Docker by default.
+To enable all tests make sure you have Docker or Docker Machine installed then run `mvn install -DSKIP_DOCKER_TESTS=false`
+
 ## Quickstart
 
 1) Drop in [JDBC driver](https://repo1.maven.org/maven2/com/yandex/ydb/ydb-sdk-jdbc-uberjar/1.8.0/ydb-sdk-jdbc-uberjar-1.8.0.jar) to classpath or pick this file in IDEA
