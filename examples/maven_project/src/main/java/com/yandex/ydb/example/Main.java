@@ -31,18 +31,24 @@ import static com.yandex.ydb.table.values.PrimitiveValue.utf8;
 public final class Main {
     public static void main(String[] args) throws IOException {
         if (args.length != 2) {
-            System.err.println("Usage: java -jar example.jar endpoint database");
+            System.err.println("Usage: java -jar example.jar <endpoint> <database>");
         }
-        var endpoint = args[0];
-        var database = args[1];
+        String endpoint = args[0];
+        String database = args[1];
 
         CredentialProvider credentialProvider;
-        var iamToken = System.getenv("IAM_TOKEN");
-        var oauthToken = System.getenv("YC_TOKEN");
+        String iamToken = System.getenv("YDB_ACCESS_TOKEN_CREDENTIALS");
+        if (iamToken == null) {
+            iamToken = System.getenv("IAM_TOKEN"); // Deprecated name
+        }
+        String saKeyFile = System.getenv("YDB_SERVICE_ACCOUNT_KEY_FILE_CREDENTIALS");
+        if (saKeyFile == null) {
+            saKeyFile = System.getenv("SA_KEY_FILE"); // Deprecated name
+        }
+        String oauthToken = System.getenv("YC_TOKEN");
         if (oauthToken == null) {
             oauthToken = System.getenv("OAUTH_TOKEN"); // Deprecated name
         }
-        var saKeyFile = System.getenv("SA_KEY_FILE");
         if (iamToken != null) {
             credentialProvider = IamTokenCredentialProvider.builder()
                     .token(iamToken)
