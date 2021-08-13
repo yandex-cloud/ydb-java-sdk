@@ -18,10 +18,17 @@ import org.testcontainers.containers.wait.strategy.AbstractWaitStrategy;
 import static org.rnorth.ducttape.unreliables.Unreliables.retryUntilSuccess;
 
 public class YdbDockerHelper {
-
-    private static final int GRPC_PORT = 2136; // unsecured port
-    private static final int WEB_UI_PORT = 8765;
+    private static final String SECURE_CONNECTION = "secured";
     private static final String LOCAL_DATABASE = "local";
+
+    private static final int WEB_UI_PORT = 8765;
+    private static final boolean SECURED;
+    private static final int GRPC_PORT;
+    static {
+        SECURED = Boolean.getBoolean(SECURE_CONNECTION);
+        GRPC_PORT = SECURED ? 2135 : 2136;
+    }
+
 
     private static String DOCKER_URL;
 
@@ -39,10 +46,13 @@ public class YdbDockerHelper {
             GenericContainer<?> container = ydbContainer();
             container.start();
 
-            DOCKER_URL = String.format("jdbc:ydb:%s:%s/%s",
+            String suffix = SECURED ? "?secureConnection=true" : "";
+
+            DOCKER_URL = String.format("jdbc:ydb:%s:%s/%s%s",
                     container.getContainerIpAddress(),
                     container.getMappedPort(GRPC_PORT),
-                    LOCAL_DATABASE);
+                    LOCAL_DATABASE,
+                    suffix);
         }
 
         return DOCKER_URL;
@@ -59,9 +69,13 @@ public class YdbDockerHelper {
             String host = waitStrategyTarget.getContainerIpAddress();
             int mappedPort = waitStrategyTarget.getMappedPort(GRPC_PORT);
 
-            GrpcTransport transport = GrpcTransport.forHost(host, mappedPort).build();
-            TableClient tableClient = TableClient.newClient(GrpcTableRpc.useTransport(transport)).build();
-            retryUntilSuccess((int) 3600, TimeUnit.SECONDS, () -> {
+            GrpcTransport.Builder transport = GrpcTransport.forHost(host, mappedPort);
+            if (SECURED) {
+                transport.withSecureConnection();
+            }
+
+            TableClient tableClient = TableClient.newClient(GrpcTableRpc.useTransport(transport.build())).build();
+            retryUntilSuccess(3600, TimeUnit.SECONDS, () -> {
                 getRateLimiter().doWhenReady(() -> {
                     try {
                         log.info("Getting session");
