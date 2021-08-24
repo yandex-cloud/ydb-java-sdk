@@ -168,7 +168,7 @@ public class YdbConnectionImpl implements YdbConnection {
                 if (e.getStatusCode() == StatusCode.NOT_FOUND) {
                     this.clearTx();
                 }
-                throw e; // Имеет смысл выдавать наружу все равно
+                throw e; // Should be thrown anyway
             }
         }
     }
@@ -534,7 +534,6 @@ public class YdbConnectionImpl implements YdbConnection {
         } else {
             if (state.txId != null) {
                 if (!state.txId.equals(txId)) {
-                    // TODO: Нужно ли бросать такое исключение?
                     throw new IllegalStateException("Internal error, previous transaction " + state.txId +
                             " not closed, but opened another one: " + txId);
                 }

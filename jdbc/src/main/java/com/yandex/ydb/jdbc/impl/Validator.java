@@ -135,13 +135,10 @@ public class Validator {
             case BAD_REQUEST:
             case INTERNAL_ERROR:
             case CLIENT_UNAUTHENTICATED:
-                // grpc сообщил, что запрос не аутентифицирован.
-                // Это интернал ошибка, но возможно была проблема с выпиской токена и можно
-                // попробовать поретраить - если не поможет, то отдать наружу
+                // gRPC reports, request is not authenticated
+                // Maybe internal error, maybe some issue with token
             case UNAUTHORIZED:
-                // БД сообщила, что запрос не авторизован. Это интернал ошибка, но сейчас это
-                // стабильно происходит по непонятным причинам; простой ретрай помогает  -
-                // https://st.yandex-team.ru/KIKIMR-8694
+                // Unauthorized by database
             case SCHEME_ERROR:
             case GENERIC_ERROR:
             case CLIENT_CALL_UNIMPLEMENTED:
@@ -152,44 +149,43 @@ public class Validator {
 
             case ABORTED:
             case UNAVAILABLE:
-                // БД ответила, что она или часть ее подсистем не доступны
+                // Some of database parts are not available
             case OVERLOADED:
-                // БД перегружена - нужно ретраить с экспоненциальной задержкой
+                // Database is overloaded, need to retry with exponential backoff
             case TRANSPORT_UNAVAILABLE:
-                // проблемы с сетевой связностью
+                // Some issues with networking
             case CLIENT_RESOURCE_EXHAUSTED:
-                // недостаточно свободных ресурсов для обслуживания запроса
+                // No resources to handle client request
             case NOT_FOUND:
-                // Вероятнее всего это проблемы с prepared запросом.
-                // Стоит поретраить с новой сессией.
-                // Еще может быть Transaction not found
+                // Could be 'prepared query' issue, could be 'transaction not found'
+                // Should be retries with new session
             case BAD_SESSION:
-                // На самом деле можно повторить всю транзакцию
+                // Retry with new session
             case SESSION_EXPIRED:
-                // На самом деле можно повторить всю транзакцию
+                // Retry with new session
                 throw new YdbRetryableException(response, statusCode);
 
             case CANCELLED:
-                // Запрос был отменен, тк закончился установленный в запросе таймаут (CancelAfter).
-                // Запрос на сервере гарантированно отменен.
+                // Query was canceled due to query timeout (CancelAfter)
+                // Query was definitely canceled by database
             case CLIENT_CANCELLED:
             case CLIENT_INTERNAL_ERROR:
-                // неизвестная ошибка на клиентской стороне (чаще всего транспортного уровня)
+                // Some unknown client side error, probably on transport layer
                 checkGrpcContextStatus(response, statusCode);
                 throw new YdbConditionallyRetryableException(response, statusCode);
 
             case UNDETERMINED:
             case TIMEOUT:
-                // БД отвечала слишком долго - нужно ретраить с экспоненциальной задержкой
+                // Database cannot respond in time, need to retry with exponential backoff
             case PRECONDITION_FAILED:
             case CLIENT_DEADLINE_EXCEEDED:
-                // запрос был отменен на транспортном уровне, тк закончился установленный
+                // Query was canceled on transport layer
             case SESSION_BUSY:
-                // в этот сессии скорей всего исполняется другой запрос, стоит поретраить с новой сессией
+                // Another query is executing already, retry with new session
             case CLIENT_DISCOVERY_FAILED:
-                // ошибка в ходе получения списка эндпоинтов
+                // Some issue with database endpoints discovery
             case CLIENT_LIMITS_REACHED:
-                // достигнут лимит на количество сессий на клиентской стороне
+                // Client side session limit was reached
                 throw new YdbConditionallyRetryableException(response, statusCode);
             default:
                 throw new YdbNonRetryableException(response, statusCode);
@@ -198,20 +194,20 @@ public class Validator {
 
     public static void checkGrpcContextStatus(Object response, StatusCode statusCode) throws SQLException {
         if (Context.current().getDeadline() != null && Context.current().getDeadline().isExpired()) {
-            // время на обработку запроса закончилось, нужно выбросить отдельное исключение чтобы не было ретраев
+            // Query deadline reached, separate exception thrown to prevent retries
             throw new YdbNonRetryableException(DB_QUERY_DEADLINE_EXCEEDED + response, statusCode);
         } else if (Context.current().isCancelled()) {
-            // запрос отменил сам клиент, эту ошибку не нужно ретраить
+            // Canceled on client side, no need to retry
             throw new YdbNonRetryableException(DB_QUERY_CANCELLED + response, statusCode);
         }
     }
 
     public static void checkGrpcContextStatus(Exception exception) throws SQLException {
         if (Context.current().getDeadline() != null && Context.current().getDeadline().isExpired()) {
-            // время на обработку запроса закончилось, нужно выбросить отдельное исключение чтобы не было ретраев
+            // Query deadline reached, separate exception thrown to prevent retries
             throw new YdbExecutionException(DB_QUERY_DEADLINE_EXCEEDED + exception.getMessage(), exception);
         } else if (Context.current().isCancelled()) {
-            // запрос отменил сам клиент, эту ошибку не нужно ретраить
+            // Canceled on client side, no need to retry
             throw new YdbExecutionException(DB_QUERY_CANCELLED + exception.getMessage(), exception);
         }
     }

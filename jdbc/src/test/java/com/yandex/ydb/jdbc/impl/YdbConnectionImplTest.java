@@ -280,7 +280,7 @@ class YdbConnectionImplTest extends AbstractTest {
 
         assertNull(connection.getYdbTxId());
 
-        connection.commit(); // Нечего коммитить - транзакция уже откатилась
+        connection.commit(); // Nothing to commit, transaction was rolled back already
         assertNull(connection.getYdbTxId());
 
         YdbResultSet result = (YdbResultSet) statement.executeQuery("select * from unit_1");
