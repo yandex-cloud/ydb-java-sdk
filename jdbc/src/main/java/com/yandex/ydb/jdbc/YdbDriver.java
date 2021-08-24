@@ -57,6 +57,7 @@ public class YdbDriver implements Driver {
 
     @Override
     public YdbConnection connect(String url, Properties info) throws SQLException {
+        LOGGER.info("About to connect to [{}] using properties {}", url, info);
         if (!acceptsURL(url)) {
             return null;
         }

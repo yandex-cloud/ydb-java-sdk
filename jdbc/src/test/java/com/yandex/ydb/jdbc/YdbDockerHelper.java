@@ -1,10 +1,16 @@
 package com.yandex.ydb.jdbc;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
+
 import com.yandex.ydb.core.Result;
 import com.yandex.ydb.core.grpc.GrpcTransport;
+import com.yandex.ydb.jdbc.exception.YdbConfigurationException;
+import com.yandex.ydb.jdbc.settings.YdbProperties;
 import com.yandex.ydb.table.Session;
 import com.yandex.ydb.table.TableClient;
 import com.yandex.ydb.table.description.TableDescription;
@@ -24,29 +30,55 @@ public class YdbDockerHelper {
     private static final int WEB_UI_PORT = 8765;
     private static final boolean SECURED;
     private static final int GRPC_PORT;
+
     static {
         SECURED = Boolean.getBoolean(SECURE_CONNECTION);
         GRPC_PORT = SECURED ? 2135 : 2136;
     }
 
-
     private static String DOCKER_URL;
 
-    private static GenericContainer<?> ydbContainer() {
+    private static ContainerDescription ydbContainer() {
         String customImage = System.getProperty("YDB_IMAGE", "cr.yandex/yc/yandex-docker-local-ydb:latest");
-        return new GenericContainer<>(
-                customImage)
-                .withExposedPorts(GRPC_PORT, WEB_UI_PORT)
-                .withCreateContainerCmdModifier(modifier -> modifier.withName("ydb-" + UUID.randomUUID()))
-                .waitingFor(new YdbCanCreateTableWaitStrategy());
+
+        GenericContainer<?> container = new GenericContainer<>(customImage);
+        container.withExposedPorts(GRPC_PORT, WEB_UI_PORT);
+        container.withCreateContainerCmdModifier(modifier -> modifier.withName("ydb-" + UUID.randomUUID()));
+
+        String ydbCertFile;
+        if (SECURED) {
+            String ydbCerts;
+            try {
+                ydbCerts = Files.createTempDirectory("ydb-jdbc").toAbsolutePath().toString();
+            } catch (IOException e) {
+                throw new RuntimeException("Unable to create temporary directory for YDB certificates", e);
+            }
+            container.withFileSystemBind(ydbCerts, "/ydb_certs");
+            ydbCertFile = ydbCerts + "/ca.pem";
+        } else {
+            ydbCertFile = null;
+        }
+        container.waitingFor(new YdbCanCreateTableWaitStrategy(ydbCertFile));
+        return new ContainerDescription(container, ydbCertFile);
     }
 
     static synchronized String getContainerUrl() {
         if (DOCKER_URL == null) {
-            GenericContainer<?> container = ydbContainer();
+            ContainerDescription description = ydbContainer();
+            GenericContainer<?> container = description.ydbContainer;
             container.start();
 
-            String suffix = SECURED ? "?secureConnection=true" : "";
+            String suffix;
+            if (SECURED) {
+                String ydbCertFile = description.ydbCertFile;
+                if (ydbCertFile != null) {
+                    suffix = "?secureConnectionCertificate=file:" + ydbCertFile;
+                } else {
+                    suffix = "?secureConnection=true";
+                }
+            } else {
+                suffix = "";
+            }
 
             DOCKER_URL = String.format("jdbc:ydb:%s:%s/%s%s",
                     container.getContainerIpAddress(),
@@ -64,40 +96,61 @@ public class YdbDockerHelper {
 
         private static final String DOCKER_INIT_TABLE = "/" + LOCAL_DATABASE + "/docker_init_table";
 
+        @Nullable
+        private final String ydbCertFile;
+
+        private YdbCanCreateTableWaitStrategy(@Nullable String ydbCertFile) {
+            this.ydbCertFile = ydbCertFile;
+        }
+
         @Override
         protected void waitUntilReady() {
             String host = waitStrategyTarget.getContainerIpAddress();
             int mappedPort = waitStrategyTarget.getMappedPort(GRPC_PORT);
 
-            GrpcTransport.Builder transport = GrpcTransport.forHost(host, mappedPort);
-            if (SECURED) {
-                transport.withSecureConnection();
-            }
-
-            TableClient tableClient = TableClient.newClient(GrpcTableRpc.useTransport(transport.build())).build();
             retryUntilSuccess(3600, TimeUnit.SECONDS, () -> {
                 getRateLimiter().doWhenReady(() -> {
                     try {
-                        log.info("Getting session");
-                        Result<Session> sessionResult = tableClient.createSession().get();
-                        if (!sessionResult.isSuccess()) {
-                            throw new RuntimeException("Session not ready: " + sessionResult);
+                        GrpcTransport.Builder transportBuilder = GrpcTransport.forHost(host, mappedPort);
+                        if (SECURED) {
+                            transportBuilder.withSecureConnection();
+                            if (ydbCertFile != null) {
+                                try {
+                                    // Docker machine? No viable solution yet
+                                    transportBuilder.withSecureConnection(
+                                            YdbProperties.byteFileReference("file:" + ydbCertFile));
+                                } catch (YdbConfigurationException e) {
+                                    log.error("YDB Certificate file is not available", e);
+                                }
+                            }
                         }
+                        try (GrpcTransport transport = transportBuilder.build()) {
+                            GrpcTableRpc grpcTableRpc = GrpcTableRpc.useTransport(transport);
+                            try (TableClient tableClient = TableClient.newClient(grpcTableRpc).build()) {
 
-                        Session session = sessionResult.ok()
-                                .orElseThrow(() -> new RuntimeException("Internal error when checking session"));
+                                log.info("Getting session");
+                                Result<Session> sessionResult = tableClient.createSession().get();
+                                if (!sessionResult.isSuccess()) {
+                                    throw new RuntimeException("Session not ready: " + sessionResult);
+                                }
 
-                        log.info("Creating test table");
-                        session.createTable(
-                                DOCKER_INIT_TABLE,
-                                TableDescription
-                                        .newBuilder()
-                                        .addNullableColumn("id", PrimitiveType.utf8())
-                                        .setPrimaryKey("id")
-                                        .build()
-                        )
-                                .get()
-                                .expect("Table creation error");
+                                Session session = sessionResult.ok()
+                                        .orElseThrow(() ->
+                                                new RuntimeException("Internal error when checking session"));
+
+                                log.info("Creating test table");
+                                session.createTable(
+                                        DOCKER_INIT_TABLE,
+                                        TableDescription
+                                                .newBuilder()
+                                                .addNullableColumn("id", PrimitiveType.utf8())
+                                                .setPrimaryKey("id")
+                                                .build()
+                                )
+                                        .get()
+                                        .expect("Table creation error");
+                            }
+                        }
                     } catch (Exception e) {
                         log.debug("Checking container state failed: {}", e.getMessage());
                         throw new RuntimeException(e);
@@ -106,6 +159,17 @@ public class YdbDockerHelper {
                 log.info("Done");
                 return true;
             });
+        }
+    }
+
+    private static class ContainerDescription {
+        private final GenericContainer<?> ydbContainer;
+        @Nullable
+        private final String ydbCertFile;
+
+        private ContainerDescription(GenericContainer<?> ydbContainer, @Nullable String ydbCertFile) {
+            this.ydbContainer = ydbContainer;
+            this.ydbCertFile = ydbCertFile;
         }
     }
 }
