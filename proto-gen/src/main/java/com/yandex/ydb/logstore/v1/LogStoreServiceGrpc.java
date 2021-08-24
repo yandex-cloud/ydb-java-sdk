@@ -213,6 +213,37 @@ public final class LogStoreServiceGrpc {
     return getDropLogTableMethod;
   }
 
+  private static volatile io.grpc.MethodDescriptor<com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableRequest,
+      com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableResponse> getAlterLogTableMethod;
+
+  @io.grpc.stub.annotations.RpcMethod(
+      fullMethodName = SERVICE_NAME + '/' + "AlterLogTable",
+      requestType = com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableRequest.class,
+      responseType = com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableResponse.class,
+      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+  public static io.grpc.MethodDescriptor<com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableRequest,
+      com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableResponse> getAlterLogTableMethod() {
+    io.grpc.MethodDescriptor<com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableRequest, com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableResponse> getAlterLogTableMethod;
+    if ((getAlterLogTableMethod = LogStoreServiceGrpc.getAlterLogTableMethod) == null) {
+      synchronized (LogStoreServiceGrpc.class) {
+        if ((getAlterLogTableMethod = LogStoreServiceGrpc.getAlterLogTableMethod) == null) {
+          LogStoreServiceGrpc.getAlterLogTableMethod = getAlterLogTableMethod =
+              io.grpc.MethodDescriptor.<com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableRequest, com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableResponse>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "AlterLogTable"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableRequest.getDefaultInstance()))
+              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableResponse.getDefaultInstance()))
+              .setSchemaDescriptor(new LogStoreServiceMethodDescriptorSupplier("AlterLogTable"))
+              .build();
+        }
+      }
+    }
+    return getAlterLogTableMethod;
+  }
+
   /**
    * Creates a new async stub that supports all call types for the service
    */
@@ -303,6 +334,13 @@ public final class LogStoreServiceGrpc {
       asyncUnimplementedUnaryCall(getDropLogTableMethod(), responseObserver);
     }
 
+    /**
+     */
+    public void alterLogTable(com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableRequest request,
+        io.grpc.stub.StreamObserver<com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableResponse> responseObserver) {
+      asyncUnimplementedUnaryCall(getAlterLogTableMethod(), responseObserver);
+    }
+
     @java.lang.Override public final io.grpc.ServerServiceDefinition bindService() {
       return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
           .addMethod(
@@ -347,6 +385,13 @@ public final class LogStoreServiceGrpc {
                 com.yandex.ydb.logstore.LogStoreProtos.DropLogTableRequest,
                 com.yandex.ydb.logstore.LogStoreProtos.DropLogTableResponse>(
                   this, METHODID_DROP_LOG_TABLE)))
+          .addMethod(
+            getAlterLogTableMethod(),
+            asyncUnaryCall(
+              new MethodHandlers<
+                com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableRequest,
+                com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableResponse>(
+                  this, METHODID_ALTER_LOG_TABLE)))
           .build();
     }
   }
@@ -412,6 +457,14 @@ public final class LogStoreServiceGrpc {
       asyncUnaryCall(
           getChannel().newCall(getDropLogTableMethod(), getCallOptions()), request, responseObserver);
     }
+
+    /**
+     */
+    public void alterLogTable(com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableRequest request,
+        io.grpc.stub.StreamObserver<com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableResponse> responseObserver) {
+      asyncUnaryCall(
+          getChannel().newCall(getAlterLogTableMethod(), getCallOptions()), request, responseObserver);
+    }
   }
 
   /**
@@ -468,6 +521,13 @@ public final class LogStoreServiceGrpc {
     public com.yandex.ydb.logstore.LogStoreProtos.DropLogTableResponse dropLogTable(com.yandex.ydb.logstore.LogStoreProtos.DropLogTableRequest request) {
       return blockingUnaryCall(
           getChannel(), getDropLogTableMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
+    public com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableResponse alterLogTable(com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableRequest request) {
+      return blockingUnaryCall(
+          getChannel(), getAlterLogTableMethod(), getCallOptions(), request);
     }
   }
 
@@ -532,6 +592,14 @@ public final class LogStoreServiceGrpc {
       return futureUnaryCall(
           getChannel().newCall(getDropLogTableMethod(), getCallOptions()), request);
     }
+
+    /**
+     */
+    public com.google.common.util.concurrent.ListenableFuture<com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableResponse> alterLogTable(
+        com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableRequest request) {
+      return futureUnaryCall(
+          getChannel().newCall(getAlterLogTableMethod(), getCallOptions()), request);
+    }
   }
 
   private static final int METHODID_CREATE_LOG_STORE = 0;
@@ -540,6 +608,7 @@ public final class LogStoreServiceGrpc {
   private static final int METHODID_CREATE_LOG_TABLE = 3;
   private static final int METHODID_DESCRIBE_LOG_TABLE = 4;
   private static final int METHODID_DROP_LOG_TABLE = 5;
+  private static final int METHODID_ALTER_LOG_TABLE = 6;
 
   private static final class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -581,6 +650,10 @@ public final class LogStoreServiceGrpc {
         case METHODID_DROP_LOG_TABLE:
           serviceImpl.dropLogTable((com.yandex.ydb.logstore.LogStoreProtos.DropLogTableRequest) request,
               (io.grpc.stub.StreamObserver<com.yandex.ydb.logstore.LogStoreProtos.DropLogTableResponse>) responseObserver);
+          break;
+        case METHODID_ALTER_LOG_TABLE:
+          serviceImpl.alterLogTable((com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableRequest) request,
+              (io.grpc.stub.StreamObserver<com.yandex.ydb.logstore.LogStoreProtos.AlterLogTableResponse>) responseObserver);
           break;
         default:
           throw new AssertionError();
@@ -649,6 +722,7 @@ public final class LogStoreServiceGrpc {
               .addMethod(getCreateLogTableMethod())
               .addMethod(getDescribeLogTableMethod())
               .addMethod(getDropLogTableMethod())
+              .addMethod(getAlterLogTableMethod())
               .build();
         }
       }
