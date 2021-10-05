@@ -54,6 +54,7 @@ class YdbConnectionImplTest extends AbstractTest {
     @BeforeEach
     void beforeEach() throws SQLException {
         connection = getTestConnection();
+        this.configureOnce(AbstractTest::recreateSimpleTestTable);
     }
 
     @Test
@@ -568,8 +569,34 @@ class YdbConnectionImplTest extends AbstractTest {
         SQLWarning warnings = ps.getWarnings();
         assertNotNull(warnings);
 
-        // TODO: add proper tests and driver property after https://a.yandex-team.ru/review/1781801/details merge
-        System.out.println("WARNING: " + warnings);
+        assertEquals("#1030 Type annotation (S_WARNING)\n" +
+                "  1:3 - 1:3: At function: RemovePrefixMembers, At function: RemoveSystemMembers, At function: " +
+                "PersistableRepr, At function: SqlProject (S_WARNING)\n" +
+                "  35:3 - 35:3: At function: Filter, At function: Coalesce (S_WARNING)\n" +
+                "  51:3 - 51:3: At function: SqlIn (S_WARNING)\n" +
+                "  51:3 - 51:3: #1108 IN may produce unexpected result when used with nullable arguments. Consider " +
+                "adding 'PRAGMA AnsiInForEmptyOrNullableItemsCollections;' (S_WARNING)", warnings.getMessage());
+        assertNull(warnings.getNextWarning());
+    }
+
+    @Test
+    void testAnsiLexer() throws SQLException {
+        YdbResultSet rs = connection.createStatement().executeQuery("--!ansi_lexer\n" +
+                "select 'string value' as \"name with space\"");
+        assertTrue(rs.next());
+        assertEquals("string value", rs.getString("name with space"));
+    }
+
+    @Test
+    void testAnsiLexerForIdea() throws SQLException {
+        YdbStatement statement = connection.createStatement();
+        statement.execute("upsert into unit_1(key, c_Utf8) values (1, '2')");
+        connection.commit();
+
+        YdbResultSet rs = statement.executeQuery("--!ansi_lexer\n" +
+                "select t.c_Utf8 from \"unit_1\" as t where t.key = 1"); // TODO: Must be "unit_1" t, see YQL-12618
+        assertTrue(rs.next());
+        assertEquals("2", rs.getString("c_Utf8"));
     }
 
     //
