@@ -16,8 +16,9 @@ import yandex.cloud.sdk.auth.provider.IamTokenCredentialProvider;
 
 public final class Main {
     public static void main(String[] args) {
-        if (args.length != 2) {
+        if (args.length != 3) {
             System.err.println("Usage: java -jar example.jar <endpoint> <database> <access-token>");
+            return;
         }
         String endpoint = args[0];
         String database = args[1];
