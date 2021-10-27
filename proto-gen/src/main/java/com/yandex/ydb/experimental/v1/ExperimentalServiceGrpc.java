@@ -27,37 +27,6 @@ public final class ExperimentalServiceGrpc {
   public static final String SERVICE_NAME = "Ydb.Experimental.V1.ExperimentalService";
 
   // Static method descriptors that strictly reflect the proto.
-  private static volatile io.grpc.MethodDescriptor<com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsRequest,
-      com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsResponse> getUploadRowsMethod;
-
-  @io.grpc.stub.annotations.RpcMethod(
-      fullMethodName = SERVICE_NAME + '/' + "UploadRows",
-      requestType = com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsRequest.class,
-      responseType = com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsResponse.class,
-      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
-  public static io.grpc.MethodDescriptor<com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsRequest,
-      com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsResponse> getUploadRowsMethod() {
-    io.grpc.MethodDescriptor<com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsRequest, com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsResponse> getUploadRowsMethod;
-    if ((getUploadRowsMethod = ExperimentalServiceGrpc.getUploadRowsMethod) == null) {
-      synchronized (ExperimentalServiceGrpc.class) {
-        if ((getUploadRowsMethod = ExperimentalServiceGrpc.getUploadRowsMethod) == null) {
-          ExperimentalServiceGrpc.getUploadRowsMethod = getUploadRowsMethod =
-              io.grpc.MethodDescriptor.<com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsRequest, com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsResponse>newBuilder()
-              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "UploadRows"))
-              .setSampledToLocalTracing(true)
-              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsRequest.getDefaultInstance()))
-              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsResponse.getDefaultInstance()))
-              .setSchemaDescriptor(new ExperimentalServiceMethodDescriptorSupplier("UploadRows"))
-              .build();
-        }
-      }
-    }
-    return getUploadRowsMethod;
-  }
-
   private static volatile io.grpc.MethodDescriptor<com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryRequest,
       com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryResponse> getExecuteStreamQueryMethod;
 
@@ -87,37 +56,6 @@ public final class ExperimentalServiceGrpc {
       }
     }
     return getExecuteStreamQueryMethod;
-  }
-
-  private static volatile io.grpc.MethodDescriptor<com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageRequest,
-      com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageResponse> getGetDiskSpaceUsageMethod;
-
-  @io.grpc.stub.annotations.RpcMethod(
-      fullMethodName = SERVICE_NAME + '/' + "GetDiskSpaceUsage",
-      requestType = com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageRequest.class,
-      responseType = com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageResponse.class,
-      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
-  public static io.grpc.MethodDescriptor<com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageRequest,
-      com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageResponse> getGetDiskSpaceUsageMethod() {
-    io.grpc.MethodDescriptor<com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageRequest, com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageResponse> getGetDiskSpaceUsageMethod;
-    if ((getGetDiskSpaceUsageMethod = ExperimentalServiceGrpc.getGetDiskSpaceUsageMethod) == null) {
-      synchronized (ExperimentalServiceGrpc.class) {
-        if ((getGetDiskSpaceUsageMethod = ExperimentalServiceGrpc.getGetDiskSpaceUsageMethod) == null) {
-          ExperimentalServiceGrpc.getGetDiskSpaceUsageMethod = getGetDiskSpaceUsageMethod =
-              io.grpc.MethodDescriptor.<com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageRequest, com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageResponse>newBuilder()
-              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
-              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "GetDiskSpaceUsage"))
-              .setSampledToLocalTracing(true)
-              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageRequest.getDefaultInstance()))
-              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageResponse.getDefaultInstance()))
-              .setSchemaDescriptor(new ExperimentalServiceMethodDescriptorSupplier("GetDiskSpaceUsage"))
-              .build();
-        }
-      }
-    }
-    return getGetDiskSpaceUsageMethod;
   }
 
   /**
@@ -169,41 +107,14 @@ public final class ExperimentalServiceGrpc {
   public static abstract class ExperimentalServiceImplBase implements io.grpc.BindableService {
 
     /**
-     * <pre>
-     * Fast bulk load rows to a table bypassing transaction logic.
-     * </pre>
-     */
-    public void uploadRows(com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsRequest request,
-        io.grpc.stub.StreamObserver<com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsResponse> responseObserver) {
-      asyncUnimplementedUnaryCall(getUploadRowsMethod(), responseObserver);
-    }
-
-    /**
      */
     public void executeStreamQuery(com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryRequest request,
         io.grpc.stub.StreamObserver<com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryResponse> responseObserver) {
       asyncUnimplementedUnaryCall(getExecuteStreamQueryMethod(), responseObserver);
     }
 
-    /**
-     * <pre>
-     * Returns disk space usage by database
-     * </pre>
-     */
-    public void getDiskSpaceUsage(com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageRequest request,
-        io.grpc.stub.StreamObserver<com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageResponse> responseObserver) {
-      asyncUnimplementedUnaryCall(getGetDiskSpaceUsageMethod(), responseObserver);
-    }
-
     @java.lang.Override public final io.grpc.ServerServiceDefinition bindService() {
       return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
-          .addMethod(
-            getUploadRowsMethod(),
-            asyncUnaryCall(
-              new MethodHandlers<
-                com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsRequest,
-                com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsResponse>(
-                  this, METHODID_UPLOAD_ROWS)))
           .addMethod(
             getExecuteStreamQueryMethod(),
             asyncServerStreamingCall(
@@ -211,13 +122,6 @@ public final class ExperimentalServiceGrpc {
                 com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryRequest,
                 com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryResponse>(
                   this, METHODID_EXECUTE_STREAM_QUERY)))
-          .addMethod(
-            getGetDiskSpaceUsageMethod(),
-            asyncUnaryCall(
-              new MethodHandlers<
-                com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageRequest,
-                com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageResponse>(
-                  this, METHODID_GET_DISK_SPACE_USAGE)))
           .build();
     }
   }
@@ -237,33 +141,11 @@ public final class ExperimentalServiceGrpc {
     }
 
     /**
-     * <pre>
-     * Fast bulk load rows to a table bypassing transaction logic.
-     * </pre>
-     */
-    public void uploadRows(com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsRequest request,
-        io.grpc.stub.StreamObserver<com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsResponse> responseObserver) {
-      asyncUnaryCall(
-          getChannel().newCall(getUploadRowsMethod(), getCallOptions()), request, responseObserver);
-    }
-
-    /**
      */
     public void executeStreamQuery(com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryRequest request,
         io.grpc.stub.StreamObserver<com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryResponse> responseObserver) {
       asyncServerStreamingCall(
           getChannel().newCall(getExecuteStreamQueryMethod(), getCallOptions()), request, responseObserver);
-    }
-
-    /**
-     * <pre>
-     * Returns disk space usage by database
-     * </pre>
-     */
-    public void getDiskSpaceUsage(com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageRequest request,
-        io.grpc.stub.StreamObserver<com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageResponse> responseObserver) {
-      asyncUnaryCall(
-          getChannel().newCall(getGetDiskSpaceUsageMethod(), getCallOptions()), request, responseObserver);
     }
   }
 
@@ -282,31 +164,11 @@ public final class ExperimentalServiceGrpc {
     }
 
     /**
-     * <pre>
-     * Fast bulk load rows to a table bypassing transaction logic.
-     * </pre>
-     */
-    public com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsResponse uploadRows(com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsRequest request) {
-      return blockingUnaryCall(
-          getChannel(), getUploadRowsMethod(), getCallOptions(), request);
-    }
-
-    /**
      */
     public java.util.Iterator<com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryResponse> executeStreamQuery(
         com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryRequest request) {
       return blockingServerStreamingCall(
           getChannel(), getExecuteStreamQueryMethod(), getCallOptions(), request);
-    }
-
-    /**
-     * <pre>
-     * Returns disk space usage by database
-     * </pre>
-     */
-    public com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageResponse getDiskSpaceUsage(com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageRequest request) {
-      return blockingUnaryCall(
-          getChannel(), getGetDiskSpaceUsageMethod(), getCallOptions(), request);
     }
   }
 
@@ -323,33 +185,9 @@ public final class ExperimentalServiceGrpc {
         io.grpc.Channel channel, io.grpc.CallOptions callOptions) {
       return new ExperimentalServiceFutureStub(channel, callOptions);
     }
-
-    /**
-     * <pre>
-     * Fast bulk load rows to a table bypassing transaction logic.
-     * </pre>
-     */
-    public com.google.common.util.concurrent.ListenableFuture<com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsResponse> uploadRows(
-        com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsRequest request) {
-      return futureUnaryCall(
-          getChannel().newCall(getUploadRowsMethod(), getCallOptions()), request);
-    }
-
-    /**
-     * <pre>
-     * Returns disk space usage by database
-     * </pre>
-     */
-    public com.google.common.util.concurrent.ListenableFuture<com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageResponse> getDiskSpaceUsage(
-        com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageRequest request) {
-      return futureUnaryCall(
-          getChannel().newCall(getGetDiskSpaceUsageMethod(), getCallOptions()), request);
-    }
   }
 
-  private static final int METHODID_UPLOAD_ROWS = 0;
-  private static final int METHODID_EXECUTE_STREAM_QUERY = 1;
-  private static final int METHODID_GET_DISK_SPACE_USAGE = 2;
+  private static final int METHODID_EXECUTE_STREAM_QUERY = 0;
 
   private static final class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -368,17 +206,9 @@ public final class ExperimentalServiceGrpc {
     @java.lang.SuppressWarnings("unchecked")
     public void invoke(Req request, io.grpc.stub.StreamObserver<Resp> responseObserver) {
       switch (methodId) {
-        case METHODID_UPLOAD_ROWS:
-          serviceImpl.uploadRows((com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsRequest) request,
-              (io.grpc.stub.StreamObserver<com.yandex.ydb.experimental.ExperimentalProtos.UploadRowsResponse>) responseObserver);
-          break;
         case METHODID_EXECUTE_STREAM_QUERY:
           serviceImpl.executeStreamQuery((com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryRequest) request,
               (io.grpc.stub.StreamObserver<com.yandex.ydb.experimental.ExperimentalProtos.ExecuteStreamQueryResponse>) responseObserver);
-          break;
-        case METHODID_GET_DISK_SPACE_USAGE:
-          serviceImpl.getDiskSpaceUsage((com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageRequest) request,
-              (io.grpc.stub.StreamObserver<com.yandex.ydb.experimental.ExperimentalProtos.GetDiskSpaceUsageResponse>) responseObserver);
           break;
         default:
           throw new AssertionError();
@@ -441,9 +271,7 @@ public final class ExperimentalServiceGrpc {
         if (result == null) {
           serviceDescriptor = result = io.grpc.ServiceDescriptor.newBuilder(SERVICE_NAME)
               .setSchemaDescriptor(new ExperimentalServiceFileDescriptorSupplier())
-              .addMethod(getUploadRowsMethod())
               .addMethod(getExecuteStreamQueryMethod())
-              .addMethod(getGetDiskSpaceUsageMethod())
               .build();
         }
       }
