@@ -20,12 +20,12 @@ public class CloudAuthHelper {
         }
 
         String anonCredentials = System.getenv("YDB_ANONYMOUS_CREDENTIALS");
-        if (anonCredentials != null && anonCredentials == "1") {
+        if (anonCredentials != null && anonCredentials.equals("1")) {
             return NopAuthProvider.INSTANCE;
         }
 
         String metadataCredentials = System.getenv("YDB_METADATA_CREDENTIALS");
-        if (metadataCredentials != null && metadataCredentials == "1") {
+        if (metadataCredentials != null && metadataCredentials.equals("1")) {
             return CloudAuthProvider.newAuthProvider(
                     ComputeEngineCredentialProvider.builder()
                     .build()
