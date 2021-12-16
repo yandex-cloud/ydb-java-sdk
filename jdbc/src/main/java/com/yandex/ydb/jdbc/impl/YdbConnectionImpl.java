@@ -203,7 +203,7 @@ public class YdbConnectionImpl implements YdbConnection {
             this.clearWarnings();
             try {
                 if (session.release()) {
-                    LOGGER.info("Releasing sesession: {}", session.getId());
+                    LOGGER.info("Releasing session: {}", session.getId());
                 } else {
                     this.joinStatusImpl(
                             () -> "Closing session: " + session.getId(),
