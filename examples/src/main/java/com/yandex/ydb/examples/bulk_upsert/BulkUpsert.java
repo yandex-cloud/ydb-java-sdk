@@ -4,12 +4,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import com.yandex.ydb.core.rpc.RpcTransport;
 import com.yandex.ydb.examples.App;
 import com.yandex.ydb.examples.AppRunner;
-import com.yandex.ydb.table.Session;
+import com.yandex.ydb.table.SessionRetryContext;
 import com.yandex.ydb.table.TableClient;
 import com.yandex.ydb.table.description.TableDescription;
 import com.yandex.ydb.table.rpc.grpc.GrpcTableRpc;
@@ -29,9 +27,7 @@ public class BulkUpsert implements App {
     private final String tablePath;
 
     private final TableClient tableClient;
-
-    @Nullable
-    private final Session session;
+    private final SessionRetryContext retryCtx;
 
     private final Instant now = Instant.now();
 
@@ -40,10 +36,7 @@ public class BulkUpsert implements App {
         this.tableClient = TableClient.newClient(GrpcTableRpc.useTransport(transport))
                 .build();
         this.tablePath = this.path + "/" + TABLE_NAME;
-
-        this.session = tableClient.createSession()
-                .join()
-                .expect("cannot create session");
+        this.retryCtx = SessionRetryContext.create(tableClient).build();
     }
 
     private List<LogRecord> getLogBatch(int offset) {
@@ -62,7 +55,10 @@ public class BulkUpsert implements App {
 
     private void createTables() {
         log.info("drop table {} if exist", tablePath);
-        if (!session.dropTable(tablePath).join().isSuccess()) {
+        boolean dropped = retryCtx
+                .supplyStatus(session -> session.dropTable(tablePath))
+                .join().isSuccess();
+        if (!dropped) {
             log.info("drop table failed");
         }
 
@@ -75,15 +71,15 @@ public class BulkUpsert implements App {
         table.setPrimaryKeys(LogRecord.PRIMARY_KEYS);
 
         log.info("create table {}", tablePath);
-        session.createTable(tablePath, table.build()).join()
-                .expect("create table fail");
+        retryCtx.supplyStatus(session -> session.createTable(tablePath, table.build()))
+                .join().expect("create table fail");
     }
 
     private void writeLogBatch(List<LogRecord> items) {
         ListValue rows = LogRecord.toListValue(items);
-        session.executeBulkUpsert(tablePath, rows, new BulkUpsertSettings())
-                .join()
-                .expect("bulk upsert problem");
+        retryCtx.supplyStatus(session -> session.executeBulkUpsert(
+                tablePath, rows, new BulkUpsertSettings()
+        )).join().expect("bulk upsert problem");
     }
 
     @Override
@@ -99,9 +95,6 @@ public class BulkUpsert implements App {
 
     @Override
     public void close() {
-        if (session != null) {
-            session.close().join().expect("cannot close session");
-        }
         tableClient.close();
     }
 

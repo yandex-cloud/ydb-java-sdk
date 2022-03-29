@@ -19,6 +19,15 @@
         <Logger name="com.yandex.ydb.core.grpc" level="warn" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
+        <Logger name="com.yandex.ydb.table" level="warn" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.yandex.ydb.table.SessionRetryContext" level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.yandex.ydb.table.Session" level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
 
         <Root level="debug" >
             <AppenderRef ref="Console"/>

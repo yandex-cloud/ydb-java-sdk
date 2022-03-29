@@ -55,6 +55,11 @@ public class AppRunner {
 
         if (ydbToken != null && !ydbToken.isEmpty()) {
             transportBuilder = transportBuilder.withAuthProvider(new TokenAuthProvider(ydbToken));
+        } else {
+            ydbToken = System.getProperty("YDB_TOKEN");
+            if (ydbToken != null && !ydbToken.isEmpty()) {
+                transportBuilder = transportBuilder.withAuthProvider(new TokenAuthProvider(ydbToken));
+            }
         }
 
         if (args.certPath != null) {

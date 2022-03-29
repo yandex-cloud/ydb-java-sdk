@@ -3,15 +3,10 @@ package com.yandex.ydb.examples.basic_example;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
-import javax.annotation.Nullable;
 import javax.annotation.WillNotClose;
 
 import com.yandex.ydb.core.Result;
@@ -20,13 +15,11 @@ import com.yandex.ydb.core.rpc.RpcTransport;
 import com.yandex.ydb.examples.App;
 import com.yandex.ydb.examples.AppRunner;
 import com.yandex.ydb.examples.TablePrinter;
-import com.yandex.ydb.examples.basic_example.exceptions.NonRetriableErrorException;
-import com.yandex.ydb.examples.basic_example.exceptions.TooManyRetriesException;
 import com.yandex.ydb.table.Session;
+import com.yandex.ydb.table.SessionRetryContext;
 import com.yandex.ydb.table.TableClient;
 import com.yandex.ydb.table.description.TableColumn;
 import com.yandex.ydb.table.description.TableDescription;
-import com.yandex.ydb.table.query.DataQuery;
 import com.yandex.ydb.table.query.DataQueryResult;
 import com.yandex.ydb.table.query.Params;
 import com.yandex.ydb.table.result.ResultSetReader;
@@ -44,25 +37,18 @@ import static com.yandex.ydb.table.values.PrimitiveValue.uint64;
  * @author Sergey Polovko
  */
 public class BasicExample implements App {
-
-    private static final int MAX_RETRIES = 5;
-    private static final long OVERLOAD_DELAY_MILLIS = 5000;
-
     private final String database;
     private final TableClient tableClient;
-    @Nullable
-    private Session session;
-    private Map<String, DataQuery> preparedQueries = new HashMap<>();
+    private final SessionRetryContext retryCtx;
 
     BasicExample(@WillNotClose RpcTransport transport, String database) {
         this.database = database;
         this.tableClient = TableClient.newClient(GrpcTableRpc.useTransport(transport))
             .build();
-        this.session = tableClient.createSession()
-            .join()
-            .expect("cannot create session");
+        this.retryCtx = SessionRetryContext.create(tableClient).build();
     }
 
+    @Override
     public void run() {
         createTables();
         describeTables();
@@ -72,18 +58,18 @@ public class BasicExample implements App {
         selectSimple();
         upsertSimple();
 
-        selectWithParams();
+        selectWithParams(2, 3);
 
-        executeScanQueryWithParams();
+        executeScanQueryWithParams(2, 3);
 
-        preparedSelect(2, 3, 7);
-        preparedSelect(2, 3, 8);
+        selectWithParams(2, 3, 7);
+        selectWithParams(2, 3, 8);
 
         multiStep();
 
-        execute(this::explicitTcl);
+        retryCtx.supplyStatus(this::explicitTcl).join();
 
-        preparedSelect(2, 6, 1);
+        selectWithParams(2, 6, 1);
     }
 
     /**
@@ -98,7 +84,8 @@ public class BasicExample implements App {
             .setPrimaryKey("series_id")
             .build();
 
-        execute(session -> session.createTable(database + "/series", seriesTable).join());
+        retryCtx.supplyStatus(session -> session.createTable(database + "/series", seriesTable))
+                .join();
 
         TableDescription seasonsTable = TableDescription.newBuilder()
             .addNullableColumn("series_id", PrimitiveType.uint64())
@@ -109,7 +96,8 @@ public class BasicExample implements App {
             .setPrimaryKeys("series_id", "season_id")
             .build();
 
-        execute(session -> session.createTable(database + "/seasons", seasonsTable).join());
+        retryCtx.supplyStatus(session -> session.createTable(database + "/seasons", seasonsTable))
+                .join();
 
         TableDescription episodesTable = TableDescription.newBuilder()
             .addNullableColumn("series_id", PrimitiveType.uint64())
@@ -120,7 +108,8 @@ public class BasicExample implements App {
             .setPrimaryKeys("series_id", "season_id", "episode_id")
             .build();
 
-        execute(session -> session.createTable(database + "/episodes", episodesTable).join());
+        retryCtx.supplyStatus(session -> session.createTable(database + "/episodes", episodesTable))
+                .join();
     }
 
     /**
@@ -131,7 +120,8 @@ public class BasicExample implements App {
 
         for (String tableName : new String[]{ "series", "seasons", "episodes" }) {
             String tablePath = database + '/' + tableName;
-            TableDescription tableDesc = executeWithResult(session -> session.describeTable(tablePath).join());
+            TableDescription tableDesc = retryCtx.supplyResult(session -> session.describeTable(tablePath))
+                    .join().expect("describeTable");
 
             System.out.println(tablePath + ':');
             List<String> primaryKeys = tableDesc.getPrimaryKeys();
@@ -206,9 +196,8 @@ public class BasicExample implements App {
         TxControl txControl = TxControl.serializableRw().setCommitTx(true);
 
         System.out.println(query);
-        execute(session -> session.executeDataQuery(query, txControl, params)
-            .join()
-            .toStatus());
+        retryCtx.supplyResult(session -> session.executeDataQuery(query, txControl, params))
+                .join().toStatus();
     }
 
     /**
@@ -232,7 +221,8 @@ public class BasicExample implements App {
         TxControl txControl = TxControl.serializableRw().setCommitTx(true);
 
         // Executes data query with specified transaction control settings.
-        DataQueryResult result = executeWithResult(session -> session.executeDataQuery(query, txControl).join());
+        DataQueryResult result = retryCtx.supplyResult(session -> session.executeDataQuery(query, txControl))
+                .join().expect("execute data query");
 
         System.out.println("\n--[ SelectSimple ]--");
         // Index of result set corresponds to its order in YQL query
@@ -255,15 +245,15 @@ public class BasicExample implements App {
         TxControl txControl = TxControl.serializableRw().setCommitTx(true);
 
         // Executes data query with specified transaction control settings.
-        execute(session -> session.executeDataQuery(query, txControl)
+        retryCtx.supplyResult(session -> session.executeDataQuery(query, txControl))
             .join()
-            .toStatus());
+            .toStatus();
     }
 
-    /**
+    /*
      * Shows usage of parameters in data queries.
      */
-    public void selectWithParams() {
+    public void selectWithParams(long seriesId, long seasonId) {
         String query = String.format(
             "\n" +
             "PRAGMA TablePathPrefix(\"%s\");\n" +
@@ -282,16 +272,17 @@ public class BasicExample implements App {
         TxControl txControl = TxControl.serializableRw().setCommitTx(true);
 
         // Type of parameter values should be exactly the same as in DECLARE statements.
-        Params params = Params.of("$seriesId", uint64(2), "$seasonId", uint64(3));
+        Params params = Params.of("$seriesId", uint64(seriesId), "$seasonId", uint64(seasonId));
 
-        DataQueryResult result = executeWithResult(session -> session.executeDataQuery(query, txControl, params).join());
+        DataQueryResult result = retryCtx.supplyResult(session -> session.executeDataQuery(query, txControl, params))
+                .join().expect("execute data query");
 
         System.out.println("\n--[ SelectWithParams ]--");
         // Index of result set corresponds to its order in YQL query
         new TablePrinter(result.getResultSet(0)).print();
     }
 
-    public void executeScanQueryWithParams() {
+    public void executeScanQueryWithParams(long seriesId, long seasonId) {
         String query = String.format(
             "\n" +
             "PRAGMA TablePathPrefix(\"%s\");\n" +
@@ -305,11 +296,9 @@ public class BasicExample implements App {
                 "ON sa.series_id = sr.series_id\n" +
                 "WHERE sa.series_id = $seriesId AND sa.season_id = $seasonId;",
             database);
-        // Begin new transaction with SerializableRW mode
-        TxControl txControl = TxControl.serializableRw().setCommitTx(true);
 
         // Type of parameter values should be exactly the same as in DECLARE statements.
-        Params params = Params.of("$seriesId", uint64(2), "$seasonId", uint64(3));
+        Params params = Params.of("$seriesId", uint64(seriesId), "$seasonId", uint64(seasonId));
 
         ExecuteScanQuerySettings settings = ExecuteScanQuerySettings.newBuilder().build();
         Consumer<ResultSetReader> printer = (ResultSetReader result) -> {
@@ -318,53 +307,36 @@ public class BasicExample implements App {
 
         System.out.println("\n--[ ExecuteScanQueryWithParams ]--");
         // Index of result set corresponds to its order in YQL query
-        Status result = execute(session -> session.executeScanQuery(query, params, settings, printer).join());
+        retryCtx.supplyStatus(session -> session.executeScanQuery(query, params, settings, printer))
+                .join();
     }
 
-    /**
-     * Shows usage of prepared queries.
-     */
-    private void preparedSelect(long seriesId, long seasonId, long episodeId) {
-        final String queryId = "PreparedSelectTransaction";
+    private void selectWithParams(long seriesId, long seasonId, long episodeId) {
+        String query = String.format(
+            "\n" +
+            "PRAGMA TablePathPrefix(\"%s\");\n" +
+            "\n" +
+            "DECLARE $seriesId AS Uint64;\n" +
+            "DECLARE $seasonId AS Uint64;\n" +
+            "DECLARE $episodeId AS Uint64;\n" +
+            "\n" +
+            "SELECT *\n" +
+            "FROM episodes\n" +
+            "WHERE series_id = $seriesId AND season_id = $seasonId AND episode_id = $episodeId;",
+            database);
 
-        // Once prepared, query data is stored in the session and identified by QueryId.
-        // We keep a track of prepared queries available in current session to reuse them in
-        // consecutive calls.
-
-        DataQuery query = preparedQueries.get(queryId);
-        if (query == null) {
-            String queryText = String.format(
-                "\n" +
-                "PRAGMA TablePathPrefix(\"%s\");\n" +
-                "\n" +
-                "DECLARE $seriesId AS Uint64;\n" +
-                "DECLARE $seasonId AS Uint64;\n" +
-                "DECLARE $episodeId AS Uint64;\n" +
-                "\n" +
-                "SELECT *\n" +
-                "FROM episodes\n" +
-                "WHERE series_id = $seriesId AND season_id = $seasonId AND episode_id = $episodeId;",
-                database);
-
-            // Prepare query and and store it's QueryId for current session
-            query = executeWithResult(session -> session.prepareDataQuery(queryText).join());
-            System.out.println("Finished preparing query: " + queryId);
-
-            preparedQueries.put(queryId, query);
-        }
-
-        Params params = query.newParams()
+        Params params = Params.create(3)
             .put("$seriesId", uint64(seriesId))
             .put("$seasonId", uint64(seasonId))
             .put("$episodeId", uint64(episodeId));
 
-        TxControl txControl = TxControl.serializableRw().setCommitTx(true);
-        DataQueryResult result = query.execute(txControl, params)
-            .join()
-            .expect("prepared query failed");
+        ExecuteScanQuerySettings settings = ExecuteScanQuerySettings.newBuilder().build();
+        Consumer<ResultSetReader> printer = (ResultSetReader result) -> {
+            new TablePrinter(result).print();
+        };
 
-        System.out.println("\n--[ PreparedSelect ]--");
-        new TablePrinter(result.getResultSet(0)).print();
+        retryCtx.supplyStatus(session -> session.executeScanQuery(query, params, settings, printer))
+                .join();
     }
 
     public void multiStep() {
@@ -393,8 +365,8 @@ public class BasicExample implements App {
             // Transaction control settings don't set CommitTx flag to keep transaction active
             // after query execution.
             TxControl txControl = TxControl.serializableRw().setCommitTx(false);
-            DataQueryResult result = executeWithResult(session -> session.executeDataQuery(query, txControl, params)
-                .join());
+            DataQueryResult result = retryCtx.supplyResult(session -> session.executeDataQuery(query, txControl, params))
+                .join().expect("execute data query");
 
             if (result.isEmpty()) {
                 throw new IllegalStateException("empty result set");
@@ -434,8 +406,8 @@ public class BasicExample implements App {
             // Transaction control settings continues active transaction (tx) and
             // commits it at the end of second query execution.
             TxControl txControl = TxControl.id(txId).setCommitTx(true);
-            DataQueryResult result = executeWithResult(session -> session.executeDataQuery(query, txControl, params)
-                .join());
+            DataQueryResult result = retryCtx.supplyResult(session -> session.executeDataQuery(query, txControl, params))
+                .join().expect("execute data query");
 
             System.out.println("\n--[ MultiStep ]--");
             // Index of result set corresponds to its order in YQL query
@@ -448,11 +420,11 @@ public class BasicExample implements App {
      * In most cases it's better to use transaction control settings in executeDataQuery calls instead
      * to avoid additional hops to YDB cluster and allow more efficient execution of queries.
      */
-    private Status explicitTcl(Session session) {
+    private CompletableFuture<Status> explicitTcl(Session session) {
         Result<Transaction> transactionResult = session.beginTransaction(TransactionMode.SERIALIZABLE_READ_WRITE)
             .join();
         if (!transactionResult.isSuccess()) {
-            return transactionResult.toStatus();
+            return CompletableFuture.completedFuture(transactionResult.toStatus());
         }
 
         Transaction transaction = transactionResult.expect("cannot begin transaction");
@@ -471,106 +443,15 @@ public class BasicExample implements App {
         Result<DataQueryResult> updateResult = session.executeDataQuery(query, txControl, params)
             .join();
         if (!updateResult.isSuccess()) {
-            return updateResult.toStatus();
+            return CompletableFuture.completedFuture(updateResult.toStatus());
         }
 
         // Commit active transaction (tx)
-        return transaction.commit().join();
-    }
-
-    /**
-    * Executes given function with retry logic for YDB response statuses.
-    *
-    * In case of data transaction we have to retry the whole transaction as YDB
-    * transaction may be invalidated on query error.
-    *
-    * @throws NonRetriableErrorException in case of non-retriable error.
-    * @throws TooManyRetriesException if number of allowed retries is exceeded.
-    */
-    private Status execute(Function<Session, Status> fn) {
-        for (int i = 0; i < MAX_RETRIES; i++) {
-            Status status = null;
-
-            if (session == null) {
-                // Session was invalidated, create new one here.
-                // In real-world applications it's better to keep a pool of active sessions to avoid
-                // additional latency on session creation.
-                Result<Session> sessionResult = tableClient.createSession()
-                    .join();
-                if (sessionResult.isSuccess()) {
-                    preparedQueries.clear();
-                    session = sessionResult.expect("cannot create session");
-                } else {
-                    status = sessionResult.toStatus();
-                }
-            }
-
-            if (session != null) {
-                status = fn.apply(session);
-                if (status.isSuccess()) {
-                    return status;
-                }
-            }
-
-            assert status != null;
-
-            System.out.println(String.format("status -> %s", Arrays.toString(status.getIssues())));
-
-            switch (status.getCode()) {
-                case ABORTED:
-                case UNAVAILABLE:
-                    // Simple retry
-                    break;
-
-                case OVERLOADED:
-                case CLIENT_RESOURCE_EXHAUSTED:
-                    // Wait and retry. In applications with large parallelism it's better
-                    // to add some randomization to the delay to avoid congestion.
-                    try {
-                        Thread.sleep(OVERLOAD_DELAY_MILLIS);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                    break;
-
-                case NOT_FOUND:
-                    // May indicate invalidation of prepared query, clear prepared queries state
-                    preparedQueries.clear();
-                    break;
-
-                case BAD_SESSION:
-                    // Session is invalidated, clear session state
-                    session = null;
-                    break;
-
-                default:
-                    throw new NonRetriableErrorException(status);
-            }
-        }
-
-        throw new TooManyRetriesException();
-    }
-
-    /**
-     * Same as {@link BasicExample#execute}, but extracts result.
-     */
-    private <T> T executeWithResult(Function<Session, Result<T>> fn) {
-        AtomicReference<Result<T>> result = new AtomicReference<>();
-        execute(session -> {
-            Result<T> r = fn.apply(session);
-            result.set(r);
-            return r.toStatus();
-        });
-        return result.get().expect("expected success result");
+        return transaction.commit();
     }
 
     @Override
     public void close() {
-        if (session != null) {
-            session.close()
-                .join()
-                .expect("cannot close session");
-        }
         tableClient.close();
     }
 

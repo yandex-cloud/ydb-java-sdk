@@ -69,7 +69,6 @@ public class YdbRepository {
 
             TxControl txControl = TxControl.serializableRw().setCommitTx(true);
 
-            log.debug("run query\n{}", query);
             driver.retryCtx()
                     .supplyResult(session -> session.executeDataQuery(query, txControl, params))
                     .join().expect("can't read query result");
@@ -91,7 +90,6 @@ public class YdbRepository {
 
             TxControl txControl = TxControl.serializableRw();
 
-            log.debug("run query\n{}", query);
             DataQueryResult result = driver.retryCtx()
                     .supplyResult(session -> session.executeDataQuery(query, txControl, params))
                     .join().expect("can't read query result");
