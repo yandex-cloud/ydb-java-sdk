@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import com.yandex.ydb.core.Result;
 import com.yandex.ydb.core.UnexpectedResultException;
 import com.yandex.ydb.core.rpc.OperationTray;
+import com.yandex.ydb.core.utils.Async;
 import com.yandex.ydb.table.Session;
 import com.yandex.ydb.table.TableClient;
 import com.yandex.ydb.table.YdbTable;
@@ -80,10 +81,11 @@ final class TableClientImpl implements TableClient {
         return sessionPool.acquire(timeout)
             .handle((s, t) -> {
                 if (t == null) return Result.success(s);
-                if (t instanceof UnexpectedResultException) {
-                    return Result.fail(((UnexpectedResultException) t).getStatusCode(), ((UnexpectedResultException) t).getIssues());
+                Throwable unwrapped = Async.unwrapCompletionException(t);
+                if (unwrapped instanceof UnexpectedResultException) {
+                    return Result.fail((UnexpectedResultException) unwrapped);
                 } else {
-                    return Result.error("cannot acquire session from pool", t);
+                    return Result.error("cannot acquire session from pool", unwrapped);
                 }
             });
     }
