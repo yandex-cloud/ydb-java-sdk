@@ -1,5 +1,8 @@
-package com.yandex.ydb.examples;
+package com.yandex.ydb.demo;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -24,18 +27,23 @@ public class YdbDockerContainer extends GenericContainer<YdbDockerContainer> {
 
     private static final String DEFAULT_YDB_IMAGE = "cr.yandex/yc/yandex-docker-local-ydb:latest";
     private static final String DOCKER_DATABASE = "/local";
+    private static final String CONTAINER_PEM_CERT_PATH = "/ydb_certs/ca.pem";
 
     private final int grpcsPort; // Secure connection
     private final int grpcPort;  // Non secure connection
+    private final Path pemCertPath; // PEM cert file;
 
-    YdbDockerContainer(String image) {
+    YdbDockerContainer(PortsGenerator gen, String image) throws IOException {
         super(image);
 
-        PortsGenerator gen = new PortsGenerator();
+        pemCertPath = Files.createTempFile("ydb-cert", ".tmp");
+        pemCertPath.toFile().deleteOnExit();
+
         grpcsPort = gen.findAvailablePort();
         grpcPort = gen.findAvailablePort();
 
-        addExposedPort(grpcPort); // don't expose by default
+        addExposedPort(grpcPort);
+        addExposedPort(grpcsPort);
 
         // Host ports and container ports MUST BE equal - ydb implementation limitation
         addFixedExposedPort(grpcsPort, grpcsPort);
@@ -50,6 +58,15 @@ public class YdbDockerContainer extends GenericContainer<YdbDockerContainer> {
         waitingFor(new YdbCanCreateTableWaitStrategy());
     }
 
+    private void validatePemCert() {
+        if (pemCertPath.toFile().length() > 0) {
+            return;
+        }
+        // Copy pem file from container
+        log.info("copy pem file from container to {}", pemCertPath);
+        copyFileFromContainer(CONTAINER_PEM_CERT_PATH, pemCertPath.toAbsolutePath().toString());
+    }
+
     public String nonSecureEndpoint() {
         return String.format("%s:%s", getContainerIpAddress(), grpcPort);
     }
@@ -58,13 +75,18 @@ public class YdbDockerContainer extends GenericContainer<YdbDockerContainer> {
         return String.format("%s:%s", getContainerIpAddress(), grpcsPort);
     }
 
+    public String pemCertPath() {
+        validatePemCert();
+        return pemCertPath.toAbsolutePath().toString();
+    }
+
     public String database() {
         return DOCKER_DATABASE;
     }
 
-    public static YdbDockerContainer createAndStart() {
+    public static YdbDockerContainer createAndStart(PortsGenerator gen) throws IOException {
         String customImage = System.getProperty("YDB_IMAGE", DEFAULT_YDB_IMAGE);
-        YdbDockerContainer container = new YdbDockerContainer(customImage);
+        YdbDockerContainer container = new YdbDockerContainer(gen, customImage);
         container.start();
 
         return container;

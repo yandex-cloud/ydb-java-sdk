@@ -8,7 +8,7 @@
 
   <groupId>com.yandex.ydb</groupId>
   <artifactId>ydb-sdk-parent</artifactId>
-  <version>1.10.7</version>
+  <version>1.10.8</version>
 
   <name>Java SDK for Yandex Datatabase (YDB)</name>
   <description>Java SDK for Yandex Datatabase (YDB)</description>
@@ -18,6 +18,7 @@
     <module>auth-iam</module>
     <module>core</module>
     <module>examples</module>
+    <module>examples/url-shortener-demo</module>
     <module>proto-gen</module>
     <module>table</module>
     <module>jdbc</module>
