@@ -24,11 +24,15 @@ import static com.yandex.ydb.table.values.PrimitiveValue.uint64;
 import static com.yandex.ydb.table.values.PrimitiveValue.utf8;
 
 public class BatchUpload implements App {
+    private final static String TABLE_NAME = "batch_upload";
+
     private final String path;
-    private final String tableName;
+    private final String tablePath;
+
     private final TableClient tableClient;
+
     @Nullable
-    private Session session;
+    private final Session session;
 
     final int recordsCount = 60;
 
@@ -36,7 +40,7 @@ public class BatchUpload implements App {
         this.path = path;
         this.tableClient = TableClient.newClient(GrpcTableRpc.useTransport(transport))
                 .build();
-        this.tableName = this.path + "/batch_upload";
+        this.tablePath = this.path + "/" + TABLE_NAME;
         this.session = tableClient.createSession()
                 .join()
                 .expect("cannot create session");
@@ -77,6 +81,7 @@ public class BatchUpload implements App {
         }
     }
 
+    @Override
     public void run() {
         createTables();
 
@@ -90,7 +95,7 @@ public class BatchUpload implements App {
                     "Page: Utf8>>;\n"+
 
             "REPLACE INTO `%s`\n"+
-            "SELECT * FROM AS_TABLE($items)\n", tableName);
+            "SELECT * FROM AS_TABLE($items)\n", TABLE_NAME);
 
         Generator input = new Generator(recordsCount);
 
@@ -106,14 +111,15 @@ public class BatchUpload implements App {
         }
     }
 
-    private void executeBatch(String query, ArrayList<Value<?>> pack) {
+    private DataQueryResult executeBatch(String query, ArrayList<Value<?>> pack) {
         Value values[] = new Value[pack.size()];
         pack.toArray(values);
 
         Params params = Params.of("$items", ListValue.of(values));
 
         TxControl txControl = TxControl.serializableRw().setCommitTx(true);
-        DataQueryResult result = session.executeDataQuery(query, txControl, params).join().expect("expected success result");
+        return session.executeDataQuery(query, txControl, params)
+                .join().expect("expected success result");
     }
 
     private void createTables() {
@@ -125,7 +131,7 @@ public class BatchUpload implements App {
                 .setPrimaryKeys("HostUid", "UrlUid")
                 .build();
 
-        Status status = session.createTable(tableName, seriesTable).join();
+        Status status = session.createTable(tablePath, seriesTable).join();
         if (status != Status.SUCCESS) {
             System.out.println(String.format("Creation table failed with status: %s", status));
         }
@@ -139,6 +145,10 @@ public class BatchUpload implements App {
                     .expect("cannot close session");
         }
         tableClient.close();
+    }
+
+    public static int test(String[] args) {
+        return AppRunner.safeRun("BatchUpload", BatchUpload::new, args);
     }
 
     public static void main(String[] args) {
