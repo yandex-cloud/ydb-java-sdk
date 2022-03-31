@@ -68,14 +68,12 @@ public class SessionCache {
     }
 
     public <R> CompletableFuture<R> withQuery(QueryTemplate query, String tablePrefix,
-            Function<DataQuery, CompletableFuture<R>> fn, int retries)
-    {
+            Function<DataQuery, CompletableFuture<R>> fn, int retries) {
         return withSession(entry -> entry.prepareQuery(query, tablePrefix).thenCompose(fn), retries);
     }
 
     public <R> CompletableFuture<R> withQuery(QueryTemplate query, String tablePrefix,
-            Function<DataQuery, CompletableFuture<R>> fn)
-    {
+            Function<DataQuery, CompletableFuture<R>> fn) {
         return withQuery(query, tablePrefix, fn, DEFAULT_RETRIES);
     }
 
@@ -87,6 +85,8 @@ public class SessionCache {
             switch (((UnexpectedResultException) ex).getStatusCode()) {
                 case BAD_SESSION:
                     return true;
+                default:
+                    break;
             }
         }
         return false;
@@ -110,6 +110,8 @@ public class SessionCache {
                 case OVERLOADED:
                 case CLIENT_RESOURCE_EXHAUSTED:
                     return RetryType.WITH_BACKOFF;
+                default:
+                    break;
             }
         }
         return RetryType.NONE;
@@ -121,10 +123,9 @@ public class SessionCache {
         private int retriesLeft = 0;
         private long nextBackoffMillis = 100;
 
-        public WithSessionAndRetries(
+        WithSessionAndRetries(
                 Function<Entry, CompletableFuture<R>> fn,
-                int retries)
-        {
+                int retries) {
             this.fn = fn;
             this.retriesLeft = retries;
         }
@@ -166,6 +167,8 @@ public class SessionCache {
                             logger.debug("Callback failed, will retry in " + millis + "ms", ex);
                             nextAfter(millis);
                             return;
+                        default:
+                            break;
                     }
                 }
                 // We are not going to retry this request, complete with the last exception

@@ -1,0 +1,27 @@
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.yandex.ydb.examples</groupId>
+        <artifactId>ydb-sdk-examples</artifactId>
+        <version>1.11.1</version>
+    </parent>
+
+    <packaging>pom</packaging>
+
+    <artifactId>ydb-sdk-auth-examples</artifactId>
+    <name>YDB Auth examples</name>
+    <description>Examples of various auth providers for Yandex Database (YDB)</description>
+    
+    <modules>
+        <module>access_token_credentials</module>
+        <module>anonymous_credentials</module>
+        <module>environ</module>
+        <module>metadata_credentials</module>
+        <module>service_account_credentials</module>
+    </modules>
+</project>

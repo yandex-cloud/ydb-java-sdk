@@ -1,6 +1,5 @@
 package com.yandex.ydb.example;
 
-import com.yandex.ydb.core.Result;
 import com.yandex.ydb.core.auth.AuthProvider;
 import com.yandex.ydb.core.auth.NopAuthProvider;
 import com.yandex.ydb.core.grpc.GrpcTransport;
@@ -14,30 +13,36 @@ import java.time.Duration;
 
 public final class Main {
     public static void main(String[] args) {
-        if (args.length != 2) {
-            System.err.println("Usage: java -jar example.jar <endpoint> <database>");
+        if (args.length != 1) {
+            System.err.println("Usage: java -jar ydb-anonimous-example.jar <connection-string>");
+            return;
         }
-        String endpoint = args[0];
-        String database = args[1];
+        String connectionString = args[0];
 
         // Anonymous credentials
         AuthProvider authProvider = NopAuthProvider.INSTANCE;
 
-        GrpcTransport transport = GrpcTransport.forEndpoint(endpoint, database)
+        GrpcTransport transport = GrpcTransport.forConnectionString(connectionString)
                 .withAuthProvider(authProvider) // Or this method could not be called at all
-                .withSecureConnection()
                 .build();
-        TableClient tableClient = TableClient.newClient(GrpcTableRpc.useTransport(transport))
-                .build();
-        Result<Session> sessionResult = tableClient.getOrCreateSession(Duration.ofSeconds(10))
-                .join();
-        Session session = sessionResult.expect("ok");
-        ResultSetReader rsReader = session.executeDataQuery("SELECT 1;", TxControl.serializableRw()).join()
-                .expect("ok").getResultSet(0);
-        assert(rsReader.getRowCount() == 1);
-        System.out.println("Result:");
-        while (rsReader.next()) {
-            System.out.println(rsReader.getColumn(0).getInt32());
+
+        try (TableClient tableClient = TableClient
+                .newClient(GrpcTableRpc.ownTransport(transport))
+                .build()) {
+
+            Session session = tableClient.getOrCreateSession(Duration.ofSeconds(10))
+                    .join().expect("ok");
+
+            ResultSetReader rsReader = session.executeDataQuery("SELECT 1;", TxControl.serializableRw())
+                    .join().expect("ok").getResultSet(0);
+
+            assert (rsReader.getRowCount() == 1);
+            System.out.println("Result:");
+            while (rsReader.next()) {
+                System.out.println(rsReader.getColumn(0).getInt32());
+            }
+
+            session.release();
         }
     }
 }

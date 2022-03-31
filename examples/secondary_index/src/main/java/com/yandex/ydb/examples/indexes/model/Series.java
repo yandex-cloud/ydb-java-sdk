@@ -18,8 +18,7 @@ public class Series {
             @JsonProperty("title") String title,
             @JsonProperty("seriesInfo") String seriesInfo,
             @JsonProperty("releaseDate") LocalDate releaseDate,
-            @JsonProperty("views") long views)
-    {
+            @JsonProperty("views") long views) {
         this.seriesId = seriesId;
         this.title = title;
         this.seriesInfo = seriesInfo;

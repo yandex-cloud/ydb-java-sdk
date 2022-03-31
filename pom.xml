@@ -18,7 +18,6 @@
     <module>auth-iam</module>
     <module>core</module>
     <module>examples</module>
-    <module>examples/url-shortener-demo</module>
     <module>proto-gen</module>
     <module>table</module>
     <module>jdbc</module>

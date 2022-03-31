@@ -18,13 +18,16 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 
 /**
  *
  * @author Alexandr Gorshenin
  */
+@DisabledIfSystemProperty(named = "DISABLE_INTEGRATION_TESTS", matches = "TRUE")
 public class DemoTest {
     private static final Logger log = LoggerFactory.getLogger(DemoTest.class);
 
@@ -32,13 +35,22 @@ public class DemoTest {
     private static YdbDockerContainer container = null;
     private static URI appURI;
 
-    private static byte[] readResource(String path) throws IOException {
-        return DemoTest.class.getClassLoader()
-                .getResourceAsStream(path)
-                .readAllBytes();
+    private static byte[] readFully(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        IOUtils.copy(inputStream, os, 1024);
+        return os.toByteArray();
     }
 
-    private static byte[] readIndexHtml() throws IOException {
+    private static byte[] readResource(String path) {
+        try (InputStream is = DemoTest.class.getClassLoader().getResourceAsStream(path)) {
+            return readFully(is);
+        } catch (IOException e) {
+            log.error("can't read resource {}", path, e);
+            return null;
+        }
+    }
+
+    private static byte[] readIndexHtml() {
         return readResource("webapp/index.html");
     }
 
@@ -107,16 +119,6 @@ public class DemoTest {
         httpGETRedirect("/" + hash, appURI.toString());
     }
 
-    private String readFully(InputStream inputStream) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024];
-        int length = 0;
-        while ((length = inputStream.read(buffer)) != -1) {
-            baos.write(buffer, 0, length);
-        }
-        return baos.toString(StandardCharsets.UTF_8);
-    }
-
     private String httpGET(String path) throws IOException, InterruptedException {
         URL url = appURI.resolve(path).toURL();
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -125,7 +127,7 @@ public class DemoTest {
 
         try {
             Assertions.assertEquals(200, conn.getResponseCode(), "response wrong " + path);
-            return readFully(conn.getInputStream());
+            return new String(readFully(conn.getInputStream()), StandardCharsets.UTF_8);
         } finally {
             conn.disconnect();
         }
@@ -174,7 +176,7 @@ public class DemoTest {
 
         try {
             Assertions.assertEquals(200, conn.getResponseCode(), "response wrong " + path);
-            return readFully(conn.getInputStream());
+            return new String(readFully(conn.getInputStream()), StandardCharsets.UTF_8);
         } finally {
             conn.disconnect();
         }

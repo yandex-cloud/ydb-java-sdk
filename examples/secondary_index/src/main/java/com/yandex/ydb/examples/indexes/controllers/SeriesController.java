@@ -48,8 +48,7 @@ public class SeriesController {
     public String generateRandom(
             @RequestParam long startId,
             @RequestParam int count,
-            @RequestParam(defaultValue = "100") int maxConcurrency)
-    {
+            @RequestParam(defaultValue = "100") int maxConcurrency) {
         long nextId = startId;
         Deque<CompletableFuture<Void>> futures = new ArrayDeque<>();
         while (count > 0) {
@@ -78,8 +77,7 @@ public class SeriesController {
     @RequestMapping(path = "/list", method = RequestMethod.GET)
     public List<Series> list(
             @RequestParam(defaultValue = "10") int limit,
-            @RequestParam(required = false) Long lastSeriesId)
-    {
+            @RequestParam(required = false) Long lastSeriesId) {
         List<Series> result;
         if (lastSeriesId != null) {
             result = seriesRepository.findAll(limit, lastSeriesId);
@@ -93,8 +91,7 @@ public class SeriesController {
     public List<Series> mostViewed(
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) Long lastSeriesId,
-            @RequestParam(required = false) Long lastViews)
-    {
+            @RequestParam(required = false) Long lastViews) {
         List<Series> result;
         if (lastSeriesId != null && lastViews != null) {
             result = seriesRepository.findMostViewed(limit, lastSeriesId, lastViews);
