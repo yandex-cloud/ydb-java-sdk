@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.yandex.ydb.examples</groupId>
         <artifactId>ydb-sdk-examples</artifactId>
-        <version>1.11.1</version>
+        <version>1.11.2</version>
     </parent>
 
     <artifactId>ydb-simple-project</artifactId>
@@ -18,17 +18,17 @@
         <dependency>
             <groupId>com.yandex.ydb</groupId>
             <artifactId>ydb-sdk-core</artifactId>
-            <version>1.11.1</version>
+            <version>1.11.2</version>
         </dependency>
         <dependency>
             <groupId>com.yandex.ydb</groupId>
             <artifactId>ydb-sdk-table</artifactId>
-            <version>1.11.1</version>
+            <version>1.11.2</version>
         </dependency>
         <dependency>
             <groupId>com.yandex.ydb</groupId>
             <artifactId>ydb-sdk-auth-iam</artifactId>
-            <version>1.11.1</version>
+            <version>1.11.2</version>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
