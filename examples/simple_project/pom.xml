@@ -17,23 +17,11 @@
     <dependencies>
         <dependency>
             <groupId>com.yandex.ydb</groupId>
-            <artifactId>ydb-sdk-core</artifactId>
-            <version>1.11.2</version>
-        </dependency>
-        <dependency>
-            <groupId>com.yandex.ydb</groupId>
             <artifactId>ydb-sdk-table</artifactId>
-            <version>1.11.2</version>
         </dependency>
         <dependency>
             <groupId>com.yandex.ydb</groupId>
             <artifactId>ydb-sdk-auth-iam</artifactId>
-            <version>1.11.2</version>
-        </dependency>
-        <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-netty-shaded</artifactId>
-            <version>1.26.0</version>
         </dependency>
 
         <dependency>
