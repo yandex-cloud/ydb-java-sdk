@@ -15,7 +15,7 @@
     <description>Spring based example with usage secondary indexes</description>
     
     <properties>
-        <springboot.version>2.0.3.RELEASE</springboot.version>
+        <springboot.version>2.5.12</springboot.version>
     </properties>
 
     <dependencies>
