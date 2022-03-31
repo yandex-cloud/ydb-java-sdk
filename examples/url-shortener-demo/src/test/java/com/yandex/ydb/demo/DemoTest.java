@@ -61,9 +61,8 @@ public class DemoTest {
             log.info("set up YDB docker container");
             container = YdbDockerContainer.createAndStart(portGenerator);
             args.addAll(Arrays.asList(
-                    "-e", container.secureEndpoint(),
-                    "-d", container.database(),
-                    "-c", container.pemCertPath()
+                    "-e", container.nonSecureEndpoint(),
+                    "-d", container.database()
             ));
         }
 

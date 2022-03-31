@@ -1,5 +1,6 @@
 package com.yandex.ydb.examples;
 
+import java.io.ByteArrayOutputStream;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -14,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.AbstractWaitStrategy;
+import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -24,6 +26,7 @@ public class YdbDockerContainer extends GenericContainer<YdbDockerContainer> {
 
     private static final String DEFAULT_YDB_IMAGE = "cr.yandex/yc/yandex-docker-local-ydb:latest";
     private static final String DOCKER_DATABASE = "/local";
+    private static final String PEM_PATH = "/ydb_certs/ca.pem";
 
     private final int grpcsPort; // Secure connection
     private final int grpcPort;  // Non secure connection
@@ -46,7 +49,7 @@ public class YdbDockerContainer extends GenericContainer<YdbDockerContainer> {
 
         withCreateContainerCmdModifier(modifier -> modifier
                 .withName("ydb-" + UUID.randomUUID())
-                .withHostName("localhost"));
+                .withHostName(getHost()));
         waitingFor(new YdbCanCreateTableWaitStrategy());
     }
 
@@ -56,6 +59,14 @@ public class YdbDockerContainer extends GenericContainer<YdbDockerContainer> {
 
     public String secureEndpoint() {
         return String.format("%s:%s", getContainerIpAddress(), grpcsPort);
+    }
+
+    public byte[] pemCert() {
+        return copyFileFromContainer(PEM_PATH, is -> {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            IOUtils.copy(is, baos);
+            return baos.toByteArray();
+        });
     }
 
     public String database() {

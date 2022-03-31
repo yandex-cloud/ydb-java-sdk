@@ -24,8 +24,6 @@ import static com.yandex.ydb.table.values.PrimitiveValue.utf8;
 
 
 /**
- * This app does not preform retries on failure. Please see {@link com.yandex.ydb.examples.basic_example.BasicExample#execute}
- * for example how to do that.
  *
  * @author Sergey Polovko
  */

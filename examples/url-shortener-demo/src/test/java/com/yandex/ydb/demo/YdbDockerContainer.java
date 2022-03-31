@@ -54,7 +54,7 @@ public class YdbDockerContainer extends GenericContainer<YdbDockerContainer> {
 
         withCreateContainerCmdModifier(modifier -> modifier
                 .withName("ydb-" + UUID.randomUUID())
-                .withHostName("localhost"));
+                .withHostName(getHost()));
         waitingFor(new YdbCanCreateTableWaitStrategy());
     }
 
@@ -68,11 +68,11 @@ public class YdbDockerContainer extends GenericContainer<YdbDockerContainer> {
     }
 
     public String nonSecureEndpoint() {
-        return String.format("%s:%s", getContainerIpAddress(), grpcPort);
+        return String.format("%s:%s", getHost(), grpcPort);
     }
 
     public String secureEndpoint() {
-        return String.format("%s:%s", getContainerIpAddress(), grpcsPort);
+        return String.format("%s:%s", getHost(), grpcsPort);
     }
 
     public String pemCertPath() {

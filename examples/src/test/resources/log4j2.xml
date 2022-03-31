@@ -19,6 +19,9 @@
         <Logger name="com.yandex.ydb.core.grpc" level="error" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
+        <Logger name="com.yandex.ydb.table.impl" level="warn" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
 
         <Root level="debug" >
             <AppenderRef ref="Console"/>
