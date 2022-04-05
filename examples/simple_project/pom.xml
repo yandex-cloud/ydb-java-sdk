@@ -47,7 +47,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>libs/</classpathPrefix>
-                            <mainClass>com.yandex.ydb.example.Main</mainClass>
+                            <mainClass>com.yandex.ydb.example.App</mainClass>
                         </manifest>
                     </archive>
                 </configuration>   

@@ -1,28 +1,16 @@
-package com.yandex.ydb.examples.basic_example;
+package com.yandex.ydb.example;
 
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.List;
 
-import com.google.common.collect.ImmutableMap;
-import com.yandex.ydb.examples.basic_example.model.Episode;
-import com.yandex.ydb.examples.basic_example.model.Season;
-import com.yandex.ydb.examples.basic_example.model.Series;
-import com.yandex.ydb.table.values.ListType;
-import com.yandex.ydb.table.values.ListValue;
-import com.yandex.ydb.table.values.PrimitiveType;
-import com.yandex.ydb.table.values.PrimitiveValue;
-import com.yandex.ydb.table.values.StructType;
-import com.yandex.ydb.table.values.Value;
+import com.yandex.ydb.example.model.Episode;
+import com.yandex.ydb.example.model.Season;
+import com.yandex.ydb.example.model.Series;
 
 
-/**
- * @author Sergey Polovko
- */
 final class SeriesData {
-    private static final Series[] SERIES = {
+    public static final List<Series> SERIES = Arrays.asList(
         new Series(
             1, "IT Crowd", date("2006-02-03"),
             "The IT Crowd is a British sitcom produced by Channel 4, written by Graham Linehan, produced by " +
@@ -31,23 +19,9 @@ final class SeriesData {
             2, "Silicon Valley", date("2014-04-06"),
             "Silicon Valley is an American comedy television series created by Mike Judge, John Altschuler and " +
             "Dave Krinsky. The series focuses on five young men who founded a startup company in Silicon Valley.")
-    };
-
-    public static final StructType SERIES_TYPE = StructType.of(
-        "series_id", PrimitiveType.uint64(),
-        "title", PrimitiveType.utf8(),
-        "release_date", PrimitiveType.date(),
-        "series_info", PrimitiveType.utf8()
     );
 
-    public static final ListValue SERIES_DATA = toListValue(SERIES, SERIES_TYPE, s -> ImmutableMap.of(
-        "series_id", PrimitiveValue.uint64(s.getSeriesId()),
-        "title", PrimitiveValue.utf8(s.getTitle()),
-        "release_date", PrimitiveValue.date(s.getReleaseDate()),
-        "series_info", PrimitiveValue.utf8(s.getSeriesInfo())
-    ));
-
-    private static final Season[] SEASONS = {
+    public static final List<Season> SEASONS = Arrays.asList(
         new Season(1, 1, "Season 1", date("2006-02-03"), date("2006-03-03")),
         new Season(1, 2, "Season 2", date("2007-08-24"), date("2007-09-28")),
         new Season(1, 3, "Season 3", date("2008-11-21"), date("2008-12-26")),
@@ -57,25 +31,9 @@ final class SeriesData {
         new Season(2, 3, "Season 3", date("2016-04-24"), date("2016-06-26")),
         new Season(2, 4, "Season 4", date("2017-04-23"), date("2017-06-25")),
         new Season(2, 5, "Season 5", date("2018-03-25"), date("2018-05-13"))
-    };
-
-    public static final StructType SEASON_TYPE = StructType.of(
-        "series_id", PrimitiveType.uint64(),
-        "season_id", PrimitiveType.uint64(),
-        "title", PrimitiveType.utf8(),
-        "first_aired", PrimitiveType.date(),
-        "last_aired", PrimitiveType.date()
     );
 
-    public static final ListValue SEASON_DATA = toListValue(SEASONS, SEASON_TYPE, s -> ImmutableMap.of(
-        "series_id", PrimitiveValue.uint64(s.getSeriesId()),
-        "season_id", PrimitiveValue.uint64(s.getSeasonId()),
-        "title", PrimitiveValue.utf8(s.getTitle()),
-        "first_aired", PrimitiveValue.date(s.getFirstAired()),
-        "last_aired", PrimitiveValue.date(s.getLastAired())
-    ));
-
-    private static final Episode[] EPISODES = {
+    public static final List<Episode> EPISODES = Arrays.asList(
         new Episode(1, 1, 1, "Yesterday's Jam", date("2006-02-03")),
         new Episode(1, 1, 2, "Calamity Jen", date("2006-02-03")),
         new Episode(1, 1, 3, "Fifty-Fifty", date("2006-02-10")),
@@ -146,34 +104,11 @@ final class SeriesData {
         new Episode(2, 5, 6, "Artificial Emotional Intelligence", date("2018-04-29")),
         new Episode(2, 5, 7, "Initial Coin Offering", date("2018-05-06")),
         new Episode(2, 5, 8, "Fifty-One Percent", date("2018-05-13"))
-    };
-
-    public static final StructType EPISODE_TYPE = StructType.of(
-        "series_id", PrimitiveType.uint64(),
-        "season_id", PrimitiveType.uint64(),
-        "episode_id", PrimitiveType.uint64(),
-        "title", PrimitiveType.utf8(),
-        "air_date", PrimitiveType.date()
-    );
-
-    public static final ListValue EPISODE_DATA = toListValue(EPISODES, EPISODE_TYPE, e -> ImmutableMap.of(
-        "series_id", PrimitiveValue.uint64(e.getSeriesId()),
-        "season_id", PrimitiveValue.uint64(e.getSeasonId()),
-        "episode_id", PrimitiveValue.uint64(e.getEpisodeId()),
-        "title", PrimitiveValue.utf8(e.getTitle()),
-        "air_date", PrimitiveValue.date(e.getAirDate()))
     );
 
     private SeriesData() { }
 
     private static Instant date(String str) {
         return Instant.parse(str + "T00:00:00Z");
-    }
-
-    private static <T> ListValue toListValue(T[] items, StructType type, Function<T, Map<String, Value>> mapper) {
-        ListType listType = ListType.of(type);
-        return listType.newValue(Arrays.stream(items)
-            .map(e -> type.newValue(mapper.apply(e)))
-            .collect(Collectors.toList()));
     }
 }
