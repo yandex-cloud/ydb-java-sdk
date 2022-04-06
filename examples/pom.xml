@@ -32,7 +32,7 @@
     <modules>
         <module>auth</module>
         <module>secondary_index</module>
-        <module>simple_project</module>
+        <module>basic_example</module>
         <module>ydb-cookbook</module>
         <module>url-shortener-demo</module>
     </modules>

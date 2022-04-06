@@ -394,7 +394,7 @@ public final class App implements Runnable, AutoCloseable {
 
     public static void main(String[] args) throws IOException {
         if (args.length != 1) {
-            System.err.println("Usage: java -jar ydb-simple-project.jar <connection-string>");
+            System.err.println("Usage: java -jar ydb-basic-example.jar <connection-string>");
             return;
         }
 
