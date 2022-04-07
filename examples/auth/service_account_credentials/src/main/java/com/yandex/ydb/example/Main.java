@@ -16,7 +16,7 @@ import yandex.cloud.sdk.auth.provider.ApiKeyCredentialProvider;
 
 public final class Main {
     public static void main(String[] args) {
-        if (args.length != 3) {
+        if (args.length != 2) {
             System.err.println("Usage: java -jar ydb-service-account-example <connection-string> <sa-key-file>");
             return;
         }

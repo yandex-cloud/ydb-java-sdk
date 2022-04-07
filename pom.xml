@@ -17,7 +17,6 @@
   <modules>
     <module>auth-iam</module>
     <module>core</module>
-    <module>examples</module>
     <module>proto-gen</module>
     <module>table</module>
     <module>jdbc</module>
@@ -171,6 +170,15 @@
           </plugin>
         </plugins>
       </build>
+    </profile>
+    <profile>
+      <id>with-examples</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <modules>
+          <module>examples</module>
+      </modules>
     </profile>
   </profiles>
 </project>
