@@ -57,10 +57,12 @@ public class YdbDriver implements Driver {
 
     @Override
     public YdbConnection connect(String url, Properties info) throws SQLException {
-        LOGGER.info("About to connect to [{}] using properties {}", url, info);
         if (!acceptsURL(url)) {
             return null;
         }
+
+        // logging should be after acceptsURL, otherwise we can log properties with secrets of another database
+        LOGGER.info("About to connect to [{}] using properties {}", url, info);
 
         YdbProperties properties = YdbProperties.from(url, info);
         Clients clients = CONNECTIONS.getClients(new ConnectionConfig(url, info), properties);

@@ -25,17 +25,17 @@ dependencies:
     <dependency>
         <groupId>com.yandex.ydb</groupId>
         <artifactId>ydb-sdk-core</artifactId>
-        <version>1.11.5</version>
+        <version>1.11.6</version>
     </dependency>
     <dependency>
         <groupId>com.yandex.ydb</groupId>
         <artifactId>ydb-sdk-table</artifactId>
-        <version>1.11.5</version>
+        <version>1.11.6</version>
     </dependency>
     <dependency>
         <groupId>com.yandex.ydb</groupId>
         <artifactId>ydb-sdk-auth-iam</artifactId>
-        <version>1.11.5</version>
+        <version>1.11.6</version>
     </dependency>
 </dependencies>
 ```
@@ -49,12 +49,12 @@ See the [Connect to a database][connect-to-a-database] section of the documentat
 
 #### Generic examples ####
 
-In [examples/ydb-cookbook][ydb-cookbook] folder you can find more example applications with YDB Java SDK usage.
+In [examples][generic-examples] folder you can find more example applications with YDB Java SDK usage.
 
 
 [ydb-docs]: https://cloud.yandex.ru/docs/ydb/
-[sdk-docs]: https://cloud.yandex.ru/docs/ydb/quickstart/yql-api/ydb-sdk
-[prerequisites]: https://cloud.yandex.ru/docs/ydb/operations/connect_to_a_database#prerequisites
-[connect-to-a-database]: https://cloud.yandex.ru/docs/ydb/operations/connect_to_a_database
-[maven-project]: https://github.com/yandex-cloud/ydb-java-sdk/tree/master/examples/maven_project
+[sdk-docs]: https://cloud.yandex.ru/docs/ydb/reference/ydb-sdk/
+[prerequisites]: https://cloud.yandex.ru/docs/ydb/concepts/connect
+[connect-to-a-database]: https://cloud.yandex.ru/docs/ydb/reference/ydb-sdk/example/java#init
+[basic_example]: https://github.com/yandex-cloud/ydb-java-sdk/tree/master/examples/basic_example
 [generic-examples]: https://github.com/yandex-cloud/ydb-java-sdk/tree/master/examples
