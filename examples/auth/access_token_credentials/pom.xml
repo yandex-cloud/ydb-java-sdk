@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.yandex.ydb.examples</groupId>
         <artifactId>ydb-sdk-auth-examples</artifactId>
-        <version>1.11.6</version>
+        <version>1.12.0</version>
     </parent>
 
     <artifactId>ydb-java-example-auth-access-token</artifactId>
@@ -49,7 +49,7 @@
                             <mainClass>com.yandex.ydb.example.Main</mainClass>
                         </manifest>
                     </archive>
-                </configuration>   
+                </configuration>
             </plugin>
         </plugins>
     </build>

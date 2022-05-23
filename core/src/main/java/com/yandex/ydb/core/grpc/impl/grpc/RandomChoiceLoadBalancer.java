@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.yandex.ydb.core.grpc;
+package com.yandex.ydb.core.grpc.impl.grpc;
 
 import java.util.ArrayList;
 import java.util.Collection;

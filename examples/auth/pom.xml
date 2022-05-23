@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.yandex.ydb.examples</groupId>
         <artifactId>ydb-sdk-examples</artifactId>
-        <version>1.11.6</version>
+        <version>1.12.0</version>
     </parent>
 
     <packaging>pom</packaging>
