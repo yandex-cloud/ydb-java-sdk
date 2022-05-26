@@ -1,5 +1,5 @@
-SET(log4j_version 2.17.1)
-SET(slf4j_version 1.7.28)
+SET(log4j_version 2.17.2)
+SET(slf4j_version 1.7.36)
 SET(spring_boot_version 2.0.3.RELEASE)
 SET(junit5_version 5.8.2)
 SET(jcommander_version 1.81)

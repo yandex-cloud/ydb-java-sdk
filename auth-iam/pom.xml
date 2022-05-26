@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.yandex.ydb</groupId>
         <artifactId>ydb-sdk-parent</artifactId>
-        <version>1.12.0</version>
+        <version>1.12.1</version>
     </parent>
 
     <artifactId>ydb-sdk-auth-iam</artifactId>
@@ -33,7 +33,11 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.13.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
