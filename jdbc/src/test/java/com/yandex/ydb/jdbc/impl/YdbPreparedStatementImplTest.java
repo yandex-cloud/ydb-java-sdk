@@ -39,7 +39,7 @@ class YdbPreparedStatementImplTest extends AbstractYdbPreparedStatementImplTest 
                             statement.setObject("c_Utf8", PrimitiveType.utf8().makeOptional().emptyValue());
                             statement.execute();
                         },
-                        "Parameter $c_Utf8 type mismatch, expected: Utf8, actual: Utf8?"));
+                        "Parameter $c_Utf8 type mismatch, expected: Utf8, actual: Optional<Utf8>"));
     }
 
     @Test
