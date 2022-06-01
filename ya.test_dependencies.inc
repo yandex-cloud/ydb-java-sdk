@@ -1,7 +1,7 @@
 SET(log4j_version 2.17.2)
 SET(google_truth_version 0.34)
 SET(junit_version 4.13.2)
-SET(mockito_version 2.28.2)
+SET(mockito_version 3.11.2)
 SET(mock_server_version 5.5.1)
 SET(testcontainers_version 1.15.2)
 
@@ -16,6 +16,7 @@ DEPENDENCY_MANAGEMENT(
 
     # Mockito
     contrib/java/org/mockito/mockito-core/${mockito_version}
+    contrib/java/org/mockito/mockito-inline/${mockito_version}
 
     # Mock Server
     contrib/java/org/mock-server/mockserver-netty/${mock_server_version}
