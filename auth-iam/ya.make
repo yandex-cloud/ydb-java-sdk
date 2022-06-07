@@ -17,6 +17,7 @@ INCLUDE(${ARCADIA_ROOT}/kikimr/public/sdk/java/ya.dependencies.inc)
 PEERDIR(
     kikimr/public/sdk/java/core
 
+    contrib/java/io/grpc/grpc-netty-shaded
     contrib/java/com/yandex/cloud/java-sdk-auth
 )
 
