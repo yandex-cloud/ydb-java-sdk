@@ -15,5 +15,7 @@ RECURSE(
 
 IF (NOT HARDENING AND NOT SANITIZER_TYPE)
     RECURSE(
+        auth-tvm
+        auth-tvm/ut
     )
 ENDIF()
