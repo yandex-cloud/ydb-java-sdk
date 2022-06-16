@@ -28,6 +28,13 @@ public class TableWithPartitioningSettings {
     }
 
     public void run() {
+        PartitioningSettings initSettings = new PartitioningSettings();
+        initSettings.setPartitionSize(2500);       // 2000 by default
+        initSettings.setMinPartitionsCount(5);     // 1 by default
+        initSettings.setMaxPartitionsCount(500);   // 50 by default
+        initSettings.setPartitioningByLoad(true);  // false by default
+        initSettings.setPartitioningBySize(true);  // true by default
+
         TableDescription tableDescription = TableDescription.newBuilder()
                 .addNullableColumn("id", PrimitiveType.uint64())
                 .addNullableColumn("code", PrimitiveType.utf8())
@@ -35,14 +42,8 @@ public class TableWithPartitioningSettings {
                 .addNullableColumn("created", PrimitiveType.timestamp())
                 .addNullableColumn("data", PrimitiveType.json())
                 .setPrimaryKey("id")
+                .setPartitioningSettings(initSettings)
                 .build();
-
-        PartitioningSettings initSettings = new PartitioningSettings();
-        initSettings.setPartitionSize(2500);       // 2000 by default
-        initSettings.setMinPartitionsCount(5);     // 1 by default
-        initSettings.setMaxPartitionsCount(500);   // 50 by default
-        initSettings.setPartitioningByLoad(true);  // false by default
-        initSettings.setPartitioningBySize(true);  // true by default
 
         PartitioningSettings updateSettings = new PartitioningSettings();
         updateSettings.setMinPartitionsCount(2);
@@ -56,7 +57,7 @@ public class TableWithPartitioningSettings {
         mergedSettings.setPartitioningBySize(true);  // init value
         mergedSettings.setPartitioningByLoad(false); // updated value
 
-        createTable(tableDescription, initSettings);
+        createTable(tableDescription);
         describeTable(tableDescription, initSettings, false);
 
         alterTable(updateSettings);
@@ -65,12 +66,9 @@ public class TableWithPartitioningSettings {
         dropTable();
     }
 
-    private void createTable(TableDescription tableDescription, PartitioningSettings partitioning) {
-        CreateTableSettings settings = new CreateTableSettings();
-        settings.setPartitioningSettings(partitioning);
-
+    private void createTable(TableDescription tableDescription) {
         Status status = ctx.supplyStatus(
-                session -> session.createTable(tablePath, tableDescription, settings)
+                session -> session.createTable(tablePath, tableDescription, new CreateTableSettings())
         ).join();
 
         Assertions.assertTrue(status.isSuccess(), "Create table with PartitioningSettings");
@@ -124,6 +122,7 @@ public class TableWithPartitioningSettings {
         PartitioningSettings settings = description.getPartitioningSettings();
         Assertions.assertNotNull(settings, "Table partitioning settings");
 
+        assert (settings != null);
         Assertions.assertEquals(partitioning.getPartitionSizeMb(),
                 settings.getPartitionSizeMb(), "Partition Size Mb");
         Assertions.assertEquals(partitioning.getMinPartitionsCount(),
