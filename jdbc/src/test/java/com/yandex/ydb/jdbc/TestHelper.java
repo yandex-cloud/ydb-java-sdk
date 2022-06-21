@@ -10,7 +10,6 @@ import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 import com.yandex.ydb.jdbc.exception.YdbConfigurationException;
-import com.yandex.ydb.jdbc.exception.YdbRetryableException;
 import com.yandex.ydb.jdbc.settings.YdbProperties;
 import org.junit.jupiter.api.function.Executable;
 import org.slf4j.Logger;
@@ -76,9 +75,6 @@ public class TestHelper {
                                                              Consumer<T> check,
                                                              @Nullable String description) {
         Throwable throwable = assertThrows(Throwable.class, exec, description);
-        if (throwable instanceof YdbRetryableException) {
-            throw new RuntimeException(throwable);
-        }
         assertTrue(type.isAssignableFrom(throwable.getClass()),
                 () -> "Unexpected exception type thrown, expected " + type + ", got " + throwable.getClass());
         LOGGER.trace("Catch exception", throwable);

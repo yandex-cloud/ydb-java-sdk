@@ -22,6 +22,7 @@ import com.google.common.net.HostAndPort;
 import com.yandex.ydb.core.auth.AuthProvider;
 import com.yandex.ydb.core.auth.TokenAuthProvider;
 import com.yandex.ydb.jdbc.exception.YdbConfigurationException;
+import com.yandex.ydb.jdbc.exception.YdbRetryableException;
 import com.yandex.ydb.jdbc.impl.YdbConnectionImpl;
 import com.yandex.ydb.jdbc.settings.ParsedProperty;
 import com.yandex.ydb.jdbc.settings.YdbClientProperty;
@@ -117,6 +118,19 @@ class YdbDriverTest {
         try (YdbConnection connection = driver.connect(testUrl, new Properties())) {
             assertEquals("/ru-prestable/home/miroslav2/mydb", connection.getDatabase());
             LOGGER.info("Session to public database opened: {}", connection.getYdbSession());
+        }
+    }
+
+    @DisabledIfSystemProperty(named = SKIP_DOCKER_TESTS, matches = TRUE)
+    @Test
+    void connectAndCloseMultipleTimes() throws SQLException {
+        try (YdbConnection ydbConnection = driver.connect(TestHelper.getTestUrl(), new Properties())) {
+            ydbConnection.getYdbSession().close().join().expect("cannot close");
+            ydbConnection.getYdbSession().close().join().expect("cannot close"); // multiple close is ok
+
+            assertThrowsMsgLike(YdbRetryableException.class,
+                    () -> ydbConnection.createStatement().executeQuery("select 2 + 2"),
+                    "Session not found");
         }
     }
 
