@@ -9,13 +9,15 @@ import yandex.cloud.sdk.auth.provider.ComputeEngineCredentialProvider;
 import yandex.cloud.sdk.auth.provider.IamTokenCredentialProvider;
 
 public class CloudAuthHelper {
+
     public static AuthProvider getAuthProviderFromEnviron() {
         String saKeyFile = System.getenv("YDB_SERVICE_ACCOUNT_KEY_FILE_CREDENTIALS");
         if (saKeyFile != null) {
             return CloudAuthProvider.newAuthProvider(
-                ApiKeyCredentialProvider.builder()
-                     .fromFile(Paths.get(saKeyFile))
-                    .build()
+                    ApiKeyCredentialProvider.builder()
+                            .fromFile(Paths.get(saKeyFile))
+                            .enableCache()
+                            .build()
             );
         }
 
@@ -28,7 +30,8 @@ public class CloudAuthHelper {
         if (metadataCredentials != null && metadataCredentials.equals("1")) {
             return CloudAuthProvider.newAuthProvider(
                     ComputeEngineCredentialProvider.builder()
-                    .build()
+                            .enableCache()
+                            .build()
             );
         }
 
@@ -36,8 +39,8 @@ public class CloudAuthHelper {
         if (accessToken != null) {
             return CloudAuthProvider.newAuthProvider(
                     IamTokenCredentialProvider.builder()
-                    .token(accessToken)
-                    .build()
+                            .token(accessToken)
+                            .build()
             );
         }
 
