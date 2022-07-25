@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.yandex.ydb.examples</groupId>
         <artifactId>ydb-sdk-examples</artifactId>
-        <version>1.13.7</version>
+        <version>1.14.0</version>
     </parent>
 
     <artifactId>ydb-cookbook</artifactId>

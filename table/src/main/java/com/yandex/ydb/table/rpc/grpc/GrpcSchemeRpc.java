@@ -8,6 +8,7 @@ import javax.annotation.WillClose;
 import javax.annotation.WillNotClose;
 
 import com.yandex.ydb.core.Result;
+import com.yandex.ydb.core.grpc.GrpcRequestSettings;
 import com.yandex.ydb.core.grpc.GrpcTransport;
 import com.yandex.ydb.core.rpc.OperationTray;
 import com.yandex.ydb.core.rpc.RpcTransport;
@@ -55,28 +56,38 @@ public final class GrpcSchemeRpc implements SchemeRpc {
     }
 
     @Override
-    public CompletableFuture<Result<MakeDirectoryResponse>> makeDirectory(MakeDirectoryRequest request, long deadlineAfter) {
-        return transport.unaryCall(SchemeServiceGrpc.getMakeDirectoryMethod(), request, deadlineAfter);
+    public CompletableFuture<Result<MakeDirectoryResponse>> makeDirectory(MakeDirectoryRequest request,
+                                                                          GrpcRequestSettings settings) {
+        return transport.unaryCall(SchemeServiceGrpc.getMakeDirectoryMethod(), request, settings);
     }
 
     @Override
-    public CompletableFuture<Result<RemoveDirectoryResponse>> removeDirectory(RemoveDirectoryRequest request, long deadlineAfter) {
-        return transport.unaryCall(SchemeServiceGrpc.getRemoveDirectoryMethod(), request, deadlineAfter);
+    public CompletableFuture<Result<RemoveDirectoryResponse>> removeDirectory(RemoveDirectoryRequest request,
+                                                                              GrpcRequestSettings settings) {
+        return transport.unaryCall(SchemeServiceGrpc.getRemoveDirectoryMethod(), request, settings);
     }
 
     @Override
-    public CompletableFuture<Result<ListDirectoryResponse>> describeDirectory(ListDirectoryRequest request, long deadlineAfter) {
-        return transport.unaryCall(SchemeServiceGrpc.getListDirectoryMethod(), request, deadlineAfter);
+    public CompletableFuture<Result<ListDirectoryResponse>> describeDirectory(ListDirectoryRequest request,
+                                                                              GrpcRequestSettings settings) {
+        return transport.unaryCall(SchemeServiceGrpc.getListDirectoryMethod(), request, settings);
     }
 
     @Override
-    public CompletableFuture<Result<DescribePathResponse>> describePath(DescribePathRequest request, long deadlineAfter) {
-        return transport.unaryCall(SchemeServiceGrpc.getDescribePathMethod(), request, deadlineAfter);
+    public CompletableFuture<Result<DescribePathResponse>> describePath(DescribePathRequest request,
+                                                                        GrpcRequestSettings settings) {
+        return transport.unaryCall(SchemeServiceGrpc.getDescribePathMethod(), request, settings);
     }
 
     @Override
     public String getDatabase() {
         return transport.getDatabase();
+    }
+
+    @Override
+    @Nullable
+    public String getEndpointByNodeId(int nodeId) {
+        return transport.getEndpointByNodeId(nodeId);
     }
 
     @Override
