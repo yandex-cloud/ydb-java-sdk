@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import com.yandex.ydb.core.Result;
 import com.yandex.ydb.core.UnexpectedResultException;
 import com.yandex.ydb.core.grpc.GrpcRequestSettings;
+import com.yandex.ydb.core.grpc.YdbHeaders;
 import com.yandex.ydb.core.rpc.OperationTray;
 import com.yandex.ydb.core.utils.Async;
 import com.yandex.ydb.table.Session;
@@ -18,12 +19,14 @@ import com.yandex.ydb.table.settings.CreateSessionSettings;
 import com.yandex.ydb.table.stats.SessionPoolStats;
 import com.yandex.ydb.table.utils.OperationParamUtils;
 import com.yandex.ydb.table.utils.RequestSettingsUtils;
+import io.grpc.Metadata;
 
 
 /**
  * @author Sergey Polovko
  */
 final class TableClientImpl implements TableClient {
+    private final static String SERVER_BALANCER_HINT = "session-balancer";
 
     private final TableRpc tableRpc;
     @Nullable
@@ -59,8 +62,10 @@ final class TableClientImpl implements TableClient {
             .setOperationParams(OperationParamUtils.fromRequestSettings(settings))
             .build();
 
+        // Use server-side session balancer
         final GrpcRequestSettings grpcRequestSettings = GrpcRequestSettings.newBuilder()
                 .withDeadlineAfter(RequestSettingsUtils.calculateDeadlineAfter(settings))
+                .withExtraHeaders(getClientCapabilities())
                 .build();
 
         return tableRpc.createSession(request, grpcRequestSettings)
@@ -99,5 +104,11 @@ final class TableClientImpl implements TableClient {
             sessionPool.close();
         }
         tableRpc.close();
+    }
+
+    private Metadata getClientCapabilities() {
+        Metadata metadata = new Metadata();
+        metadata.put(YdbHeaders.YDB_CLIENT_CAPABILITIES, SERVER_BALANCER_HINT);
+        return metadata;
     }
 }
