@@ -57,8 +57,7 @@ public class YdbRepository {
 
     public void insertRecord(UrlRecord record) throws YdbException  {
         try {
-            String query = "\n"
-                    + "DECLARE $url AS utf8;\n"
+            String query = "DECLARE $url AS utf8;\n"
                     + "DECLARE $hash AS utf8;\n"
                     + "UPSERT INTO " + TABLE_NAME + "(src, hash) VALUES ($url, $hash);";
 
@@ -80,8 +79,7 @@ public class YdbRepository {
 
     public Optional<UrlRecord> findByHash(String hash) throws YdbException  {
         try {
-            String query = "\n"
-                    + "DECLARE $hash AS utf8;\n"
+            String query = "DECLARE $hash AS utf8;\n"
                     + "SELECT * FROM " + TABLE_NAME + " WHERE hash=$hash;";
 
             Params params = Params.of(

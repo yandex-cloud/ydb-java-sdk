@@ -117,7 +117,6 @@ public class PaginationApp implements App {
      */
     private void fillTableDataTransaction() {
         String query = String.format(
-            "\n" +
             "PRAGMA TablePathPrefix(\"%s\");\n" +
             "\n" +
             "DECLARE $schoolsData AS List<Struct<\n" +
@@ -143,7 +142,6 @@ public class PaginationApp implements App {
 
     private List<School> selectPaging(long limit, School.Key lastSchool) {
         String query = String.format(
-            "\n" +
             "PRAGMA TablePathPrefix(\"%s\");\n" +
             "\n" +
             "DECLARE $limit AS Uint64;\n" +

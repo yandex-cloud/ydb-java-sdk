@@ -80,7 +80,6 @@ public class BatchUpload implements App {
         createTables();
 
         String query = String.format(
-            "\n" +
             "DECLARE $items AS\n" +
             "List<Struct<\n" +
             "HostUid: Uint64,\n" +
