@@ -27,6 +27,11 @@
         </dependency>
 
         <dependency>
+            <groupId>com.yandex.ydb</groupId>
+            <artifactId>ydb-sdk-auth-iam</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
         </dependency>

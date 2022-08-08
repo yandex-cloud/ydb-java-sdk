@@ -24,6 +24,12 @@ public class AppParams {
     @Parameter(names = { "-c", "--cert" }, description = "Path to PEM certificate", help = true)
     private String certPath;
 
+    @Parameter(names = { "-t", "--tls" }, description = "Use TLS encrypted connection", help = true)
+    private boolean useTls = false;
+
+    @Parameter(names = { "-i", "--iam" }, description = "Use YC IAM authentication", help = true)
+    private boolean useIam = false;
+
     private AppParams() { }
 
     public static AppParams parseArgs(String[] args) {
@@ -51,5 +57,13 @@ public class AppParams {
 
     public String certPath() {
         return this.certPath;
+    }
+
+    public boolean useTls() {
+        return useTls;
+    }
+
+    public boolean useIam() {
+        return useIam;
     }
 }

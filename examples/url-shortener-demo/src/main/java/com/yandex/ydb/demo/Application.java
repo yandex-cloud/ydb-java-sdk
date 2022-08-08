@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Duration;
 
+import com.yandex.ydb.auth.iam.CloudAuthHelper;
 import com.yandex.ydb.core.grpc.GrpcTransport;
 import com.yandex.ydb.core.rpc.RpcTransport;
 import com.yandex.ydb.demo.rest.RedirectServlet;
@@ -92,8 +93,17 @@ public class Application {
         GrpcTransport.Builder builder = GrpcTransport.forEndpoint(endpoint, database)
                 .withReadTimeout(Duration.ofSeconds(10));
 
+        if (prms.useIam()) {
+            log.info("...Configuring for YC IAM authentication");
+            builder.withAuthProvider(CloudAuthHelper.getAuthProviderFromEnviron());
+        }
+
         if (prms.certPath() != null) {
+            log.info("...Configuring for TLS using certificate at {}", prms.certPath());
             builder.withSecureConnection(Files.readAllBytes(Paths.get(prms.certPath())));
+        } else if (prms.useTls()) {
+            log.info("...Configuring for TLS using default certificates");
+            builder.withSecureConnection();
         }
 
         return builder.build();
