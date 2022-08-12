@@ -52,9 +52,9 @@ See the [Connect to a database][connect-to-a-database] section of the documentat
 In [examples][generic-examples] folder you can find more example applications with YDB Java SDK usage.
 
 
-[ydb-docs]: https://cloud.yandex.ru/docs/ydb/
-[sdk-docs]: https://cloud.yandex.ru/docs/ydb/reference/ydb-sdk/
-[prerequisites]: https://cloud.yandex.ru/docs/ydb/concepts/connect
-[connect-to-a-database]: https://cloud.yandex.ru/docs/ydb/reference/ydb-sdk/example/java#init
+[ydb-docs]: https://ydb.tech/docs/
+[sdk-docs]: https://ydb.tech/en/docs/reference/ydb-sdk/
+[prerequisites]: https://ydb.tech/en/docs/concepts/connect
+[connect-to-a-database]: https://ydb.tech/en/docs/reference/ydb-sdk/auth#env
 [basic_example]: https://github.com/yandex-cloud/ydb-java-sdk/tree/master/examples/basic_example
 [generic-examples]: https://github.com/yandex-cloud/ydb-java-sdk/tree/master/examples
