@@ -224,7 +224,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Datetime", "1970-01-01T00:00",
                         "c_Timestamp", "1970-01-01T00:00:00Z",
                         "c_Interval", "PT0S",
-                        "c_Decimal", "0.000000000"
+                        "c_Decimal", "0"
                 ),
                 map(
                         "key", "4",
@@ -439,7 +439,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Uint8", 100L,
                         "c_Uint32", 2000000002L,
                         "c_Uint64", 2000000000002L,
-                        "c_Decimal", 3335000000L,
+                        "c_Decimal", 3L,
                         "c_Date", 3111L * 86400 * 1000,
                         "c_Datetime", 3111111L * 1000,
                         "c_Timestamp", 3111L,
@@ -453,7 +453,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Uint8", 200L,
                         "c_Uint32", 4000000002L,
                         "c_Uint64", 4000000000002L,
-                        "c_Decimal", -3335000000L,
+                        "c_Decimal", -3L,
                         "c_Date", 3112L * 86400 * 1000,
                         "c_Datetime", 3112111L * 1000,
                         "c_Timestamp", 3112L,
@@ -481,7 +481,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Uint8", 1L,
                         "c_Uint32", 1L,
                         "c_Uint64", 1L,
-                        "c_Decimal", 1000000000L,
+                        "c_Decimal", 1L,
                         "c_Date", 86400000L,
                         "c_Datetime", 1000L,
                         "c_Timestamp", 0L,
@@ -1058,7 +1058,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Datetime", LocalDateTime.parse("1970-02-06T00:11:51"),
                         "c_Timestamp", Instant.parse("1970-01-01T00:00:03.111112Z"),
                         "c_Interval", Duration.parse("PT3.111113S"),
-                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.newValue("3.335000000")
+                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.fromString("3.335000000")
                 ),
                 map(
                         "key", 2,
@@ -1079,7 +1079,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Datetime", LocalDateTime.parse("1970-02-06T00:28:31"),
                         "c_Timestamp", Instant.parse("1970-01-01T00:00:03.112112Z"),
                         "c_Interval", Duration.parse("PT3.112113S"),
-                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.newValue("-3.335000000")
+                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.fromString("-3.335000000")
                 ),
                 map(
                         "key", 3,
@@ -1100,7 +1100,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Datetime", LocalDateTime.parse("1970-01-01T00:00"),
                         "c_Timestamp", Instant.parse("1970-01-01T00:00:00Z"),
                         "c_Interval", Duration.parse("PT0S"),
-                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.newValue(0)
+                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.fromLong(0)
                 ),
                 map(
                         "key", 4,
@@ -1121,7 +1121,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Datetime", LocalDateTime.parse("1970-01-01T00:00:01"),
                         "c_Timestamp", Instant.parse("1970-01-01T00:00:00.000001Z"),
                         "c_Interval", Duration.parse("PT0.000001S"),
-                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.newValue("1.000000000")
+                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.fromString("1.000000000")
                 ),
                 map(
                         "key", 5,
@@ -1190,7 +1190,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Datetime", PrimitiveValue.datetime(Instant.parse("1970-02-06T00:11:51Z")),
                         "c_Timestamp", PrimitiveValue.timestamp(Instant.parse("1970-01-01T00:00:03.111112Z")),
                         "c_Interval", PrimitiveValue.interval(Duration.parse("PT3.111113S")),
-                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.newValue("3.335000000")
+                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.fromString("3.335000000")
                 ),
                 map(
                         "key", PrimitiveValue.int32(2),
@@ -1211,7 +1211,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Datetime", PrimitiveValue.datetime(Instant.parse("1970-02-06T00:28:31Z")),
                         "c_Timestamp", PrimitiveValue.timestamp(Instant.parse("1970-01-01T00:00:03.112112Z")),
                         "c_Interval", PrimitiveValue.interval(Duration.parse("PT3.112113S")),
-                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.newValue("-3.335000000")
+                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.fromString("-3.335000000")
                 ),
                 map(
                         "key", PrimitiveValue.int32(3),
@@ -1232,7 +1232,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Datetime", PrimitiveValue.datetime(Instant.parse("1970-01-01T00:00:00Z")),
                         "c_Timestamp", PrimitiveValue.timestamp(Instant.parse("1970-01-01T00:00:00Z")),
                         "c_Interval", PrimitiveValue.interval(Duration.parse("PT0S")),
-                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.newValue(0)
+                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.fromLong(0)
                 ),
                 map(
                         "key", PrimitiveValue.int32(4),
@@ -1253,7 +1253,7 @@ class YdbResultSetImplTest extends AbstractTest {
                         "c_Datetime", PrimitiveValue.datetime(Instant.parse("1970-01-01T00:00:01Z")),
                         "c_Timestamp", PrimitiveValue.timestamp(Instant.parse("1970-01-01T00:00:00.000001Z")),
                         "c_Interval", PrimitiveValue.interval(Duration.parse("PT0.000001S")),
-                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.newValue("1.000000000")
+                        "c_Decimal", YdbTypes.DEFAULT_DECIMAL_TYPE.fromString("1.000000000")
                 ),
                 map(
                         "key", PrimitiveValue.int32(5),

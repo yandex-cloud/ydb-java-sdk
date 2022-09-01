@@ -1,4 +1,8 @@
-## 1.14.3 ##
+## 1.14.5 ##
+
+* Fixed casting for Decimal with scale
+
+## 1.14.4 ##
 
 * Added support of not null columns in TableDescription
 

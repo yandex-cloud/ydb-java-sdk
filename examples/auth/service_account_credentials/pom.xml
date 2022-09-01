@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.yandex.ydb.examples</groupId>
         <artifactId>ydb-sdk-auth-examples</artifactId>
-        <version>1.14.4</version>
+        <version>1.14.5</version>
     </parent>
 
     <artifactId>ydb-java-example-auth-service-account-credentials</artifactId>

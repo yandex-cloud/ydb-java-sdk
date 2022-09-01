@@ -427,19 +427,19 @@ public class MappingSetters {
         if (x instanceof DecimalValue) {
             return (DecimalValue) x;
         } else if (x instanceof BigDecimal) {
-            return type.newValue((BigDecimal) x);
+            return type.fromBigDecimal((BigDecimal) x);
         } else if (x instanceof BigInteger) {
-            return type.newValue((BigInteger) x);
+            return type.fromBigInteger((BigInteger) x);
         } else if (x instanceof Long) {
-            return type.newValue((Long) x);
+            return type.fromLong((Long) x);
         } else if (x instanceof Integer) {
-            return type.newValue((Integer) x);
+            return type.fromLong((Integer) x);
         } else if (x instanceof Short) {
-            return type.newValue((Short) x);
+            return type.fromLong((Short) x);
         } else if (x instanceof Byte) {
-            return type.newValue((Byte) x);
+            return type.fromLong((Byte) x);
         } else if (x instanceof String) {
-            return type.newValue((String) x);
+            return type.fromString((String) x);
         }
         throw castNotSupported(type.getKind(), x);
     }

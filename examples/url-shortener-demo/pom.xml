@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.yandex.ydb.examples</groupId>
         <artifactId>ydb-sdk-examples</artifactId>
-        <version>1.14.4</version>
+        <version>1.14.5</version>
     </parent>
 
     <artifactId>url-shortener-demo</artifactId>

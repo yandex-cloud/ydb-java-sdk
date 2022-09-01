@@ -1070,22 +1070,22 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
                 YdbPreparedStatement::setBigDecimal,
                 ResultSet::getBigDecimal,
                 Arrays.asList(
-                        pair(new BigDecimal("0.0"), new BigDecimal("0E-9")),
-                        pair(new BigDecimal("1.3"), new BigDecimal("1.3E-8"))
+                        pair(new BigDecimal("0.0"), new BigDecimal("0.000000000")),
+                        pair(new BigDecimal("1.3"), new BigDecimal("1.300000000"))
                 ),
                 Arrays.asList(
-                        pair(1, new BigDecimal("1E-9")),
-                        pair(0, new BigDecimal("0E-9")),
-                        pair(-1, new BigDecimal("-1E-9")),
-                        pair(127, new BigDecimal("1.27E-7")),
-                        pair((byte) 4, new BigDecimal("4E-9")),
-                        pair((short) 5, new BigDecimal("5E-9")),
-                        pair(6, new BigDecimal("6E-9")),
-                        pair(7L, new BigDecimal("7E-9")),
+                        pair(1, new BigDecimal("1.000000000")),
+                        pair(0, new BigDecimal("0.000000000")),
+                        pair(-1, new BigDecimal("-1.000000000")),
+                        pair(127, new BigDecimal("127.000000000")),
+                        pair((byte) 4, new BigDecimal("4.000000000")),
+                        pair((short) 5, new BigDecimal("5.000000000")),
+                        pair(6, new BigDecimal("6.000000000")),
+                        pair(7L, new BigDecimal("7.000000000")),
                         pair("1", new BigDecimal("1.000000000")),
                         pair("1.1", new BigDecimal("1.100000000")),
-                        pair(DecimalType.of(22, 9).newValue("1.2"), new BigDecimal("1.200000000")),
-                        pair(new BigInteger("2"), new BigDecimal("2E-9"))
+                        pair(DecimalType.of(22, 9).fromString("1.2"), new BigDecimal("1.200000000")),
+                        pair(new BigInteger("2"), new BigDecimal("2.000000000"))
                 ),
                 Arrays.asList(
                         true,
@@ -2183,7 +2183,7 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
             params.put("c_Datetime", new Time(MILLIS_IN_DAY * (prefix++) + 111000));
             params.put("c_Timestamp", Instant.ofEpochMilli(MILLIS_IN_DAY * (prefix++) + 112112));
             params.put("c_Interval", Duration.of(prefix++, ChronoUnit.MICROS));
-            params.put("c_Decimal", defaultType.newValue((prefix) + ".1").makeOptional());
+            params.put("c_Decimal", defaultType.fromString((prefix) + ".1").makeOptional());
             values.add(params);
         }
 

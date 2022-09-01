@@ -301,7 +301,7 @@ public class MappingGetters {
                     };
             }
         } else if (kind == Type.Kind.DECIMAL) {
-            return value -> value.getDecimal().toBigInteger().longValue(); // TODO: Improve performance
+            return value -> value.getDecimal().toLong();
         } else {
             return value -> {
                 throw dataTypeNotSupported(kind, javaType);
