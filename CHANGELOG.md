@@ -1,3 +1,7 @@
+## 1.14.6 ##
+
+* Fixed JDK8 compability
+
 ## 1.14.5 ##
 
 * Fixed casting for Decimal with scale
