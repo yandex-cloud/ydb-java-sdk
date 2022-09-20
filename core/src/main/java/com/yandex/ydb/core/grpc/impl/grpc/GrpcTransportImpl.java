@@ -153,6 +153,12 @@ public class GrpcTransportImpl extends GrpcTransport {
                 .maxInboundMessageSize(64 << 20) // 64 MiB
                 .withOption(ChannelOption.ALLOCATOR, ByteBufAllocator.DEFAULT);
 
+        if (builder.isEnableRetry()) {
+            channelBuilder.enableRetry();
+        } else {
+            channelBuilder.disableRetry();
+        }
+
         builder.getChannelInitializer().accept(channelBuilder);
         return channelBuilder.build();
     }

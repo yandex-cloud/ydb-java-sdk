@@ -25,17 +25,17 @@ dependencies:
     <dependency>
         <groupId>com.yandex.ydb</groupId>
         <artifactId>ydb-sdk-core</artifactId>
-        <version>1.14.6</version>
+        <version>1.14.7</version>
     </dependency>
     <dependency>
         <groupId>com.yandex.ydb</groupId>
         <artifactId>ydb-sdk-table</artifactId>
-        <version>1.14.6</version>
+        <version>1.14.7</version>
     </dependency>
     <dependency>
         <groupId>com.yandex.ydb</groupId>
         <artifactId>ydb-sdk-auth-iam</artifactId>
-        <version>1.14.6</version>
+        <version>1.14.7</version>
     </dependency>
 </dependencies>
 ```

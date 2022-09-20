@@ -38,6 +38,7 @@ import io.grpc.ClientCall;
 import io.grpc.ClientInterceptor;
 import io.grpc.ClientInterceptors;
 import io.grpc.ConnectivityState;
+import io.grpc.ExperimentalApi;
 import io.grpc.ManagedChannel;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
@@ -480,6 +481,11 @@ public abstract class GrpcTransport implements RpcTransport {
         private DiscoveryMode discoveryMode = DiscoveryMode.SYNC;
         private TransportImplType transportImplType = TransportImplType.GRPC_TRANSPORT_IMPL;
         private BalancingSettings balancingSettings;
+        /**
+         * can cause leaks
+         * https://github.com/grpc/grpc-java/issues/9340
+         */
+        private boolean enableRetry = false;
 
         private Builder(@Nullable String endpoint, @Nullable String database, @Nullable List<HostAndPort> hosts) {
             this.endpoint = endpoint;
@@ -580,6 +586,22 @@ public abstract class GrpcTransport implements RpcTransport {
 
         public Builder withBalancingSettings(BalancingSettings balancingSettings) {
             this.balancingSettings = balancingSettings;
+            return this;
+        }
+
+        public boolean isEnableRetry() {
+            return enableRetry;
+        }
+
+        @ExperimentalApi("https://github.com/grpc/grpc-java/issues/9340")
+        public Builder enableRetry() {
+            this.enableRetry = true;
+            return this;
+        }
+
+        @ExperimentalApi("https://github.com/grpc/grpc-java/issues/9340")
+        public Builder disableRetry() {
+            this.enableRetry = false;
             return this;
         }
 

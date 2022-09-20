@@ -1,3 +1,7 @@
+## 1.14.7 ##
+
+* Disabled grpc retry https://github.com/grpc/grpc-java/issues/9340
+
 ## 1.14.6 ##
 
 * SnapshotReadOnly transactions support
