@@ -1,5 +1,6 @@
 ## 1.14.6 ##
 
+* SnapshotReadOnly transactions support
 * Fixed JDK8 compability
 
 ## 1.14.5 ##
