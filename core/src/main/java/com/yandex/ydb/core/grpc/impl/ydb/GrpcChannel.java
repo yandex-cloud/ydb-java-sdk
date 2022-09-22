@@ -40,6 +40,13 @@ class GrpcChannel {
                 .withOption(ChannelOption.ALLOCATOR, ByteBufAllocator.DEFAULT);
 
         channelSettings.getChannelInitializer().accept(channelBuilder);
+
+        if (channelSettings.isEnableRetry()) {
+            channelBuilder.enableRetry();
+        } else {
+            channelBuilder.disableRetry();
+        }
+
         realChannel = channelBuilder.build();
         channel = interceptChannel(realChannel, channelSettings);
     }

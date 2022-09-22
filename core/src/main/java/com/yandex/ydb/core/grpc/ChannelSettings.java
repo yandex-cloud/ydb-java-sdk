@@ -21,6 +21,7 @@ public class ChannelSettings {
     private final Consumer<NettyChannelBuilder> channelInitializer;
     private boolean useTLS;
     private byte[] cert;
+    private boolean enableRetry = false;
 
     private ChannelSettings(GrpcTransport.Builder builder) {
         this.database = builder.getDatabase();
@@ -28,6 +29,7 @@ public class ChannelSettings {
         this.channelInitializer = builder.getChannelInitializer();
         this.useTLS = builder.getUseTls();
         this.cert = builder.getCert();
+        this.enableRetry = builder.isEnableRetry();
     }
 
     public String getDatabase() {
@@ -48,6 +50,10 @@ public class ChannelSettings {
 
     public boolean isUseTLS() {
         return useTLS;
+    }
+
+    public boolean isEnableRetry() {
+        return enableRetry;
     }
 
     private SslContext createSslContext() {
