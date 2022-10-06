@@ -80,6 +80,23 @@ public class TableClientImpl2Test {
     }
 
     @Test
+    public void immediateSessionRelease() {
+        client.getOrCreateSession(Duration.ZERO).thenAccept(res -> {
+            if (res.isSuccess()) {
+                res.expect("session").release();
+            }
+        }).join();
+        checkPoolStatus(0, 1);
+
+        client.getOrCreateSession(Duration.ZERO).thenAccept(res -> {
+            if (res.isSuccess()) {
+                res.expect("session").close();
+            }
+        }).join();
+        checkPoolStatus(0, 0);
+    }
+
+    @Test
     public void getOrCreateSessionPoisoned() {
         Session session = nextSession();
         checkPoolStatus(1, 0);

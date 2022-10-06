@@ -1,3 +1,7 @@
+## 1.14.8 ##
+
+* Fixed session leak when session is released in the future of getOrCreate
+
 ## 1.14.7 ##
 
 * Disabled grpc retry https://github.com/grpc/grpc-java/issues/9340

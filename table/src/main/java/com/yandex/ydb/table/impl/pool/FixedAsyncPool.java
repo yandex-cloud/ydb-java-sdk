@@ -244,11 +244,12 @@ public final class FixedAsyncPool<T> implements AsyncPool<T> {
                 if (ex != null) {
                     acquiredObjectsCount.decrementAndGet();
                     onAcquire(promise, null, ex);
-                } else if (promise.complete(o)) {
-                    acquiredObjects.put(o, o);
                 } else {
-                    // do not leak object if promise already completed
-                    release(o);
+                    acquiredObjects.put(o, o);
+                    if (!promise.complete(o)) {
+                        // do not leak object if promise already completed
+                        release(o);
+                    }
                 }
             });
         } catch (Throwable t) {

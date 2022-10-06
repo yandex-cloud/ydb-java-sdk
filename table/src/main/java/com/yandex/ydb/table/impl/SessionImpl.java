@@ -85,7 +85,6 @@ import io.grpc.Metadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.yandex.ydb.table.YdbTable.ColumnFamily.Compression.COMPRESSION_LZ4;
 import static com.yandex.ydb.table.YdbTable.ColumnFamily.Compression.COMPRESSION_NONE;
 import static com.yandex.ydb.table.YdbTable.ColumnFamily.Compression.COMPRESSION_UNSPECIFIED;
@@ -137,8 +136,13 @@ class SessionImpl implements Session {
         try {
             URI uri = new URI(sessionId);
             Map<String, String> params = getQueryMap(uri.getQuery());
+            if (params == null) {
+                return null;
+            }
             String nodeStr = params.get("node_id");
-            checkNotNull(nodeStr, "no node_id in session id");
+            if (nodeStr == null) {
+                return null;
+            }
             return Integer.parseUnsignedInt(nodeStr);
         } catch (Exception e) {
             log.debug("Failed to parse session_id for node_id: {}", e.toString());
@@ -147,6 +151,9 @@ class SessionImpl implements Session {
     }
 
     private static Map<String, String> getQueryMap(String query) {
+        if (query == null) {
+            return null;
+        }
         String[] params = query.split("&");
         Map<String, String> map = new HashMap<>();
 
