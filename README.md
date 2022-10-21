@@ -1,3 +1,6 @@
+# This repository is deprecated. 
+## The actual repository is available here https://github.com/ydb-platform/ydb-java-sdk, you can use the [Migration Guide](https://github.com/ydb-platform/ydb-java-sdk/wiki/YDB-Java-v2-Migration-Guide) to update
+
 # Java SDK for Yandex Database (YDB) ![Maven metadata URL](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fcom%2Fyandex%2Fydb%2Fydb-sdk-parent%2Fmaven-metadata.xml)
 
 The Java SDK for YDB enables Java developers to work with Yandex Database.
