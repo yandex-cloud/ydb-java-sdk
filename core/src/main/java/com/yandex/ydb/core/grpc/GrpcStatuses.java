@@ -42,7 +42,7 @@ public final class GrpcStatuses {
             return com.yandex.ydb.core.Status.of(code, message);
         }
 
-        return com.yandex.ydb.core.Status.of(code, null, message, Issue.of(cause.getMessage(), Issue.Severity.ERROR));
+        return com.yandex.ydb.core.Status.of(code, message, Issue.of(cause.getMessage(), Issue.Severity.ERROR));
     }
 
     private static String getMessage(Status status) {
