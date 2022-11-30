@@ -1,3 +1,7 @@
+## 1.14.9 ##
+
+* Removed unecessary warnings
+
 ## 1.14.8 ##
 
 * Fixed session leak when session is released in the future of getOrCreate
