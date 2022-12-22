@@ -62,7 +62,8 @@ public class YdbDriver implements Driver {
         }
 
         // logging should be after acceptsURL, otherwise we can log properties with secrets of another database
-        LOGGER.info("About to connect to [{}] using properties {}", url, info);
+        LOGGER.info("About to connect to [{}] using properties {}",
+                YdbProperties.hideSecrets(url), YdbProperties.hideSecrets(info));
 
         YdbProperties properties = YdbProperties.from(url, info);
         Clients clients = CONNECTIONS.getClients(new ConnectionConfig(url, info), properties);

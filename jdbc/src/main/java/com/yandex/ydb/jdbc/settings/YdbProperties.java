@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,6 +39,9 @@ public class YdbProperties {
     private static final String CLASSPATH_REF = "classpath:";
     private static final String HOME_REF = "~";
     private static final String FILE_HOME_REF = FILE_REF + HOME_REF;
+
+    private static final Pattern TOKEN_PATTERN = Pattern.compile("(" + YdbConnectionProperty.TOKEN.getName() + "=)([^&]*)",
+            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
     private final YdbConnectionProperties connectionProperties;
     private final YdbClientProperties clientProperties;
@@ -77,6 +81,35 @@ public class YdbProperties {
 
     public static boolean isYdb(String url) {
         return url.startsWith(JDBC_YDB_PREFIX);
+    }
+
+    public static String hideSecrets(String url) {
+        if (url == null) {
+            return "null";
+        }
+
+        return TOKEN_PATTERN.matcher(url).replaceAll("$1*****");
+    }
+
+    public static String hideSecrets(Properties props) {
+        if (props == null) {
+            return "null";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append('{');
+        props.forEach((key, value) -> {
+            sb.append(key);
+            sb.append('=');
+            if (YdbConnectionProperty.TOKEN.getName().equalsIgnoreCase(String.valueOf(key))) {
+                sb.append("*****");
+            } else {
+                sb.append(value);
+            }
+            sb.append(',').append(' ');
+        });
+
+        return sb.append('}').toString();
     }
 
     @SuppressWarnings("UnstableApiUsage")
