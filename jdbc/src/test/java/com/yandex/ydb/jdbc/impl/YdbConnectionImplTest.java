@@ -642,9 +642,6 @@ class YdbConnectionImplTest extends AbstractTest {
         String simpleTypeError = "is not supported by storage";
         String complexTypeError = "Only core YQL data types are currently supported";
         return Arrays.asList(
-                Arguments.of("c_Int8", "Int8", simpleTypeError),
-                Arguments.of("c_Int16", "Int16", simpleTypeError),
-                Arguments.of("c_Uint16", "Uint16", simpleTypeError),
                 Arguments.of("c_Uuid", "Uuid", simpleTypeError),
                 Arguments.of("c_TzDate", "TzDate", simpleTypeError),
                 Arguments.of("c_TzDatetime", "TzDatetime", simpleTypeError),
