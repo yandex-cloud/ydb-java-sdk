@@ -33,6 +33,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import io.grpc.Attributes;
 import io.grpc.ConnectivityState;
 import io.grpc.ConnectivityStateInfo;
@@ -274,7 +275,7 @@ final class YdbLoadBalancer extends LoadBalancer {
      */
     private static Map<EquivalentAddressGroup, EquivalentAddressGroup> stripAttrs(
             List<EquivalentAddressGroup> groupList) {
-        Map<EquivalentAddressGroup, EquivalentAddressGroup> addrs = new HashMap<>(groupList.size() * 2);
+        Map<EquivalentAddressGroup, EquivalentAddressGroup> addrs = Maps.newHashMapWithExpectedSize(groupList.size());
         for (EquivalentAddressGroup group : groupList) {
             addrs.put(stripAttrs(group), group);
         }

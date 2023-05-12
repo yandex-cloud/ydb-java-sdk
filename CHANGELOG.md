@@ -1,3 +1,7 @@
+## 1.14.10 ##
+
+* Avoid HashMap(capacity), HashSet(capacity) constructors
+
 ## 1.14.9 ##
 
 * Removed unecessary warnings

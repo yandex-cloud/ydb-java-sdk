@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Maps;
 import com.yandex.ydb.core.Issue;
 import com.yandex.ydb.core.Result;
 import com.yandex.ydb.core.Status;
@@ -259,7 +260,7 @@ public final class EndpointPool {
             newKnownEndpoints.put(record.endpoint.getHostAndPort(), record);
         }
 
-        Map<Integer, String> newKnownEndpointsByNodeId = new HashMap<>(uniqueRecords.size());
+        Map<Integer, String> newKnownEndpointsByNodeId = Maps.newHashMapWithExpectedSize(uniqueRecords.size());
         for (EndpointEntry record : uniqueRecords) {
             newKnownEndpointsByNodeId.put(record.endpoint.getNodeId(), record.endpoint.getHostAndPort());
         }

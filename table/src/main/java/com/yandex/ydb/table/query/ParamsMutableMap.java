@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import com.yandex.ydb.ValueProtos;
 import com.yandex.ydb.table.values.Type;
 import com.yandex.ydb.table.values.Value;
@@ -49,9 +50,7 @@ final class ParamsMutableMap implements Params {
 
     @Override
     public Map<String, ValueProtos.TypedValue> toPb() {
-        Map<String, ValueProtos.TypedValue> result = new HashMap<>(
-                (int) ((((float) params.size()) / 0.75f) + 1.0f)
-        );
+        Map<String, ValueProtos.TypedValue> result = Maps.newHashMapWithExpectedSize(params.size());
         for (Map.Entry<String, Value<?>> entry : params.entrySet()) {
             Value<?> value = entry.getValue();
             String name = entry.getKey();

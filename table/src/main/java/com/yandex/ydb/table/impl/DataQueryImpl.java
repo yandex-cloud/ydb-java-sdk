@@ -13,6 +13,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.common.hash.Hashing;
 import com.yandex.ydb.ValueProtos;
 import com.yandex.ydb.core.Result;
@@ -113,7 +114,7 @@ final class DataQueryImpl implements DataQuery {
         DataQueryParams(ImmutableMap<String, Type> types, ImmutableMap<String, ValueProtos.Type> typesPb) {
             this.types = types;
             this.typesPb = typesPb;
-            this.params = new HashMap<>(types.size());
+            this.params = Maps.newHashMapWithExpectedSize(types.size());
         }
 
         @Override
@@ -136,7 +137,7 @@ final class DataQueryImpl implements DataQuery {
 
         @Override
         public Map<String, ValueProtos.TypedValue> toPb() {
-            Map<String, ValueProtos.TypedValue> result = new HashMap<>(params.size());
+            Map<String, ValueProtos.TypedValue> result = Maps.newHashMapWithExpectedSize(params.size());
             for (Map.Entry<String, Value<?>> entry : params.entrySet()) {
                 Value<?> value = entry.getValue();
                 String name = entry.getKey();

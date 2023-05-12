@@ -3,6 +3,7 @@ package com.yandex.ydb.table.result.impl;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.yandex.ydb.ValueProtos;
 import com.yandex.ydb.table.result.ValueReader;
 
@@ -24,7 +25,7 @@ final class ProtoStructValueReader extends AbstractValueReader {
     }
 
     private static HashMap<String, Integer> buildNameIdx(ValueProtos.StructType structType) {
-        HashMap<String, Integer> nameIdx = new HashMap<>(structType.getMembersCount());
+        HashMap<String, Integer> nameIdx = Maps.newHashMapWithExpectedSize(structType.getMembersCount());
         for (int i = 0; i < structType.getMembersCount(); i++) {
             nameIdx.put(structType.getMembers(i).getName(), i);
         }

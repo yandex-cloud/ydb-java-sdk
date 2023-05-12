@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.yandex.ydb.examples</groupId>
         <artifactId>ydb-sdk-examples</artifactId>
-        <version>1.14.9</version>
+        <version>1.14.10</version>
     </parent>
 
     <artifactId>ydb-basic-example</artifactId>
