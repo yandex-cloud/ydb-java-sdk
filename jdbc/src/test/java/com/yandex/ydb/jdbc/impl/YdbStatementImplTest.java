@@ -102,11 +102,14 @@ class YdbStatementImplTest extends AbstractTest {
 
     @Test
     void executeDataQueryInTx() throws SQLException {
-        // Cannot select from table already updated in transaction
         statement.executeUpdate("upsert into unit_1(key, c_Utf8) values (1, '2')");
-        assertThrowsMsgLike(YdbNonRetryableException.class,
-                () -> statement.executeQuery("select * from unit_1"),
-                "Data modifications previously made to table");
+        ResultSet rs = statement.executeQuery("select key, c_Utf8 from unit_1");
+
+        assertFalse(rs.isClosed());
+        assertTrue(rs.next());
+        assertEquals(1, rs.getInt(1));
+        assertEquals("2", rs.getString(2));
+        assertFalse(rs.next());
     }
 
     @Test

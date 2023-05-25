@@ -5,8 +5,10 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import com.yandex.ydb.jdbc.YdbTypes;
 import com.yandex.ydb.spring.data.AbstractTest;
@@ -19,8 +21,10 @@ import org.springframework.data.domain.Sort;
 
 import static com.yandex.ydb.jdbc.TestHelper.stringFileReference;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class AllColumnsValueTest extends AbstractTest {
@@ -100,7 +104,7 @@ public class AllColumnsValueTest extends AbstractTest {
 
             assertEquals(2, repository.count());
             assertEquals(Arrays.asList(rec1), repository.findAllById(Arrays.asList(rec1.id)));
-            assertEquals(Arrays.asList(rec2, rec1), repository.findAllById(Arrays.asList(rec2.id, 3, 4, rec1.id)));
+            assertEqualsIgnoreOrder(Arrays.asList(rec1, rec2), repository.findAllById(Arrays.asList(rec2.id, 3, 4, rec1.id)));
 
             LOGGER.info("findViewByIdIn...");
             assertEquals(Arrays.asList(), repositoryViewString.findViewByIdIn());
@@ -121,7 +125,7 @@ public class AllColumnsValueTest extends AbstractTest {
             assertNotSame(rec1, actual);
             assertEquals(rec1, actual);
 
-            assertEquals(Arrays.asList(rec1, rec2), repository.findAll());
+            assertEqualsIgnoreOrder(Arrays.asList(rec1, rec2), repository.findAll());
             assertEquals(Arrays.asList(rec2, rec1), repository.findAll(Sort.by(Sort.Direction.DESC, "stringValue")));
             assertEquals(Arrays.asList(rec1, rec2), repository.findAll(Sort.by("stringValue")));
         });
@@ -176,6 +180,18 @@ public class AllColumnsValueTest extends AbstractTest {
             assertEquals(rec, actual);
         });
 
+    }
+
+    private <T> void assertEqualsIgnoreOrder(List<T> expected, Iterable<T> value) {
+        assertNotNull(value);
+        assertNotNull(expected);
+
+        List<T> exp = new ArrayList<>(expected);
+        for (T item: value) {
+            assertTrue(exp.contains(item));
+            exp.remove(item);
+        }
+        assertTrue(exp.isEmpty());
     }
 
     @Test

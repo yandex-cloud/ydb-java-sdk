@@ -276,8 +276,8 @@ class YdbConnectionImplTest extends AbstractTest {
         statement.execute("upsert into unit_1(key, c_Utf8) values (1, '2')");
 
         assertThrowsMsgLike(YdbNonRetryableException.class,
-                () -> statement.executeQuery("select * from unit_1"),
-                "Data modifications previously made to table");
+                () -> statement.executeQuery("select key2 from unit_1"),
+                "Member not found: key2. Did you mean key? (S_ERROR)");
 
         assertNull(connection.getYdbTxId());
 
@@ -297,8 +297,8 @@ class YdbConnectionImplTest extends AbstractTest {
         statement.execute("insert into unit_1(key, c_Utf8) values (1, '2')");
 
         assertThrowsMsg(YdbNonRetryableException.class,
-                () -> statement.executeQuery("select * from unit_1"),
-                e -> Assertions.assertTrue(e.getMessage().contains("Data modifications previously made to table")),
+                () -> statement.executeQuery("select key2 from unit_1"),
+                e -> Assertions.assertTrue(e.getMessage().contains("Member not found: key2. Did you mean key? (S_ERROR)")),
                 null);
 
         assertNull(connection.getYdbTxId());
@@ -537,14 +537,8 @@ class YdbConnectionImplTest extends AbstractTest {
 
         statement.execute("upsert into unit_1(key, c_Utf8) values (1, '2')");
         statement.executeSchemeQuery("create table unit_11(id Int32, value Int32, primary key(id))");
-        try {
-            // No commits in case of ddl
-            assertThrowsMsgLike(YdbNonRetryableException.class,
-                    () -> statement.executeQuery("select * from unit_1"),
-                    "Data modifications previously made to table");
-        } finally {
-            statement.executeSchemeQuery("drop table unit_11");
-        }
+        statement.executeQuery("select * from unit_11");
+        statement.executeSchemeQuery("drop table unit_11");
     }
 
     @Test
@@ -640,7 +634,7 @@ class YdbConnectionImplTest extends AbstractTest {
 
     static List<Arguments> unsupportedTypes() {
         String simpleTypeError = "is not supported by storage";
-        String complexTypeError = "Only core YQL data types are currently supported";
+        String complexTypeError = "Only YQL data types and PG types are currently supported";
         return Arrays.asList(
                 Arguments.of("c_Uuid", "Uuid", simpleTypeError),
                 Arguments.of("c_TzDate", "TzDate", simpleTypeError),

@@ -40,7 +40,6 @@ import com.yandex.ydb.jdbc.YdbPreparedStatement;
 import com.yandex.ydb.jdbc.YdbResultSet;
 import com.yandex.ydb.jdbc.YdbTypes;
 import com.yandex.ydb.jdbc.exception.YdbConditionallyRetryableException;
-import com.yandex.ydb.jdbc.exception.YdbNonRetryableException;
 import com.yandex.ydb.jdbc.exception.YdbRetryableException;
 import com.yandex.ydb.table.values.DecimalType;
 import com.yandex.ydb.table.values.DecimalValue;
@@ -161,9 +160,12 @@ public abstract class AbstractYdbPreparedStatementImplTest extends AbstractTest 
                     .prepareStatement("declare $key as Int32?;" +
                             "select c_Utf8 from unit_2 where key = $key");
             selectStatement.setInt("key", 1);
-            assertThrowsMsgLike(YdbNonRetryableException.class,
-                    selectStatement::executeQuery,
-                    "Data modifications previously made to table");
+
+            ResultSet rs = selectStatement.executeQuery();
+            assertTrue(rs.next());
+            assertEquals("value-1", rs.getString("c_Utf8"));
+
+            assertFalse(rs.next());
         });
     }
 
