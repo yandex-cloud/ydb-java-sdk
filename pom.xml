@@ -8,7 +8,7 @@
 
     <groupId>com.yandex.ydb</groupId>
     <artifactId>ydb-sdk-parent</artifactId>
-    <version>1.14.10</version>
+    <version>1.14.11</version>
 
     <name>Java SDK for Yandex Datatabase (YDB)</name>
     <description>Java SDK for Yandex Datatabase (YDB)</description>
@@ -150,6 +150,19 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.22.2</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>2.4</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <deployAtEnd>true</deployAtEnd>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

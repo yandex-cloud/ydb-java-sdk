@@ -634,7 +634,7 @@ class YdbConnectionImplTest extends AbstractTest {
 
     static List<Arguments> unsupportedTypes() {
         String simpleTypeError = "is not supported by storage";
-        String complexTypeError = "Only YQL data types and PG types are currently supported";
+        String complexTypeError = "Invalid type for column:";
         return Arrays.asList(
                 Arguments.of("c_Uuid", "Uuid", simpleTypeError),
                 Arguments.of("c_TzDate", "TzDate", simpleTypeError),

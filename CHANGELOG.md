@@ -1,3 +1,7 @@
+## 1.14.11 ##
+
+* Updated JDBC tests, changed README.md
+
 ## 1.14.10 ##
 
 * Avoid HashMap(capacity), HashSet(capacity) constructors
