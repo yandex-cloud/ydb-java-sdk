@@ -15,17 +15,36 @@ public class Changefeed {
     private final Format format;
     private final boolean virtualTimestamps;
     private final java.time.Duration retentionPeriod;
+    private final boolean initialScan;
 
     public Changefeed(String name, Mode mode, Format format) {
-        this(name, mode, format, false, java.time.Duration.ofHours(24));
+        this(name, mode, format, false, java.time.Duration.ofHours(24), false);
     }
 
-    public Changefeed(String name, Mode mode, Format format, boolean virtualTimestamps, java.time.Duration retentionPeriod) {
+    public Changefeed(
+            String name,
+            Mode mode,
+            Format format,
+            boolean virtualTimestamps,
+            java.time.Duration retentionPeriod)
+    {
+        this(name, mode, format, virtualTimestamps, retentionPeriod, false);
+    }
+
+    public Changefeed(
+            String name,
+            Mode mode,
+            Format format,
+            boolean virtualTimestamps,
+            java.time.Duration retentionPeriod,
+            boolean initialScan)
+    {
         this.name = Objects.requireNonNull(name);
         this.mode = Objects.requireNonNull(mode);
         this.format = Objects.requireNonNull(format);
         this.virtualTimestamps = virtualTimestamps;
         this.retentionPeriod = retentionPeriod;
+        this.initialScan = initialScan;
     }
 
     public String getName() {
@@ -44,6 +63,10 @@ public class Changefeed {
         return virtualTimestamps;
     }
 
+    public boolean hasInitialScan() {
+        return initialScan;
+    }
+
     public java.time.Duration getRetentionPeriod() {
         return retentionPeriod;
     }
@@ -55,6 +78,7 @@ public class Changefeed {
                 .setMode(mode.toProto())
                 .setVirtualTimestamps(virtualTimestamps)
                 .setRetentionPeriod(toProto(retentionPeriod))
+                .setInitialScan(initialScan)
                 .build();
     }
 
