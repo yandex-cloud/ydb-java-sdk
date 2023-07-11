@@ -5,6 +5,9 @@ import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
 import com.yandex.ydb.core.Result;
+import com.yandex.ydb.core.UnexpectedResultException;
+import com.yandex.ydb.core.utils.Async;
+import com.yandex.ydb.table.Session;
 import com.yandex.ydb.table.SessionStatus;
 import com.yandex.ydb.table.impl.SessionImpl.State;
 import com.yandex.ydb.table.impl.pool.FixedAsyncPool;
@@ -77,21 +80,46 @@ final class SessionPool implements PooledObjectHandler<SessionImpl> {
         return s.keepAlive();
     }
 
-    CompletableFuture<SessionImpl> acquire(Duration timeout) {
-        final Instant startTime = Instant.now();
-        return idlePool.acquire(timeout)
-            .thenCompose(s -> {
-                if (s.switchState(State.IDLE, State.ACTIVE)) {
-                    logger.debug("session `{}' acquired", s);
-                    return CompletableFuture.completedFuture(s);
-                } else {
-                    release(s);
-                    Duration duration = Duration.between(startTime, Instant.now());
-                    return acquire(timeout.minus(Duration.ZERO.compareTo(duration) < 0
-                        ? duration
-                        : Duration.ZERO));
+    CompletableFuture<Result<Session>> acquire(Duration timeout) {
+        CompletableFuture<Result<Session>> future = new CompletableFuture<>();
+        Instant expireTime = Instant.now().plusNanos(timeout.toNanos());
+
+        tryAcquire(future, expireTime);
+        return future;
+    }
+
+    private void tryAcquire(CompletableFuture<Result<Session>> future, Instant expireTime) {
+        Duration timeout = Duration.between(Instant.now(), expireTime);
+        idlePool.acquire(timeout.isNegative() ? Duration.ZERO : timeout).whenComplete((session, th) -> {
+            if (future.isDone()) {
+                if (session != null) {
+                    // Fake usage of session
+                    session.switchState(State.IDLE, State.ACTIVE);
+                    release(session);
                 }
-            });
+                return;
+            }
+
+            if (th != null) {
+                Throwable unwrapped = Async.unwrapCompletionException(th);
+                if (unwrapped instanceof UnexpectedResultException) {
+                    future.complete(Result.fail((UnexpectedResultException) unwrapped));
+                } else {
+                    future.complete(Result.error("cannot acquire session from pool", unwrapped));
+                }
+                return;
+            }
+
+            if (session != null) {
+                if (session.switchState(State.IDLE, State.ACTIVE)) {
+                    logger.debug("session `{}' acquired", session);
+                    future.complete(Result.success(session));
+                } else {
+                    release(session);
+                    tryAcquire(future, expireTime);
+                }
+            }
+        });
     }
 
     void release(SessionImpl session) {
@@ -106,8 +134,8 @@ final class SessionPool implements PooledObjectHandler<SessionImpl> {
             session.close(); // do not await session to be closed
             idlePool.release(session);
         } else {
-            idlePool.release(session);
             logger.debug("session `{}' released", session);
+            idlePool.release(session);
         }
     }
 

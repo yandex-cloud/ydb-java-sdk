@@ -1,3 +1,7 @@
+## 1.14.12 ##
+
+* Fixed session leaks for pending acquires
+
 ## 1.14.11 ##
 
 * Updated JDBC tests, changed README.md
