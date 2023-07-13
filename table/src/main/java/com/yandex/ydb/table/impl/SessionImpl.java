@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
@@ -44,6 +45,7 @@ import com.yandex.ydb.table.query.DataQuery;
 import com.yandex.ydb.table.query.DataQueryResult;
 import com.yandex.ydb.table.query.ExplainDataQueryResult;
 import com.yandex.ydb.table.query.Params;
+import com.yandex.ydb.table.result.ReadTableMeta;
 import com.yandex.ydb.table.result.ResultSetReader;
 import com.yandex.ydb.table.result.impl.ProtoValueReaders;
 import com.yandex.ydb.table.rpc.TableRpc;
@@ -848,7 +850,7 @@ class SessionImpl implements Session {
     }
 
     @Override
-    public CompletableFuture<Status> readTable(String tablePath, ReadTableSettings settings, Consumer<ResultSetReader> fn) {
+    public CompletableFuture<Status> readTable(String tablePath, ReadTableSettings settings, BiConsumer<ResultSetReader, ReadTableMeta> fn) {
         ReadTableRequest.Builder request = ReadTableRequest.newBuilder()
             .setSessionId(id)
             .setPath(tablePath)
@@ -891,7 +893,8 @@ class SessionImpl implements Session {
                 StatusIds.StatusCode statusCode = response.getStatus();
                 if (statusCode == StatusIds.StatusCode.SUCCESS) {
                     try {
-                        fn.accept(ProtoValueReaders.forResultSet(response.getResult().getResultSet()));
+                        fn.accept(ProtoValueReaders.forResultSet(response.getResult().getResultSet()),
+                                  new ReadTableMeta(response.getSnapshot()));
                     } catch (Throwable t) {
                         promise.completeExceptionally(t);
                         throw new IllegalStateException(t);

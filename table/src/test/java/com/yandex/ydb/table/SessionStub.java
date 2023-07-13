@@ -2,6 +2,7 @@ package com.yandex.ydb.table;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import com.yandex.ydb.core.Result;
@@ -11,6 +12,7 @@ import com.yandex.ydb.table.query.DataQuery;
 import com.yandex.ydb.table.query.DataQueryResult;
 import com.yandex.ydb.table.query.ExplainDataQueryResult;
 import com.yandex.ydb.table.query.Params;
+import com.yandex.ydb.table.result.ReadTableMeta;
 import com.yandex.ydb.table.result.ResultSetReader;
 import com.yandex.ydb.table.settings.AlterTableSettings;
 import com.yandex.ydb.table.settings.BeginTxSettings;
@@ -116,6 +118,11 @@ public class SessionStub implements Session {
 
     @Override
     public CompletableFuture<Status> readTable(String tablePath, ReadTableSettings settings, Consumer<ResultSetReader> fn) {
+        return notImplemented("readTable()");
+    }
+
+    @Override
+    public CompletableFuture<Status> readTable(String tablePath, ReadTableSettings settings, BiConsumer<ResultSetReader, ReadTableMeta> fn) {
         return notImplemented("readTable()");
     }
 
