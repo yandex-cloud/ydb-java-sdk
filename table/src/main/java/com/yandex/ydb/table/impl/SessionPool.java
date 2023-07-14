@@ -12,7 +12,6 @@ import com.yandex.ydb.table.SessionStatus;
 import com.yandex.ydb.table.impl.SessionImpl.State;
 import com.yandex.ydb.table.impl.pool.FixedAsyncPool;
 import com.yandex.ydb.table.impl.pool.PooledObjectHandler;
-import com.yandex.ydb.table.impl.pool.SettlersPool;
 import com.yandex.ydb.table.settings.CloseSessionSettings;
 import com.yandex.ydb.table.settings.CreateSessionSettings;
 import com.yandex.ydb.table.stats.SessionPoolStats;
@@ -32,11 +31,6 @@ final class SessionPool implements PooledObjectHandler<SessionImpl> {
      */
     private final FixedAsyncPool<SessionImpl> idlePool;
 
-    /**
-     * Pool to store sessions with unknown status due to some transport errors.
-     */
-    private final SettlersPool<SessionImpl> settlersPool;
-
     private final int minSize;
     private final int maxSize;
 
@@ -51,7 +45,6 @@ final class SessionPool implements PooledObjectHandler<SessionImpl> {
             maxSize * 2,
             options.getKeepAliveTimeMillis(),
             options.getMaxIdleTimeMillis());
-        this.settlersPool = new SettlersPool<>(this, idlePool, 10, 5_000);
     }
 
     @Override
@@ -124,11 +117,9 @@ final class SessionPool implements PooledObjectHandler<SessionImpl> {
 
     void release(SessionImpl session) {
         if (session.switchState(State.DISCONNECTED, State.IDLE)) {
-            if (!settlersPool.offerIfHaveSpace(session)) {
-                logger.debug("Destroy {} because settlers pool overflow", session);
-                session.close(); // do not await session to be closed
-                idlePool.release(session);
-            }
+            logger.debug("Destroy {} because disconnected", session);
+            session.close(); // do not await session to be closed
+            idlePool.release(session);
         } else if (session.isGracefulShutdown()) {
             logger.debug("Destroy {} because graceful shutdown hook was recived", session);
             session.close(); // do not await session to be closed
@@ -145,7 +136,6 @@ final class SessionPool implements PooledObjectHandler<SessionImpl> {
 
     void close() {
         idlePool.close();
-        settlersPool.close();
     }
 
     public SessionPoolStats getStats() {
@@ -153,7 +143,7 @@ final class SessionPool implements PooledObjectHandler<SessionImpl> {
             minSize,
             maxSize,
             idlePool.getIdleCount(),
-            settlersPool.size(),
+            0,
             idlePool.getAcquiredCount(),
             idlePool.getPendingAcquireCount());
     }

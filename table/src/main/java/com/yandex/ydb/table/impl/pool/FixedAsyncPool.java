@@ -143,6 +143,7 @@ public final class FixedAsyncPool<T> implements AsyncPool<T> {
         }
 
         if (!acquiredObjects.contains(object)) {
+            logger.warn("obj {} double release, possible pool leaks!!", object, new RuntimeException("Double release"));
             return;
         }
 
