@@ -119,11 +119,11 @@ final class SessionPool implements PooledObjectHandler<SessionImpl> {
         if (session.switchState(State.DISCONNECTED, State.IDLE)) {
             logger.debug("Destroy {} because disconnected", session);
             session.close(); // do not await session to be closed
-            idlePool.release(session);
+            idlePool.delete(session);
         } else if (session.isGracefulShutdown()) {
-            logger.debug("Destroy {} because graceful shutdown hook was recived", session);
+            logger.debug("Destroy {} because graceful shutdown hook was received", session);
             session.close(); // do not await session to be closed
-            idlePool.release(session);
+            idlePool.delete(session);
         } else {
             logger.debug("session `{}' released", session);
             idlePool.release(session);
