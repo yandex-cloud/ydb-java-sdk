@@ -181,7 +181,7 @@ public final class FixedAsyncPool<T> implements AsyncPool<T> {
         if (acquiredObjects.remove(object, object)) {
             acquiredCount.decrementAndGet();
         }
-        logger.trace("Object {} deleted: acquired = {}", acquiredCount.get());
+        logger.trace("Object {} deleted: acquired = {}", object, acquiredCount.get());
     }
 
     private PooledObject<T> pollObject() {
@@ -207,11 +207,11 @@ public final class FixedAsyncPool<T> implements AsyncPool<T> {
 
             // no objects left in the pool, so create new one
 
-            CompletableFuture<T> future = handler.create(deadlineAfter)
-                .thenApply(o -> {
-                    logger.debug("Created {}", o);
-                    return o;
-                });
+            CompletableFuture<T> future = handler.create(deadlineAfter).thenApply(o -> {
+                logger.debug("Created {}", o);
+                return o;
+            });
+
             if (future.isDone() && !future.isCompletedExceptionally()) {
                 // faster than subscribing on future
                 onAcquire(promise, future.getNow(null), null);
@@ -219,21 +219,9 @@ public final class FixedAsyncPool<T> implements AsyncPool<T> {
             }
 
             future.whenComplete((o, ex) -> {
-                if (ex != null) {
-                    acquiredCount.decrementAndGet();
-                    logger.trace("Complete future {} by exception: acquired = {}", promise, acquiredCount.get());
-                    onAcquire(promise, null, ex);
-                } else {
-                    acquiredObjects.put(o, o);
-                    if (!promise.complete(o)) {
-                        // do not leak object if promise already completed
-                        release(o);
-                    }
-                }
+                onAcquire(promise, o, ex);
             });
         } catch (Throwable t) {
-            acquiredCount.decrementAndGet();
-            logger.trace("Complete future {} by throwable: acquired = {}", promise, acquiredCount.get());
             onAcquire(promise, null, t);
         }
     }
@@ -252,8 +240,12 @@ public final class FixedAsyncPool<T> implements AsyncPool<T> {
         } else if (error == null) {
             acquiredObjects.put(object, object);
             logger.trace("Object {} is acquired: acquired = {}", object, acquiredCount.get());
-            promise.complete(object);
+            if (!promise.complete(object)) {
+                release(object);
+            }
         } else {
+            acquiredCount.decrementAndGet();
+            logger.trace("Complete future {} by exception: acquired = {}", promise, acquiredCount.get());
             promise.completeExceptionally(error);
             runPendingAcquireTasks();
         }
@@ -399,7 +391,9 @@ public final class FixedAsyncPool<T> implements AsyncPool<T> {
             pendingAcquireTasks.remove(this);
 
             String msg = "cannot acquire object within " + TimeUnit.NANOSECONDS.toMillis(timeoutNanos) + "ms";
-            onAcquire(promise, null, new TimeoutException(msg));
+            logger.trace("Future {} was canceld by timeout: pending = {}", promise, pendingCount.get());
+            promise.completeExceptionally(new TimeoutException(msg));
+            runPendingAcquireTasks();
         }
     }
 
