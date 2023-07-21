@@ -156,10 +156,10 @@ public final class FixedAsyncPool<T> implements AsyncPool<T> {
             }
             offerObject(new PooledObject<>(object, System.currentTimeMillis()));
             acquiredCount.decrementAndGet();
-            logger.trace("Object {} released: acquired = {}", acquiredCount.get());
+            logger.trace("Object {} released: acquired = {}", object, acquiredCount.get());
         } else {
             acquiredCount.decrementAndGet();
-            logger.trace("Object {} destoyed: acquired = {}", acquiredCount.get());
+            logger.trace("Object {} destoyed: acquired = {}", object, acquiredCount.get());
             handler.destroy(object);
         }
 

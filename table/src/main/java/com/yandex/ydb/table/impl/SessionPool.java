@@ -105,8 +105,10 @@ final class SessionPool implements PooledObjectHandler<SessionImpl> {
 
             if (session != null) {
                 if (session.switchState(State.IDLE, State.ACTIVE)) {
-                    logger.debug("session `{}' acquired", session);
-                    future.complete(Result.success(session));
+                    logger.trace("Acquire session '{}'", session);
+                    if (!future.complete(Result.success(session))) {
+                        release(session);
+                    }
                 } else {
                     release(session);
                     tryAcquire(future, expireTime);
@@ -117,15 +119,15 @@ final class SessionPool implements PooledObjectHandler<SessionImpl> {
 
     void release(SessionImpl session) {
         if (session.switchState(State.DISCONNECTED, State.IDLE)) {
-            logger.debug("Destroy {} because disconnected", session);
+            logger.trace("Destroy session '{}' because disconnected", session);
             session.close(); // do not await session to be closed
             idlePool.delete(session);
         } else if (session.isGracefulShutdown()) {
-            logger.debug("Destroy {} because graceful shutdown hook was received", session);
+            logger.trace("Destroy session '{}' because graceful shutdown hook was received", session);
             session.close(); // do not await session to be closed
             idlePool.delete(session);
         } else {
-            logger.debug("session `{}' released", session);
+            logger.trace("Release session '{}'", session);
             idlePool.release(session);
         }
     }
