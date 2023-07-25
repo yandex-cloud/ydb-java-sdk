@@ -111,13 +111,6 @@ public final class FixedAsyncPool<T> implements AsyncPool<T> {
                 }
                 assert count >= 0;
                 logger.trace("Try acquire or create: acquired = {}", acquiredCount.get());
-                // FIXME: Temporaly logs for detect YDBREQUESTS-2270 problem
-                if (logger.isTraceEnabled()) {
-                    if (acquiredCount.get() > 100 && acquiredCount.get() % 150 == 0
-                            && Thread.currentThread().getName().contains("namespace=\"ci\"")) {
-                        logger.trace("Possible session leaks", new RuntimeException("SESSION LEAK"));
-                    }
-                }
                 doAcquireOrCreate(promise, deadlineAfter);
                 return promise;
             }

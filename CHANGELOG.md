@@ -1,8 +1,12 @@
+## 1.14.14 ##
+
+* Added trace logs to session pool
+* Fixed processing of completed futures in session pool 
+
 ## 1.14.13 ##
 
 * Added warnings for double release of session
-* Added support of virtual timestamps to readTable
-* 
+* Added support of virtual timestamps to readTable 
 
 ## 1.14.12 ##
 
