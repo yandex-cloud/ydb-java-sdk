@@ -30,6 +30,7 @@ public class ReadTableSettings {
     private final int rowLimit;
     private final ImmutableList<String> columns;
     private final long timeoutNanos;
+    private final long noDataInStreamTimeoutMillis;
 
     private ReadTableSettings(Builder b) {
         this.ordered = b.ordered;
@@ -40,6 +41,7 @@ public class ReadTableSettings {
         this.rowLimit = b.rowLimit;
         this.columns = ImmutableList.copyOf(b.columns);
         this.timeoutNanos = b.timeoutNanos;
+        this.noDataInStreamTimeoutMillis = b.noDataInStreamTimeoutMillis;
     }
 
     public static Builder newBuilder() {
@@ -84,6 +86,10 @@ public class ReadTableSettings {
         return System.nanoTime() + timeoutNanos;
     }
 
+    public long getNoDataInStreamTimeoutMillis() {
+        return noDataInStreamTimeoutMillis;
+    }
+
     /**
      * BUILDER
      */
@@ -97,6 +103,7 @@ public class ReadTableSettings {
         private int rowLimit = 0;
         private List<String> columns = Collections.emptyList();
         private long timeoutNanos = 0;
+        private long noDataInStreamTimeoutMillis = 0;
 
         Builder() {
         }
@@ -181,6 +188,11 @@ public class ReadTableSettings {
 
         public Builder timeout(Duration duration) {
             this.timeoutNanos = duration.toNanos();
+            return this;
+        }
+
+        public Builder noDataInStreamTimeoutMillis(Duration duration) {
+            this.noDataInStreamTimeoutMillis = duration.toMillis();
             return this;
         }
 

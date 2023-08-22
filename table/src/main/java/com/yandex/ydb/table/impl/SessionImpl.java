@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -23,12 +24,14 @@ import com.yandex.ydb.core.Issue;
 import com.yandex.ydb.core.Result;
 import com.yandex.ydb.core.Status;
 import com.yandex.ydb.core.StatusCode;
+import com.yandex.ydb.core.UnexpectedResultException;
 import com.yandex.ydb.core.grpc.EndpointInfo;
 import com.yandex.ydb.core.grpc.GrpcRequestSettings;
 import com.yandex.ydb.core.grpc.YdbHeaders;
 import com.yandex.ydb.core.rpc.OperationTray;
 import com.yandex.ydb.core.rpc.StreamControl;
 import com.yandex.ydb.core.rpc.StreamObserver;
+import com.yandex.ydb.core.utils.Async;
 import com.yandex.ydb.table.Session;
 import com.yandex.ydb.table.SessionStatus;
 import com.yandex.ydb.table.YdbTable;
@@ -84,6 +87,8 @@ import com.yandex.ydb.table.values.Value;
 import com.yandex.ydb.table.values.proto.ProtoType;
 import com.yandex.ydb.table.values.proto.ProtoValue;
 import io.grpc.Metadata;
+import io.netty.util.Timeout;
+import io.netty.util.TimerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -887,41 +892,93 @@ class SessionImpl implements Session {
                 .withTrailersHandler(shutdownHandler)
                 .build();
         CompletableFuture<Status> promise = new CompletableFuture<>();
-        StreamControl control = tableRpc.streamReadTable(request.build(), new StreamObserver<ReadTableResponse>() {
-            @Override
-            public void onNext(ReadTableResponse response) {
-                StatusIds.StatusCode statusCode = response.getStatus();
-                if (statusCode == StatusIds.StatusCode.SUCCESS) {
-                    try {
-                        fn.accept(ProtoValueReaders.forResultSet(response.getResult().getResultSet()),
-                                  new ReadTableMeta(response.getSnapshot()));
-                    } catch (Throwable t) {
-                        promise.completeExceptionally(t);
-                        throw new IllegalStateException(t);
-                    }
-                } else {
-                    Issue[] issues = Issue.fromPb(response.getIssuesList());
-                    StatusCode code = StatusCode.fromProto(statusCode);
-                    promise.complete(Status.of(code, issues));
-                }
-            }
-
-            @Override
-            public void onError(Status status) {
-                assert !status.isSuccess();
-                promise.complete(status);
-            }
-
-            @Override
-            public void onCompleted() {
-                promise.complete(Status.SUCCESS);
-            }
-        }, grpcRequestSettings);
+        StreamObserverWithTimer observer = new StreamObserverWithTimer(fn, promise, settings.getNoDataInStreamTimeoutMillis());
+        StreamControl control = tableRpc.streamReadTable(request.build(), observer, grpcRequestSettings);
         return promise.whenComplete((status, ex) -> {
             if (ex instanceof CancellationException) {
                 control.cancel();
             }
+            if (ex instanceof UnexpectedResultException) {
+                UnexpectedResultException ure = (UnexpectedResultException) ex;
+                if (ure.getStatusCode() == StatusCode.CLIENT_DEADLINE_EXCEEDED) {
+                    control.cancel();
+                }
+            }
         });
+    }
+
+    private static class StreamObserverWithTimer implements StreamObserver<ReadTableResponse>, TimerTask {
+
+        private final BiConsumer<ResultSetReader, ReadTableMeta> fn;
+        private final CompletableFuture<Status> promise;
+        private final long noDataInStreamTimeoutMillis;
+        private Timeout timeout;
+
+        private StreamObserverWithTimer(
+                BiConsumer<ResultSetReader, ReadTableMeta> fn,
+                CompletableFuture<Status> promise,
+                long noDataInStreamTimeoutMillis)
+        {
+            this.fn = fn;
+            this.promise = promise;
+            this.noDataInStreamTimeoutMillis = noDataInStreamTimeoutMillis;
+
+            scheduleNoDataTimeout();
+        }
+
+        @Override
+        public void onNext(ReadTableResponse response) {
+            StatusIds.StatusCode statusCode = response.getStatus();
+            if (statusCode == StatusIds.StatusCode.SUCCESS) {
+                try {
+                    fn.accept(ProtoValueReaders.forResultSet(response.getResult().getResultSet()),
+                              new ReadTableMeta(response.getSnapshot()));
+                    scheduleNoDataTimeout();
+                } catch (Throwable t) {
+                    promise.completeExceptionally(t);
+                    throw new IllegalStateException(t);
+                }
+            } else {
+                Issue[] issues = Issue.fromPb(response.getIssuesList());
+                StatusCode code = StatusCode.fromProto(statusCode);
+                promise.complete(Status.of(code, issues));
+            }
+        }
+
+        private void scheduleNoDataTimeout() {
+            if (noDataInStreamTimeoutMillis <= 0) {
+                return;
+            }
+            if (timeout != null) {
+                timeout.cancel();
+            }
+            timeout = Async.runAfter(
+                    this,
+                    noDataInStreamTimeoutMillis,
+                    TimeUnit.MILLISECONDS);
+        }
+
+        @Override
+        public void onError(Status status) {
+            assert !status.isSuccess();
+            promise.complete(status);
+        }
+
+        @Override
+        public void onCompleted() {
+            promise.complete(Status.SUCCESS);
+        }
+
+        @Override
+        public void run(Timeout timeout) {
+            if (timeout.isCancelled() || promise.isDone() || !timeout.isExpired()) {
+                return;
+            }
+            promise.completeExceptionally(
+                    new UnexpectedResultException(
+                            "Cancelled by no data in read table stream timeout",
+                            StatusCode.CLIENT_DEADLINE_EXCEEDED));
+        }
     }
 
     @Override

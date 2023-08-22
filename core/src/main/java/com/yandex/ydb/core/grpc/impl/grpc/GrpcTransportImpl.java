@@ -251,7 +251,8 @@ public class GrpcTransportImpl extends GrpcTransport {
         ClientCall<ReqT, RespT> call = channel.newCall(method, callOptions);
         sendOneRequest(call, request, settings, new ServerStreamToObserver<>(observer, call));
         return () -> {
-            call.cancel("Cancelled on user request", new CancellationException());
+            // message in CancellationException prevents NPE in Issue.of
+            call.cancel("Cancelled on user request", new CancellationException("Cancelled on user request"));
         };
     }
 

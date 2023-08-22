@@ -235,7 +235,8 @@ public class YdbTransportImpl extends GrpcTransport {
                 )
         );
         return () -> {
-            call.cancel("Cancelled on user request", new CancellationException());
+            // message in CancellationException prevents NPE in Issue.of
+            call.cancel("Cancelled on user request", new CancellationException("Cancelled on user request"));
         };
     }
 
