@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.mockserver.junit.MockServerRule;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+
 import yandex.cloud.sdk.auth.provider.ComputeEngineCredentialProvider;
 import yandex.cloud.sdk.auth.provider.CredentialProvider;
 
